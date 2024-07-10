@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+      .double { font: 40px 'JetBrains Mono', monospace; fill: #cba6f7; }
+      .tapp { font: bold 40px 'JetBrains Mono', monospace; fill: #f38ba8; }
+    </style>
+  </defs>
+  <text x="0" y="45">
+    <tspan class="double">Double</tspan>
+    <tspan class="tapp">TAPP</tspan>
+  </text>
+</svg>

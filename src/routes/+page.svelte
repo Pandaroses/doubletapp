@@ -1,2 +1,4 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<div class="min-h-full w-full flex flex-row">
+	<h1>a</h1>
+	<h2>a</h2>
+</div>
