@@ -19,3 +19,9 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+
+##Cargo
+
+backend/target
+backend/Cargo.lock
