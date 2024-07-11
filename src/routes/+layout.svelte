@@ -24,7 +24,7 @@
 						<li><a href="https://studiosquared.co.uk"> studiosquared.co.uk </a></li>
 					</ul>
 				</div>
-				<div class="text-white mx-4">other text</div>
+				<div class="text-white mx-4 opacity-50 flex flex-row">inspired by <a href="https://chxry.github.io/tapp"> tapp </a></div>
 			</div>
 		</div>
 	</div>
