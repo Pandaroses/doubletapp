@@ -13,3 +13,4 @@
 - cta
 - custom backgrounds
 - cleanup code
+- WHY THE FUCK IS THE MODAL THERE
