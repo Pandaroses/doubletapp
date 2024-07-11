@@ -1,8 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Clock from 'svelte-material-icons/Timer.svelte';
+	import Trophy from 'svelte-material-icons/Trophy.svelte';
+	// can be timer, endless, pulse
+	let gameMode = 'timer';
+	let gameStarted = false;
+	let time = 30;
 	let score = 0;
 	let codes: any;
 	onMount(() => {
+		//TODO remove after testing
 		localStorage.setItem(
 			'keybinds',
 			JSON.stringify({ wU: 87, wD: 83, wL: 65, wR: 68, aU: 38, aD: 40, aL: 37, aR: 39, submit: 32 })
@@ -17,6 +24,14 @@
 	let acursorX = size - 1;
 	let acursorY = size - 1;
 	const initGrid = () => {
+		gameStarted = false;
+		wcursorX = 0;
+		wcursorY = 0;
+		acursorX = size - 1;
+		acursorY = size - 1;
+
+		grid = Array(Math.pow(size, 2)).fill(false);
+
 		let count = 0;
 		while (count < size) {
 			let x = Math.floor(Math.random() * size);
@@ -27,8 +42,37 @@
 			}
 		}
 	};
-
+	const endGame = () => {
+		alert(score);
+		score = 0;
+		time = 30;
+		initGrid();
+	};
+	const startGame = () => {
+		gameStarted = true;
+		switch (gameMode) {
+			case 'timer':
+				console.log('starting timer');
+				startTimer();
+				break;
+			case 'pulse':
+			case 'endless':
+		}
+	};
+	const startTimer = () => {
+		time = 30;
+		let interval = setInterval(() => {
+			time -= 1;
+			if (time == 0) {
+				endGame();
+				clearInterval(interval);
+			}
+		}, 1000);
+	};
 	const submit = () => {
+		if (!gameStarted) {
+			startGame();
+		}
 		if (
 			grid[wcursorX * size + wcursorY] === true &&
 			grid[acursorX * size + acursorY] === true &&
@@ -39,9 +83,9 @@
 				let x = Math.floor(Math.random() * size);
 				let y = Math.floor(Math.random() * size);
 				if (
-					grid[y * size + x] === false 
-						&& (((wcursorX * size + wcursorY) !== (y * size + x)) ||
-					((acursorX * size + acursorY) !== (y * size + x)))
+					grid[y * size + x] === false &&
+					(wcursorX * size + wcursorY !== y * size + x ||
+						acursorX * size + acursorY !== y * size + x)
 				) {
 					grid[y * size + x] = true;
 					count += 1;
@@ -54,7 +98,6 @@
 			score = 0;
 		}
 	};
-
 	const onKeyDown = (e: any) => {
 		switch (e.keyCode) {
 			case codes.wU:
@@ -89,16 +132,27 @@
 	initGrid();
 </script>
 
-<div class="bg-surface0">
-	<div class="text-3xl text-blue">score: {score}</div>
-	<div class="w-fit h-fit bg-mauve flex flex-col">
+<div class="">
+	<div class="flex flex-row text-3xl text-text justify-between py-2">
+		<div class="{gameMode == 'timer' ? '' : 'hidden'} flex flex-row items-center">
+			<Clock />
+			<div class="px-2 {time < 15 ? (time < 5 ? 'text-red' : 'text-peach') : 'text-green'}">
+				{time}
+			</div>
+		</div>
+		<div class="flex flex-row items-center">
+			<Trophy />
+			<div class="px-2">{score}</div>
+		</div>
+	</div>
+	<div class="w-fit h-fit flex flex-col">
 		{#each Array(size) as _, col}
 			<div class="w-fit h-fit flex flex-row">
 				{#each Array(size) as _, row}
 					<div
 						class="{grid[row * size + col]
 							? 'bg-crust'
-							: 'bg-text'}   w-32 h-32 border-black border flex items-center justify-center"
+							: 'bg-subtext1'}   w-32 h-32 border-crust border flex items-center justify-center"
 					>
 						<div
 							class="h-8 w-8 {row == wcursorX && col == wcursorY
@@ -111,6 +165,17 @@
 				{/each}
 			</div>
 		{/each}
+		<div class="text-text flex flex-row text-2xl py-4 justify-between">
+			<div class="flex flex-row">
+				<label for="gamemode" class="pr-4"> GAMEMODE: </label>
+				<select id="gamemodes" name="modes" class="bg-surface0 px-2" bind:value={gameMode}>
+					<option value="timer"> TIME </option>
+					<option value="pulse"> PULSE </option>
+					<option value="endless"> ENDLESS </option>
+				</select>
+			</div>
+			<button class="bg-surface0 px-2" on:click={initGrid}> NEW GAME </button>
+		</div>
 	</div>
 </div>
 
