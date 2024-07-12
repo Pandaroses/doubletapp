@@ -20,9 +20,10 @@
 <dialog
 	bind:this={dialog}
 	on:close={() => (showModal = false)}
-	class="h-screen w-screen bg-crust/80 flex flex-col items-center justify-center"
+	class="h-screen w-screen bg-crust/80 flex flex-col items-center justify-center {showModal? '': 'hidden'}"
 >
-	<div class="w-96 h-fit flex flex-col items-center bg-surface0">
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div class="w-96 h-fit flex flex-col items-center bg-surface0" on:click|stopPropagation>
 		<div class="h-16 w-16 border-2 border-black m-2" />
 		<div class="flex flex-row">
 			<div class="h-16 w-16 border-2 border-black m-2" />

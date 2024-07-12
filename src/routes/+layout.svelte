@@ -31,5 +31,6 @@
 			</div>
 		</div>
 	</div>
-	<Modal bind:showModal />
+
+	<Modal bind:showModal  />
 </main>

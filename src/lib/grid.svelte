@@ -152,7 +152,7 @@
 					<div
 						class="{grid[row * size + col]
 							? 'bg-crust'
-							: 'bg-subtext1'}   w-32 h-32 border-crust border flex items-center justify-center"
+							: 'bg-text'}   w-32 h-32 border-crust border flex items-center justify-center"
 					>
 						<div
 							class="h-8 w-8 {row == wcursorX && col == wcursorY
