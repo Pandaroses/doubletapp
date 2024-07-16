@@ -19,10 +19,12 @@
 
 	export let size: number;
 	let grid = Array(Math.pow(size, 2)).fill(false);
+	let cGrid = Array(Math.pow(size, 2)).fill('neutral');
 	let wcursorX = 0;
 	let wcursorY = 0;
 	let acursorX = size - 1;
 	let acursorY = size - 1;
+
 	const initGrid = () => {
 		gameStarted = false;
 		wcursorX = 0;
@@ -73,30 +75,46 @@
 		if (!gameStarted) {
 			startGame();
 		}
-		if (
-			grid[wcursorX * size + wcursorY] === true &&
-			grid[acursorX * size + acursorY] === true &&
-			(wcursorX !== acursorX || wcursorY !== acursorY)
-		) {
+		let wIndex = wcursorX * size + wcursorY;
+		let aIndex = acursorX * size + acursorY;
+		let wStatus = grid[wIndex];
+		let aStatus = grid[aIndex];
+		if (wStatus && aStatus && (wcursorX !== acursorX || wcursorY !== acursorY)) {
+			cGrid[wIndex] = 'correct';
+			cGrid[aIndex] = 'correct';
+			console.log('0');
 			let count = 0;
 			while (count < 2) {
 				let x = Math.floor(Math.random() * size);
 				let y = Math.floor(Math.random() * size);
 				if (
-					grid[y * size + x] === false &&
-					(wcursorX * size + wcursorY !== y * size + x ||
-						acursorX * size + acursorY !== y * size + x)
+					!grid[y * size + x] &&
+					(wIndex !== y * size + x ||
+						aIndex !== y * size + x)
 				) {
 					grid[y * size + x] = true;
 					count += 1;
 				}
 			}
-			grid[wcursorX * size + wcursorY] = false;
-			grid[acursorX * size + acursorY] = false;
+			grid[wIndex] = false;
+			grid[aIndex] = false;
 			score += 1;
 		} else {
+			if (wStatus && aStatus) {
+				cGrid[wIndex] = 'incorrect';
+			} else if (wStatus) {
+				cGrid[aIndex] = 'incorrect';
+				cGrid[wIndex] = 'correct';
+			} else if (aStatus) {
+				cGrid[wIndex] = 'incorrect';
+				cgrid[aIndex] = 'correct';
+			} else {
+				cGrid[wIndex] = 'incorrect';
+				cGrid[aIndex] = 'incorrect';
+			}
 			score = 0;
 		}
+		 setTimeout(() => {cGrid[wIndex] = 'neutral'; cGrid[aIndex] = 'neutral'},100);
 	};
 	const onKeyDown = (e: any) => {
 		switch (e.keyCode) {
@@ -150,9 +168,16 @@
 			<div class="w-fit h-fit flex flex-row">
 				{#each Array(size) as _, row}
 					<div
-						class="{grid[row * size + col]
-							? 'bg-crust'
-							: 'bg-text'}   w-32 h-32 border-crust border flex items-center justify-center"
+						id={grid[row * size + col]}
+						class="{cGrid[row * size + col] === 'correct'
+							? 'bg-green'
+							: cGrid[row * size + col] === 'incorrect'
+								? 'bg-red'
+								: grid[row * size + col]
+									? 'bg-crust'
+									: 'bg-text'}
+						
+					  w-32 h-32 border-crust border flex items-center justify-center transition-colors duration-100"
 					>
 						<div
 							class="h-8 w-8 {row == wcursorX && col == wcursorY
