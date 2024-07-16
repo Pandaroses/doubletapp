@@ -107,7 +107,7 @@
 				cGrid[wIndex] = 'correct';
 			} else if (aStatus) {
 				cGrid[wIndex] = 'incorrect';
-				cgrid[aIndex] = 'correct';
+				cGrid[aIndex] = 'correct';
 			} else {
 				cGrid[wIndex] = 'incorrect';
 				cGrid[aIndex] = 'incorrect';

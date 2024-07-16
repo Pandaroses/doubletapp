@@ -13,4 +13,4 @@
 - cta
 - custom backgrounds
 - cleanup code
-- WHY THE FUCK IS THE MODAL THERE
+- check user agent, if mobile block
