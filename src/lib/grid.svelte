@@ -4,16 +4,17 @@
 	import Trophy from 'svelte-material-icons/Trophy.svelte';
 	// can be timer, endless, pulse
 	let gameMode = 'timer';
+	let interval: any;
 	let gameStarted = false;
 	let time = 30;
 	let score = 0;
 	let codes: any;
 	onMount(() => {
 		//TODO remove after testing
-		localStorage.setItem(
-			'keybinds',
-			JSON.stringify({ wU: 87, wD: 83, wL: 65, wR: 68, aU: 38, aD: 40, aL: 37, aR: 39, submit: 32 })
-		);
+		// localStorage.setItem(
+		// 'keybinds',
+		// JSON.stringify({ wU: 87, wD: 83, wL: 65, wR: 68, aU: 38, aD: 40, aL: 37, aR: 39, submit: 32 })
+		// );
 		codes = JSON.parse(localStorage.getItem('keybinds') || '');
 	});
 
@@ -45,9 +46,15 @@
 		}
 	};
 	const endGame = () => {
+		// TODO make a popup that shows the results
 		alert(score);
 		score = 0;
 		time = 30;
+		wcursorX = 0;
+		wcursorY = 0;
+		acursorX = size - 1;
+		acursorY = size - 1;
+		clearInterval(interval);
 		initGrid();
 	};
 	const startGame = () => {
@@ -63,7 +70,7 @@
 	};
 	const startTimer = () => {
 		time = 30;
-		let interval = setInterval(() => {
+		interval = setInterval(() => {
 			time -= 1;
 			if (time == 0) {
 				endGame();
@@ -87,11 +94,7 @@
 			while (count < 2) {
 				let x = Math.floor(Math.random() * size);
 				let y = Math.floor(Math.random() * size);
-				if (
-					!grid[y * size + x] &&
-					(wIndex !== y * size + x ||
-						aIndex !== y * size + x)
-				) {
+				if (!grid[y * size + x] && (wIndex !== y * size + x || aIndex !== y * size + x)) {
 					grid[y * size + x] = true;
 					count += 1;
 				}
@@ -114,7 +117,10 @@
 			}
 			score = 0;
 		}
-		 setTimeout(() => {cGrid[wIndex] = 'neutral'; cGrid[aIndex] = 'neutral'},100);
+		setTimeout(() => {
+			cGrid[wIndex] = 'neutral';
+			cGrid[aIndex] = 'neutral';
+		}, 100);
 	};
 	const onKeyDown = (e: any) => {
 		switch (e.keyCode) {
@@ -144,6 +150,9 @@
 				break;
 			case codes.submit:
 				submit();
+				break;
+			case codes.reset:
+				endGame();
 				break;
 		}
 	};
@@ -199,7 +208,7 @@
 					<option value="endless"> ENDLESS </option>
 				</select>
 			</div>
-			<button class="bg-surface0 px-2" on:click={initGrid}> NEW GAME </button>
+			<button class="bg-surface0 px-2" on:click={endGame}> NEW GAME </button>
 		</div>
 	</div>
 </div>

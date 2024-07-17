@@ -10,7 +10,8 @@
 		aD: 40,
 		aL: 37,
 		aR: 39,
-		submit: 32
+		submit: 32,
+		restart: 82
 	});
 
 	$: if (dialog && showModal) dialog.showModal();
@@ -20,16 +21,37 @@
 <dialog
 	bind:this={dialog}
 	on:close={() => (showModal = false)}
-	class="h-screen w-screen bg-crust/80 flex flex-col items-center justify-center {showModal? '': 'hidden'}"
+	class="h-screen w-screen bg-crust/80 flex items-center justify-center {showModal ? '' : 'hidden'}"
 >
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div class="w-96 h-fit flex flex-col items-center bg-surface0" on:click|stopPropagation>
-		<div class="h-16 w-16 border-2 border-black m-2" />
+	<div class="flex flex-col bg-surface0 w-fit h-fit">
 		<div class="flex flex-row">
-			<div class="h-16 w-16 border-2 border-black m-2" />
-			<div class="h-16 w-16 border-2 border-black m-2" />
-			<div class="h-16 w-16 border-2 border-black m-2" />
+			<div class="flex flex-col items-center">
+				<div
+					class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
+				>
+					a
+				</div>
+				<div class="flex flex-row">
+					<div
+						class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
+					>
+						a
+					</div>
+					<div
+						class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
+					>
+						a
+					</div>
+					<div
+						class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
+					>
+						a
+					</div>
+				</div>
+			</div>
+			<div>meow2</div>
 		</div>
+
 		<button class="text-red" on:click={() => dialog.close()}>press anywhere to close</button>
 	</div>
 </dialog>
