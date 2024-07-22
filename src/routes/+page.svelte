@@ -3,5 +3,5 @@
 </script>
 
 <div class="min-h-full w-full flex flex-col items-center justify-center">
-	<Grid size={4} />
+	<Grid />
 </div>

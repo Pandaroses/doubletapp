@@ -1,57 +1,192 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
+	let meow = 0
 	export let showModal: boolean;
 	let dialog: any;
-	let defaults = JSON.stringify({
-		wU: 87,
-		wD: 83,
-		wL: 65,
-		wR: 68,
-		aU: 38,
-		aD: 40,
-		aL: 37,
-		aR: 39,
-		submit: 32,
-		restart: 82
-	});
+	let idx: any;
+	let state: any = getContext('state');
+	let keycodes: any;
+
+	$: keycodes = $state.keycodes;
+	const reset = () => {
+		console.log('resetting state');
+		$state = JSON.parse(
+			JSON.stringify({
+				gameMode: 'timer',
+				timeLimit: 30,
+				keycodes: {
+					wU: 87,
+					wD: 83,
+					wL: 65,
+					wR: 68,
+					aU: 38,
+					aD: 40,
+					aL: 37,
+					aR: 39,
+					submit: 32,
+					reset: 82
+				},
+				size: 4
+			})
+		);
+		meow += 1;
+		
+	};
+	const getChar = (i: any) => {
+		let char: any;
+		switch (i) {
+			case '0':
+				char = keycodes.wU;
+				break;
+			case '1':
+				char = keycodes.aU;
+				break;
+			case '00':
+				char = keycodes.wL;
+				break;
+			case '01':
+				char = keycodes.wD;
+				break;
+			case '02':
+				char = keycodes.wR;
+				break;
+			case '10':
+				char = keycodes.aL;
+				break;
+			case '11':
+				char = keycodes.aR;
+				break;
+			case '12':
+				char = keycodes.aD;
+				break;
+			case '20':
+				char = keycodes.submit;
+				break;
+			case '21':
+				char = keycodes.reset;
+				break;
+		}
+		return String.fromCharCode(char);
+	};
+
+	const keyClick = (i: any) => {
+		idx = i;
+		setTimeout(() => {
+			window.addEventListener('keydown', setChar, { once: true });
+		}, 0);
+	};
+
+	const setChar = (e: any) => {
+		switch (idx) {
+			case '0':
+				$state.keycodes.wU = e.keyCode;
+				break;
+			case '1':
+				$state.keycodes.aU = e.keyCode;
+				break;
+			case '00':
+				$state.keycodes.wL = e.keyCode;
+				break;
+			case '01':
+				$state.keycodes.wD = e.keyCode;
+				break;
+			case '02':
+				$state.keycodes.wR = e.keyCode;
+				break;
+			case '10':
+				$state.keycodes.aL = e.keyCode;
+				break;
+			case '11':
+				$state.keycodes.aD = e.keyCode;
+				break;
+			case '12':
+				$state.keycodes.aR = e.keyCode;
+				break;
+			case '20':
+				$state.keycodes.submit = e.keyCode;
+				break;
+			case '21':
+				$state.keycodes.reset = e.keyCode;
+				break;
+		}
+		let doc: any = document.getElementById(idx);
+		doc.textContent = String.fromCharCode(e.keyCode);
+		idx = 69420;
+	};
 
 	$: if (dialog && showModal) dialog.showModal();
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialog}
 	on:close={() => (showModal = false)}
-	class="h-screen w-screen bg-crust/80 flex items-center justify-center {showModal ? '' : 'hidden'}"
+	class="h-screen w-screen bg-crust/0 flex items-center justify-center {showModal ? '' : 'hidden'}"
 >
-	<div class="flex flex-col bg-surface0 w-fit h-fit">
-		<div class="flex flex-row">
-			<div class="flex flex-col items-center">
-				<div
-					class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
-				>
-					a
+	{#key meow}
+	<div class="flex flex-col bg-surface0 w-fit h-fit rounded-md">
+		<div class="text-text text-3xl m-4 mb-0">settings</div>
+		<div class="text-red/60 text-sm m-4 mt-0">bug alert: arrow keys are different symbols</div>
+		<div class="text-xl text-text mb-0 m-4">movement:</div>
+		<div class="flex flex-row m-4">
+			{#each Array(2) as _, x}
+				<div class="flex flex-col items-center mx-4">
+					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-no-static-element-interactions -->
+					<div
+						id={x.toString()}
+						class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
+						x.toString()
+							? 'bg-green'
+							: 'bg-text'}"
+						on:click={() => keyClick(x.toString())}
+					>
+						{getChar(x.toString())}
+					</div>
+					<div class="flex flex-row">
+						{#each Array(3) as _, y}
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<!-- svelte-ignore a11y-no-static-element-interactions -->
+							<div
+								id={x.toString() + y.toString()}
+								class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
+								x.toString() + y.toString()
+									? 'bg-green'
+									: 'bg-text'}"
+								on:click={() => keyClick(x.toString() + y.toString())}
+							>
+								{getChar(x.toString() + y.toString())}
+							</div>
+						{/each}
+					</div>
 				</div>
-				<div class="flex flex-row">
-					<div
-						class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
-					>
-						a
-					</div>
-					<div
-						class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
-					>
-						a
-					</div>
-					<div
-						class="bg-text rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none"
-					>
-						a
-					</div>
-				</div>
-			</div>
-			<div>meow2</div>
+			{/each}
 		</div>
-
-		<button class="text-red" on:click={() => dialog.close()}>press anywhere to close</button>
+		<div class="text-xl text-text mb-0 m-4">place:</div>
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div
+			id={'20'}
+			class=" rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx == '20'? 'bg-green': 'bg-text'}"
+			on:click={() => keyClick('20')}
+		>
+			{getChar('20')}
+		</div>
+		<div class="text-xl text-text mb-0 m-4">reset:</div>
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div
+			id={'21'}
+			class="rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx =='21'? 'bg-green': 'bg-text'}"
+			on:click={() => keyClick('21')}
+		>
+			{getChar('21')}
+		</div>
+		<div class="flex flex-row self-center m-4">
+			<button class="text-crust bg-red rounded-md w-16 h-8 mx-2 hover:scale-105" on:click={reset}>reset</button>
+			<button class="text-crust bg-blue rounded-md w-16 h-8 mx-2 hover:scale-105" on:click={() => dialog.close()}
+				>exit</button
+			>
+		</div>
 	</div>
+	{/key}
 </dialog>

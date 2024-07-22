@@ -1,46 +1,35 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import Clock from 'svelte-material-icons/Timer.svelte';
 	import Trophy from 'svelte-material-icons/Trophy.svelte';
-	// can be timer, endless, pulse
-	let gameMode = 'timer';
+	import { getContext } from 'svelte';
+	let state: any = getContext('state');
+
 	let interval: any;
 	let gameStarted = false;
-	let time = 30;
+	let time = $state.timeLimit;
 	let score = 0;
-	let codes: any;
-	onMount(() => {
-		//TODO remove after testing
-		// localStorage.setItem(
-		// 'keybinds',
-		// JSON.stringify({ wU: 87, wD: 83, wL: 65, wR: 68, aU: 38, aD: 40, aL: 37, aR: 39, submit: 32 })
-		// );
-		codes = JSON.parse(localStorage.getItem('keybinds') || '');
-	});
-
-	export let size: number;
-	let grid = Array(Math.pow(size, 2)).fill(false);
-	let cGrid = Array(Math.pow(size, 2)).fill('neutral');
+	let grid = Array(Math.pow($state.size, 2)).fill(false);
+	let cGrid = Array(Math.pow($state.size, 2)).fill('neutral');
 	let wcursorX = 0;
 	let wcursorY = 0;
-	let acursorX = size - 1;
-	let acursorY = size - 1;
+	let acursorX = $state.size - 1;
+	let acursorY = $state.size - 1;
 
 	const initGrid = () => {
 		gameStarted = false;
 		wcursorX = 0;
 		wcursorY = 0;
-		acursorX = size - 1;
-		acursorY = size - 1;
+		acursorX = $state.size - 1;
+		acursorY = $state.size - 1;
 
-		grid = Array(Math.pow(size, 2)).fill(false);
+		grid = Array(Math.pow($state.size, 2)).fill(false);
 
 		let count = 0;
-		while (count < size) {
-			let x = Math.floor(Math.random() * size);
-			let y = Math.floor(Math.random() * size);
-			if (grid[x * size + y] == false) {
-				grid[x * size + y] = true;
+		while (count < $state.size) {
+			let x = Math.floor(Math.random() * $state.size);
+			let y = Math.floor(Math.random() * $state.size);
+			if (grid[x * $state.size + y] == false) {
+				grid[x * $state.size + y] = true;
 				count += 1;
 			}
 		}
@@ -49,19 +38,18 @@
 		// TODO make a popup that shows the results
 		alert(score);
 		score = 0;
-		time = 30;
+		time = $state.timeLimit;
 		wcursorX = 0;
 		wcursorY = 0;
-		acursorX = size - 1;
-		acursorY = size - 1;
+		acursorX = $state.size - 1;
+		acursorY = $state.size - 1;
 		clearInterval(interval);
 		initGrid();
 	};
 	const startGame = () => {
 		gameStarted = true;
-		switch (gameMode) {
+		switch ($state.gameMode) {
 			case 'timer':
-				console.log('starting timer');
 				startTimer();
 				break;
 			case 'pulse':
@@ -69,7 +57,7 @@
 		}
 	};
 	const startTimer = () => {
-		time = 30;
+		time = $state.timeLimit;
 		interval = setInterval(() => {
 			time -= 1;
 			if (time == 0) {
@@ -82,20 +70,22 @@
 		if (!gameStarted) {
 			startGame();
 		}
-		let wIndex = wcursorX * size + wcursorY;
-		let aIndex = acursorX * size + acursorY;
+		let wIndex = wcursorX * $state.size + wcursorY;
+		let aIndex = acursorX * $state.size + acursorY;
 		let wStatus = grid[wIndex];
 		let aStatus = grid[aIndex];
 		if (wStatus && aStatus && (wcursorX !== acursorX || wcursorY !== acursorY)) {
 			cGrid[wIndex] = 'correct';
 			cGrid[aIndex] = 'correct';
-			console.log('0');
 			let count = 0;
 			while (count < 2) {
-				let x = Math.floor(Math.random() * size);
-				let y = Math.floor(Math.random() * size);
-				if (!grid[y * size + x] && (wIndex !== y * size + x || aIndex !== y * size + x)) {
-					grid[y * size + x] = true;
+				let x = Math.floor(Math.random() * $state.size);
+				let y = Math.floor(Math.random() * $state.size);
+				if (
+					!grid[y * $state.size + x] &&
+					(wIndex !== y * $state.size + x || aIndex !== y * $state.size + x)
+				) {
+					grid[y * $state.size + x] = true;
 					count += 1;
 				}
 			}
@@ -120,38 +110,38 @@
 		setTimeout(() => {
 			cGrid[wIndex] = 'neutral';
 			cGrid[aIndex] = 'neutral';
-		}, 100);
+		}, 150);
 	};
 	const onKeyDown = (e: any) => {
 		switch (e.keyCode) {
-			case codes.wU:
+			case $state.keycodes.wU:
 				wcursorY = Math.max(wcursorY - 1, 0);
 				break;
-			case codes.wD:
-				wcursorY = Math.min(wcursorY + 1, size - 1);
+			case $state.keycodes.wD:
+				wcursorY = Math.min(wcursorY + 1, $state.size - 1);
 				break;
-			case codes.wL:
+			case $state.keycodes.wL:
 				wcursorX = Math.max(wcursorX - 1, 0);
 				break;
-			case codes.wR:
-				wcursorX = Math.min(wcursorX + 1, size - 1);
+			case $state.keycodes.wR:
+				wcursorX = Math.min(wcursorX + 1, $state.size - 1);
 				break;
-			case codes.aU:
+			case $state.keycodes.aU:
 				acursorY = Math.max(acursorY - 1, 0);
 				break;
-			case codes.aD:
-				acursorY = Math.min(acursorY + 1, size - 1);
+			case $state.keycodes.aD:
+				acursorY = Math.min(acursorY + 1, $state.size - 1);
 				break;
-			case codes.aL:
+			case $state.keycodes.aL:
 				acursorX = Math.max(acursorX - 1, 0);
 				break;
-			case codes.aR:
-				acursorX = Math.min(acursorX + 1, size - 1);
+			case $state.keycodes.aR:
+				acursorX = Math.min(acursorX + 1, $state.size - 1);
 				break;
-			case codes.submit:
+			case $state.keycodes.submit:
 				submit();
 				break;
-			case codes.reset:
+			case $state.keycodes.reset:
 				endGame();
 				break;
 		}
@@ -161,7 +151,7 @@
 
 <div class="">
 	<div class="flex flex-row text-3xl text-text justify-between py-2">
-		<div class="{gameMode == 'timer' ? '' : 'hidden'} flex flex-row items-center">
+		<div class="flex flex-row items-center">
 			<Clock />
 			<div class="px-2 {time < 15 ? (time < 5 ? 'text-red' : 'text-peach') : 'text-green'}">
 				{time}
@@ -173,16 +163,16 @@
 		</div>
 	</div>
 	<div class="w-fit h-fit flex flex-col">
-		{#each Array(size) as _, col}
+		{#each Array($state.size) as _, col}
 			<div class="w-fit h-fit flex flex-row">
-				{#each Array(size) as _, row}
+				{#each Array($state.size) as _, row}
 					<div
-						id={grid[row * size + col]}
-						class="{cGrid[row * size + col] === 'correct'
+						id={grid[row * $state.size + col]}
+						class="{cGrid[row * $state.size + col] === 'correct'
 							? 'bg-green'
-							: cGrid[row * size + col] === 'incorrect'
+							: cGrid[row * $state.size + col] === 'incorrect'
 								? 'bg-red'
-								: grid[row * size + col]
+								: grid[row * $state.size + col]
 									? 'bg-crust'
 									: 'bg-text'}
 						
@@ -201,13 +191,23 @@
 		{/each}
 		<div class="text-text flex flex-row text-2xl py-4 justify-between">
 			<div class="flex flex-row">
-				<label for="gamemode" class="pr-4"> GAMEMODE: </label>
-				<select id="gamemodes" name="modes" class="bg-surface0 px-2" bind:value={gameMode}>
+				<select id="gamemodes" name="modes" class="bg-surface0 px-2" bind:value={$state.gameMode}>
+					<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
 					<option value="timer"> TIME </option>
 					<option value="pulse"> PULSE </option>
 					<option value="endless"> ENDLESS </option>
 				</select>
 			</div>
+			<select id="size" name="sizes" class="bg-surface0 px-2" bind:value={$state.size}>
+				<option value = "{4}"> 4x4 </option>
+				<option value = "{5}"> 5x5 </option>
+				<option value = "{6}"> 6x6 </option>
+			</select>
+			<select id="time" name="times" class="bg-surface0 px-2 {$state.gameMode == 'timer'? 'bg-surface0': 'bg-surface0/0 text-crust/0'}" bind:value={$state.timeLimit} on:change={() => {time = $state.timeLimit}}>
+				<option value = "{30}"> 30s </option>
+				<option value = "{45}"> 45s </option>
+				<option value = "{60}"> 60s </option>
+			</select>
 			<button class="bg-surface0 px-2" on:click={endGame}> NEW GAME </button>
 		</div>
 	</div>
