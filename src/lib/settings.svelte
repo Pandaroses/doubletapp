@@ -9,22 +9,21 @@
 
 	$: keycodes = $state.keycodes;
 	const reset = () => {
-		console.log('resetting state');
 		$state = JSON.parse(
 			JSON.stringify({
 				gameMode: 'timer',
 				timeLimit: 30,
 				keycodes: {
-					wU: 87,
-					wD: 83,
-					wL: 65,
-					wR: 68,
-					aU: 38,
-					aD: 40,
-					aL: 37,
-					aR: 39,
-					submit: 32,
-					reset: 82
+					wU: "w",
+					wD: "s",
+					wL: "a",
+					wR: "d",
+					aU: "ArrowUp",
+					aD: "ArrowDown",
+					aL: "ArrowLeft",
+					aR: "ArrowRight",
+					submit: " ",
+					reset: "r"
 				},
 				size: 4
 			})
@@ -54,10 +53,10 @@
 				char = keycodes.aL;
 				break;
 			case '11':
-				char = keycodes.aR;
+				char = keycodes.aD;
 				break;
 			case '12':
-				char = keycodes.aD;
+				char = keycodes.aR;
 				break;
 			case '20':
 				char = keycodes.submit;
@@ -66,8 +65,17 @@
 				char = keycodes.reset;
 				break;
 		}
-		return String.fromCharCode(char);
-	};
+		switch (char) {
+			case 'ArrowUp':
+				char = "↑"; break;
+			case 'ArrowDown': 
+				char = "↓"; break;
+			case 'ArrowLeft': 
+				char = "←"; break;
+			case 'ArrowRight': 
+				char = "→"; break;
+		}
+		return char	};
 
 	const keyClick = (i: any) => {
 		idx = i;
@@ -79,38 +87,49 @@
 	const setChar = (e: any) => {
 		switch (idx) {
 			case '0':
-				$state.keycodes.wU = e.keyCode;
+				$state.keycodes.wU = e.key;
 				break;
 			case '1':
-				$state.keycodes.aU = e.keyCode;
+				$state.keycodes.aU = e.key;
 				break;
 			case '00':
-				$state.keycodes.wL = e.keyCode;
+				$state.keycodes.wL = e.key;
 				break;
 			case '01':
-				$state.keycodes.wD = e.keyCode;
+				$state.keycodes.wD = e.key;
 				break;
 			case '02':
-				$state.keycodes.wR = e.keyCode;
+				$state.keycodes.wR = e.key;
 				break;
 			case '10':
-				$state.keycodes.aL = e.keyCode;
+				$state.keycodes.aL = e.key;
 				break;
 			case '11':
-				$state.keycodes.aD = e.keyCode;
+				$state.keycodes.aD = e.key;
 				break;
 			case '12':
-				$state.keycodes.aR = e.keyCode;
+				$state.keycodes.aR = e.key;
 				break;
 			case '20':
-				$state.keycodes.submit = e.keyCode;
+				$state.keycodes.submit = e.key;
 				break;
 			case '21':
-				$state.keycodes.reset = e.keyCode;
+				$state.keycodes.reset = e.key;
 				break;
 		}
 		let doc: any = document.getElementById(idx);
-		doc.textContent = String.fromCharCode(e.keyCode);
+		let char = e.key;
+		switch (char) {
+			case 'ArrowUp':
+				char = "↑"; break;
+			case 'ArrowDown': 
+				char = "↓"; break;
+			case 'ArrowLeft': 
+				char = "←"; break;
+			case 'ArrowRight': 
+				char = "→"; break;
+		}
+		doc.textContent = char;
 		idx = 69420;
 	};
 

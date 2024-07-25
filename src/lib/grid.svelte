@@ -3,7 +3,7 @@
 	import Trophy from 'svelte-material-icons/Trophy.svelte';
 	import { getContext } from 'svelte';
 	let state: any = getContext('state');
-
+	let end = false;
 	let interval: any;
 	let gameStarted = false;
 	let time = $state.timeLimit;
@@ -35,8 +35,6 @@
 		}
 	};
 	const endGame = () => {
-		// TODO make a popup that shows the results
-		alert(score);
 		score = 0;
 		time = $state.timeLimit;
 		wcursorX = 0;
@@ -61,7 +59,7 @@
 		interval = setInterval(() => {
 			time -= 1;
 			if (time == 0) {
-				endGame();
+				end = false;
 				clearInterval(interval);
 			}
 		}, 1000);
@@ -113,7 +111,7 @@
 		}, 150);
 	};
 	const onKeyDown = (e: any) => {
-		switch (e.keyCode) {
+		switch (e.key) {
 			case $state.keycodes.wU:
 				wcursorY = Math.max(wcursorY - 1, 0);
 				break;
@@ -150,67 +148,96 @@
 </script>
 
 <div class="">
-	<div class="flex flex-row text-3xl text-text justify-between py-2">
-		<div class="flex flex-row items-center">
-			<Clock />
-			<div class="px-2 {time < 15 ? (time < 5 ? 'text-red' : 'text-peach') : 'text-green'}">
-				{time}
+	{#if end}
+		<div class="flex flex-row text-3xl text-text justify-between py-2">
+			<div class="flex flex-row items-center">
+				<Clock />
+				<div class="px-2 {time < 15 ? (time < 5 ? 'text-red' : 'text-peach') : 'text-green'}">
+					{time}
+				</div>
+			</div>
+			<div class="flex flex-row items-center">
+				<Trophy />
+				<div class="px-2">{score}</div>
 			</div>
 		</div>
-		<div class="flex flex-row items-center">
-			<Trophy />
-			<div class="px-2">{score}</div>
-		</div>
-	</div>
-	<div class="w-fit h-fit flex flex-col">
-		{#each Array($state.size) as _, col}
-			<div class="w-fit h-fit flex flex-row">
-				{#each Array($state.size) as _, row}
-					<div
-						id={grid[row * $state.size + col]}
-						class="{cGrid[row * $state.size + col] === 'correct'
-							? 'bg-green'
-							: cGrid[row * $state.size + col] === 'incorrect'
-								? 'bg-red'
-								: grid[row * $state.size + col]
-									? 'bg-crust'
-									: 'bg-text'}
+		<div class="w-fit h-fit flex flex-col">
+			{#each Array($state.size) as _, col}
+				<div class="w-fit h-fit flex flex-row">
+					{#each Array($state.size) as _, row}
+						<div
+							id={grid[row * $state.size + col]}
+							class="{cGrid[row * $state.size + col] === 'correct'
+								? 'bg-green'
+								: cGrid[row * $state.size + col] === 'incorrect'
+									? 'bg-red'
+									: grid[row * $state.size + col]
+										? 'bg-crust'
+										: 'bg-text'}
 						
 					  w-32 h-32 border-crust border flex items-center justify-center transition-colors duration-100"
-					>
-						<div
-							class="h-8 w-8 {row == wcursorX && col == wcursorY
-								? 'border-t-blue border-l-blue border-t-8 border-l-8'
-								: ''}  {row == acursorX && col == acursorY
-								? 'border-b-red border-r-red border-b-8 border-r-8'
-								: ''}"
-						/>
-					</div>
-				{/each}
-			</div>
-		{/each}
-		<div class="text-text flex flex-row text-2xl py-4 justify-between">
-			<div class="flex flex-row">
-				<select id="gamemodes" name="modes" class="bg-surface0 px-2" bind:value={$state.gameMode}>
-					<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
-					<option value="timer"> TIME </option>
-					<option value="pulse"> PULSE </option>
-					<option value="endless"> ENDLESS </option>
+						>
+							<div
+								class="h-8 w-8 {row == wcursorX && col == wcursorY
+									? 'border-t-blue border-l-blue border-t-8 border-l-8'
+									: ''}  {row == acursorX && col == acursorY
+									? 'border-b-red border-r-red border-b-8 border-r-8'
+									: ''}"
+							/>
+						</div>
+					{/each}
+				</div>
+			{/each}
+			<div class="text-text flex flex-row text-2xl py-4 justify-between">
+				<div class="flex flex-row">
+					<select id="gamemodes" name="modes" class="bg-surface0 px-2" bind:value={$state.gameMode}>
+						<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
+						<option value="timer"> TIME </option>
+						<option value="pulse"> PULSE </option>
+						<option value="endless"> ENDLESS </option>
+					</select>
+				</div>
+				<select
+					id="size"
+					name="sizes"
+					class="bg-surface0 px-2"
+					bind:value={$state.size}
+					on:change={() => {
+						endGame();
+					}}
+				>
+					<option value={4}> 4x4 </option>
+					<option value={5}> 5x5 </option>
+					<option value={6}> 6x6 </option>
 				</select>
+				<select
+					id="time"
+					name="times"
+					class="bg-surface0 px-2 {$state.gameMode == 'timer'
+						? 'bg-surface0'
+						: 'bg-surface0/0 text-crust/0'}"
+					bind:value={$state.timeLimit}
+					on:change={() => {
+						time = $state.timeLimit;
+						endGame();
+					}}
+				>
+					<option value={30}> 30s </option>
+					<option value={45}> 45s </option>
+					<option value={60}> 60s </option>
+				</select>
+				<button class="bg-surface0 px-2" on:click={endGame}> RESET </button>
 			</div>
-			<select id="size" name="sizes" class="bg-surface0 px-2" bind:value={$state.size}>
-				<option value = "{4}"> 4x4 </option>
-				<option value = "{5}"> 5x5 </option>
-				<option value = "{6}"> 6x6 </option>
-			</select>
-			<select id="time" name="times" class="bg-surface0 px-2 {$state.gameMode == 'timer'? 'bg-surface0': 'bg-surface0/0 text-crust/0'}" bind:value={$state.timeLimit} on:change={() => {time = $state.timeLimit}}>
-				<option value = "{30}"> 30s </option>
-				<option value = "{45}"> 45s </option>
-				<option value = "{60}"> 60s </option>
-			</select>
-			<button class="bg-surface0 px-2" on:click={endGame}> NEW GAME </button>
 		</div>
-	</div>
+	{:else}
+		<div class="">
+		<div> Game Ended: </div>
+		<div> your score: {score} </div>
+		<button on:click={() => {end = true}}>  play again? </button>
+		
+		
+		</div>
+	{/if}
 </div>
 
 <svelte:window on:keydown|preventDefault={onKeyDown} />
