@@ -1,6 +1,9 @@
 <script lang="ts">
 	import Clock from 'svelte-material-icons/Timer.svelte';
 	import Trophy from 'svelte-material-icons/Trophy.svelte';
+	import Dice from 'svelte-material-icons/Dice5.svelte';
+	import Meow from 'svelte-material-icons/ViewGrid.svelte';
+	import Party from 'svelte-material-icons/PartyPopper.svelte';
 	import { getContext } from 'svelte';
 	let state: any = getContext('state');
 	let end = false;
@@ -140,6 +143,7 @@
 				submit();
 				break;
 			case $state.keycodes.reset:
+				end == false? end = true : '';
 				endGame();
 				break;
 		}
@@ -194,7 +198,7 @@
 						<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
 						<option value="timer"> TIME </option>
 						<option value="pulse"> PULSE </option>
-						<option value="endless"> ENDLESS </option>
+						<option value="endless"> ZEN </option>
 					</select>
 				</div>
 				<select
@@ -230,12 +234,36 @@
 			</div>
 		</div>
 	{:else}
-		<div class="">
-		<div> Game Ended: </div>
-		<div> your score: {score} </div>
-		<button on:click={() => {end = true}}>  play again? </button>
-		
-		
+		<div class="text-text flex align-right flex-col w-96">
+			<div class="text-5xl py-2 font-bold flex items-center border-b-4 border-b-subtext0"><Party class="mr-4" />game ended  </div>
+			<div class="text-4xl py-2 flex items-center justify-between ">score: {score}  <div class="text-overlay1"> #56719 </div></div>
+			<div class="flex-col items-center text-3xl  justify-between pb-2">
+				<div class="flex items-center my-1"><Dice /> gamemode:<div class="ml-1 text-overlay1">{$state.gameMode}</div> </div>
+				<div class="flex items-center my-1"><Meow /> size:<div class="ml-1 text-overlay1">{$state.size}x{$state.size}</div></div>
+				<div class="flex items-center my-1">
+					{#if $state.gameMode == 'timer'}
+						<Clock />  time:<div class="ml-1 text-overlay1">{$state.timeLimit}s</div>
+					{/if}
+				</div>
+			</div>
+			<button
+				class="text-2xl h-12 my-2 bg-blue/80 hover:bg-blue  border-rosewater transition-colors duration-150 font-bold"
+				on:click={() => {
+					end = true;
+					endGame();
+				}}
+			>
+				submit score?
+			</button>
+			<button
+				class="text-2xl h-12 my-2 bg-mauve/80 hover:bg-mauve  border-rosewater transition-colors duration-150 font-bold"
+				on:click={() => {
+					end = true;
+					endGame();
+				}}
+			>
+				play again?
+			</button>
 		</div>
 	{/if}
 </div>

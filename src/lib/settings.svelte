@@ -144,7 +144,6 @@
 	{#key meow}
 	<div class="flex flex-col bg-surface0 w-fit h-fit rounded-md">
 		<div class="text-text text-3xl m-4 mb-0">settings</div>
-		<div class="text-red/60 text-sm m-4 mt-0">bug alert: arrow keys are different symbols</div>
 		<div class="text-xl text-text mb-0 m-4">movement:</div>
 		<div class="flex flex-row m-4">
 			{#each Array(2) as _, x}
