@@ -1,7 +1,7 @@
 # mewo meow
 
 #todos
-
+- update readme.md (WHEN DONE)
 - sounds
 - anticheat
 - pulse gamemode
