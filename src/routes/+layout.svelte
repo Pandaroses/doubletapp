@@ -15,48 +15,28 @@
 		keycodes: object;
 		size: number;
 	};
+	const defaults = JSON.stringify({
+		gameMode: 'timer',
+		timeLimit: 30,
+		keycodes: {
+			wU: 'w',
+			wD: 's',
+			wL: 'a',
+			wR: 'd',
+			aU: 'ArrowUp',
+			aD: 'ArrowDown',
+			aL: 'ArrowLeft',
+			aR: 'ArrowRight',
+			submit: ' ',
+			reset: 'r'
+		},
+		size: 4
+	});
 	const getState = (): gameState => {
 		if (browser) {
-			return JSON.parse(
-				localStorage.getItem('state') ||
-					JSON.stringify({
-						gameMode: 'timer',
-						timeLimit: 30,
-						keycodes: {
-							wU: 87,
-							wD: 83,
-							wL: 65,
-							wR: 68,
-							aU: 38,
-							aD: 40,
-							aL: 37,
-							aR: 39,
-							submit: 32,
-							reset: 82
-						},
-						size: 4
-					})
-			);
+			return JSON.parse(localStorage.getItem('state') || defaults);
 		} else {
-			return JSON.parse(
-				JSON.stringify({
-					gameMode: 'timer',
-					timeLimit: 30,
-					keycodes: {
-						wU: 87,
-						wD: 83,
-						wL: 65,
-						wR: 68,
-						aU: 38,
-						aD: 40,
-						aL: 37,
-						aR: 39,
-						submit: 32,
-						reset: 82
-					},
-					size: 4
-				})
-			);
+			return JSON.parse(defaults);
 		}
 	};
 	const state = writable<gameState>(getState());
@@ -89,7 +69,9 @@
 		</div>
 		<div class="flex flex-row bg-base justify-between h-24 w-full items-center">
 			<div class="flex flex-row items-center opacity-50">
-				<a href="https://studiosquared.co.uk"> <img class=" m-4 h-10" src={studio} alt="[S]^2" /> </a>
+				<a href="https://studiosquared.co.uk">
+					<img class=" m-4 h-10" src={studio} alt="[S]^2" />
+				</a>
 			</div>
 		</div>
 	</div>

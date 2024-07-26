@@ -6,7 +6,7 @@
 	import Party from 'svelte-material-icons/PartyPopper.svelte';
 	import { getContext } from 'svelte';
 	let state: any = getContext('state');
-	let end = false;
+	let end = true;
 	let interval: any;
 	let gameStarted = false;
 	let time = $state.timeLimit;
