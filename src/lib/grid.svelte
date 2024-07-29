@@ -161,6 +161,7 @@
 		switch (e.key) {
 			case $state.keycodes.wU:
 				if (dasIntervals[0] == false) {
+					dasIntervals[0] = "fart";
 					setTimeout(() => {
 						dasIntervals[0] = setInterval(() => {
 							wcursorY = Math.max(wcursorY - 1, 0);
@@ -171,6 +172,7 @@
 				break;
 			case $state.keycodes.wD:
 				if (dasIntervals[1] == false) {
+					dasIntervals[1] = "fart";
 					setTimeout(() => {
 						dasIntervals[1] = setInterval(() => {
 							wcursorY = Math.min(wcursorY + 1, $state.size - 1);
