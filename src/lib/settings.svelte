@@ -25,7 +25,9 @@
 					submit: " ",
 					reset: "r"
 				},
-				size: 4
+				size: 4,
+				das: 133,
+				dasDelay: 150
 			})
 		);
 		meow += 1;
@@ -83,7 +85,6 @@
 			window.addEventListener('keydown', setChar, { once: true });
 		}, 0);
 	};
-
 	const setChar = (e: any) => {
 		switch (idx) {
 			case '0':

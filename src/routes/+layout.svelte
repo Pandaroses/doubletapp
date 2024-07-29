@@ -30,7 +30,9 @@
 			submit: ' ',
 			reset: 'r'
 		},
-		size: 4
+		size: 4,
+		das: 133,
+		dasDelay: 150
 	});
 	const getState = (): gameState => {
 		if (browser) {
