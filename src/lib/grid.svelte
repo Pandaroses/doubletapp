@@ -19,7 +19,6 @@
 	let acursorX = $state.size - 1;
 	let acursorY = $state.size - 1;
 
-	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 	const initGrid = () => {
 		gameStarted = false;
 		wcursorX = 0;
@@ -118,6 +117,7 @@
 		}
 	};
 	const onKeyUp = (e: any) => {
+		console.log('interval cleared');
 		switch (e.key) {
 			case $state.keycodes.wU:
 				clearInterval(dasIntervals[0]);
@@ -161,7 +161,7 @@
 		switch (e.key) {
 			case $state.keycodes.wU:
 				if (dasIntervals[0] == false) {
-					dasIntervals[0] = "fart";
+					dasIntervals[0] = 
 					setTimeout(() => {
 						dasIntervals[0] = setInterval(() => {
 							wcursorY = Math.max(wcursorY - 1, 0);
@@ -172,7 +172,7 @@
 				break;
 			case $state.keycodes.wD:
 				if (dasIntervals[1] == false) {
-					dasIntervals[1] = "fart";
+					dasIntervals[1] = 
 					setTimeout(() => {
 						dasIntervals[1] = setInterval(() => {
 							wcursorY = Math.min(wcursorY + 1, $state.size - 1);
@@ -183,6 +183,7 @@
 				break;
 			case $state.keycodes.wL:
 				if (dasIntervals[2] == false) {
+					dasIntervals[2] = 
 					setTimeout(() => {
 						dasIntervals[2] = setInterval(() => {
 							wcursorX = Math.max(wcursorX - 1, 0);
@@ -193,6 +194,7 @@
 				break;
 			case $state.keycodes.wR:
 				if (dasIntervals[3] == false) {
+					dasIntervals[3] = 
 					setTimeout(() => {
 						dasIntervals[3] = setInterval(() => {
 							wcursorX = Math.min(wcursorX + 1, $state.size - 1);
@@ -203,6 +205,7 @@
 				break;
 			case $state.keycodes.aU:
 				if (dasIntervals[4] == false) {
+				dasIntervals[4] = 
 					setTimeout(() => {
 						dasIntervals[4] = setInterval(() => {
 							acursorY = Math.max(acursorY - 1, 0);
@@ -213,6 +216,7 @@
 				break;
 			case $state.keycodes.aD:
 				if (dasIntervals[5] == false) {
+					dasIntervals[5] =
 					setTimeout(() => {
 						dasIntervals[5] = setInterval(() => {
 							acursorY = Math.min(acursorY + 1, $state.size - 1);
@@ -223,6 +227,7 @@
 				break;
 			case $state.keycodes.aL:
 				if (dasIntervals[6] == false) {
+				dasIntervals[6] =
 					setTimeout(() => {
 						dasIntervals[6] = setInterval(() => {
 							acursorX = Math.max(acursorX - 1, 0);
@@ -233,6 +238,7 @@
 				break;
 			case $state.keycodes.aR:
 				if (dasIntervals[7] == false) {
+					dasIntervals[7] =
 					setTimeout(() => {
 						dasIntervals[7] = setInterval(() => {
 							acursorX = Math.min(acursorX + 1, $state.size - 1);

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	let meow = 0
+	let meow = 0;
 	export let showModal: boolean;
 	let dialog: any;
 	let idx: any;
@@ -14,16 +14,16 @@
 				gameMode: 'timer',
 				timeLimit: 30,
 				keycodes: {
-					wU: "w",
-					wD: "s",
-					wL: "a",
-					wR: "d",
-					aU: "ArrowUp",
-					aD: "ArrowDown",
-					aL: "ArrowLeft",
-					aR: "ArrowRight",
-					submit: " ",
-					reset: "r"
+					wU: 'w',
+					wD: 's',
+					wL: 'a',
+					wR: 'd',
+					aU: 'ArrowUp',
+					aD: 'ArrowDown',
+					aL: 'ArrowLeft',
+					aR: 'ArrowRight',
+					submit: ' ',
+					reset: 'r'
 				},
 				size: 4,
 				das: 133,
@@ -31,7 +31,6 @@
 			})
 		);
 		meow += 1;
-		
 	};
 	const getChar = (i: any) => {
 		let char: any;
@@ -69,15 +68,20 @@
 		}
 		switch (char) {
 			case 'ArrowUp':
-				char = "↑"; break;
-			case 'ArrowDown': 
-				char = "↓"; break;
-			case 'ArrowLeft': 
-				char = "←"; break;
-			case 'ArrowRight': 
-				char = "→"; break;
+				char = '↑';
+				break;
+			case 'ArrowDown':
+				char = '↓';
+				break;
+			case 'ArrowLeft':
+				char = '←';
+				break;
+			case 'ArrowRight':
+				char = '→';
+				break;
 		}
-		return char	};
+		return char;
+	};
 
 	const keyClick = (i: any) => {
 		idx = i;
@@ -122,13 +126,17 @@
 		let char = e.key;
 		switch (char) {
 			case 'ArrowUp':
-				char = "↑"; break;
-			case 'ArrowDown': 
-				char = "↓"; break;
-			case 'ArrowLeft': 
-				char = "←"; break;
-			case 'ArrowRight': 
-				char = "→"; break;
+				char = '↑';
+				break;
+			case 'ArrowDown':
+				char = '↓';
+				break;
+			case 'ArrowLeft':
+				char = '←';
+				break;
+			case 'ArrowRight':
+				char = '→';
+				break;
 		}
 		doc.textContent = char;
 		idx = 69420;
@@ -143,69 +151,89 @@
 	class="h-screen w-screen bg-crust/0 flex items-center justify-center {showModal ? '' : 'hidden'}"
 >
 	{#key meow}
-	<div class="flex flex-col bg-surface0 w-fit h-fit rounded-md">
-		<div class="text-text text-3xl m-4 mb-0">settings</div>
-		<div class="text-xl text-text mb-0 m-4">movement:</div>
-		<div class="flex flex-row m-4">
-			{#each Array(2) as _, x}
-				<div class="flex flex-col items-center mx-4">
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<!-- svelte-ignore a11y-no-static-element-interactions -->
-					<div
-						id={x.toString()}
-						class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
-						x.toString()
-							? 'bg-green'
-							: 'bg-text'}"
-						on:click={() => keyClick(x.toString())}
-					>
-						{getChar(x.toString())}
+		<div class="flex flex-col bg-surface0 w-fit h-fit rounded-md">
+			<div class="text-text text-3xl m-4 mb-0">settings</div>
+			<div class="text-xl text-text mb-0 m-4">movement:</div>
+			<div class="flex flex-row m-4">
+				{#each Array(2) as _, x}
+					<div class="flex flex-col items-center mx-4">
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
+						<div
+							id={x.toString()}
+							class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
+							x.toString()
+								? 'bg-green'
+								: 'bg-text'}"
+							on:click={() => keyClick(x.toString())}
+						>
+							{getChar(x.toString())}
+						</div>
+						<div class="flex flex-row">
+							{#each Array(3) as _, y}
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								<!-- svelte-ignore a11y-no-static-element-interactions -->
+								<div
+									id={x.toString() + y.toString()}
+									class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
+									x.toString() + y.toString()
+										? 'bg-green'
+										: 'bg-text'}"
+									on:click={() => keyClick(x.toString() + y.toString())}
+								>
+									{getChar(x.toString() + y.toString())}
+								</div>
+							{/each}
+						</div>
 					</div>
-					<div class="flex flex-row">
-						{#each Array(3) as _, y}
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<!-- svelte-ignore a11y-no-static-element-interactions -->
-							<div
-								id={x.toString() + y.toString()}
-								class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
-								x.toString() + y.toString()
-									? 'bg-green'
-									: 'bg-text'}"
-								on:click={() => keyClick(x.toString() + y.toString())}
-							>
-								{getChar(x.toString() + y.toString())}
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/each}
-		</div>
-		<div class="text-xl text-text mb-0 m-4">place:</div>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div
-			id={'20'}
-			class=" rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx == '20'? 'bg-green': 'bg-text'}"
-			on:click={() => keyClick('20')}
-		>
-			{getChar('20')}
-		</div>
-		<div class="text-xl text-text mb-0 m-4">reset:</div>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div
-			id={'21'}
-			class="rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx =='21'? 'bg-green': 'bg-text'}"
-			on:click={() => keyClick('21')}
-		>
-			{getChar('21')}
-		</div>
-		<div class="flex flex-row self-center m-4">
-			<button class="text-crust bg-red rounded-md w-16 h-8 mx-2 hover:scale-105" on:click={reset}>reset</button>
-			<button class="text-crust bg-blue rounded-md w-16 h-8 mx-2 hover:scale-105" on:click={() => dialog.close()}
-				>exit</button
+				{/each}
+			</div>
+			<div class="text-xl text-text mb-0 m-4">place:</div>
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				id={'20'}
+				class=" rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx ==
+				'20'
+					? 'bg-green'
+					: 'bg-text'}"
+				on:click={() => keyClick('20')}
 			>
+				{getChar('20')}
+			</div>
+			<div class="text-xl text-text mb-0 m-4">reset:</div>
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				id={'21'}
+				class="rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx ==
+				'21'
+					? 'bg-green'
+					: 'bg-text'}"
+				on:click={() => keyClick('21')}
+			>
+				{getChar('21')}
+			</div>
+			<div>
+				<input
+					bind:value={$state.das}
+					on:input={(e) => {
+						console.log(e);
+					}}
+				/>
+			</div>
+			<div>
+				<input bind:value={$state.dasDelay} />
+			</div>
+			<div class="flex flex-row self-center m-4">
+				<button class="text-crust bg-red rounded-md w-16 h-8 mx-2 hover:scale-105" on:click={reset}
+					>reset</button
+				>
+				<button
+					class="text-crust bg-blue rounded-md w-16 h-8 mx-2 hover:scale-105"
+					on:click={() => dialog.close()}>exit</button
+				>
+			</div>
 		</div>
-	</div>
 	{/key}
 </dialog>
