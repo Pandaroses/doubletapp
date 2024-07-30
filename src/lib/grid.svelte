@@ -117,45 +117,35 @@
 		}
 	};
 	const onKeyUp = (e: any) => {
-		console.log('interval cleared');
+		let i = 0;
 		switch (e.key) {
 			case $state.keycodes.wU:
-				clearInterval(dasIntervals[0]);
-				dasIntervals[0] = false;
-				break;
+							i = 0
+								break;
 			case $state.keycodes.wD:
-				clearInterval(dasIntervals[1]);
-				dasIntervals[1] = false;
-				break;
+							i = 1
+								break;
 			case $state.keycodes.wL:
-				clearInterval(dasIntervals[2]);
-				dasIntervals[2] = false;
-				break;
+							i = 2
+								break;
 			case $state.keycodes.wR:
-				clearInterval(dasIntervals[3]);
-				dasIntervals[3] = false;
-				break;
+							i = 3
+								break;
 			case $state.keycodes.aU:
-				clearInterval(dasIntervals[4]);
-				dasIntervals[4] = false;
-				break;
+							i = 4
+								break;
 			case $state.keycodes.aD:
-				clearInterval(dasIntervals[5]);
-				dasIntervals[5] = false;
-				break;
+							i = 5
+								break;
 			case $state.keycodes.aL:
-				clearInterval(dasIntervals[6]);
-				dasIntervals[6] = false;
-				break;
+							i = 6
+								break;
 			case $state.keycodes.aR:
-				clearInterval(dasIntervals[7]);
-				dasIntervals[7] = false;
-				break;
-			default:
-				clearInterval(dasIntervals[8]);
-				dasIntervals[8] = false;
-				break;
+							i = 7
+								break;
 		}
+		clearInterval(dasIntervals[i]);
+		dasIntervals[i] = false;
 	};
 	const onKeyDown = (e: any) => {
 		switch (e.key) {
@@ -255,6 +245,7 @@
 				endGame();
 				break;
 		}
+
 	};
 	initGrid();
 </script>
