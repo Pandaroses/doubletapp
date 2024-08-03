@@ -4,8 +4,7 @@
 - update readme.md (WHEN DONE)
 - sounds
 - anticheat
-today - pulse gamemode
-today - endless gamemode
+-pulse/endless
 - global leaderboard
 - cta
 - custom backgrounds
@@ -15,5 +14,5 @@ today - endless gamemode
 - cheater mode
 
 #FIX
-- whatever the fuck is going on with das right now
+
 - rename das to ARR, and dasDelay to DAS
