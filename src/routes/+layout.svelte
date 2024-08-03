@@ -53,7 +53,7 @@
 </script>
 
 <main class={FLAVOUR}>
-	<div class="flex flex-col justify-between h-full max-h-screen min-w-screen">
+	<div class="flex flex-col justify-between h-full max-h-screen min-w-screen font-mono">
 		<div class="flex flex-row bg-base justify-between h-fit w-full items-center">
 			<div class="flex flex-row text-4xl text-rosewater p-2">
 				<x class="text-blue">Double</x> <x class="text-mauve font-bold">TAPP</x>
