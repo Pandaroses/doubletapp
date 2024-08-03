@@ -4,8 +4,8 @@
 - update readme.md (WHEN DONE)
 - sounds
 - anticheat
-- pulse gamemode
-- endless gamemode
+today - pulse gamemode
+today - endless gamemode
 - global leaderboard
 - cta
 - custom backgrounds
@@ -13,4 +13,7 @@
 - custom DAS
 - fix layout.svelte
 - cheater mode
-- fix on game end actually block inputs
+
+#FIX
+- whatever the fuck is going on with das right now
+- rename das to ARR, and dasDelay to DAS
