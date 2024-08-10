@@ -214,16 +214,29 @@
 			>
 				{getChar('21')}
 			</div>
-			<div>
+			<div class="text-xl text-text mb-0 m-4">auto repeat rate:</div>
+			<div class="flex flex-row text-text text-xl mx-8">
+				<div class="w-8">
+				{$state.das}
+				</div>
 				<input
+					class = "mx-4 w-64"
+					type="range"
+					min="0" max="1000" step="1"
 					bind:value={$state.das}
-					on:input={(e) => {
-						console.log(e);
-					}}
 				/>
 			</div>
-			<div>
-				<input bind:value={$state.dasDelay} />
+			<div class="text-xl text-text mb-0 m-4">delayed auto shift:</div>
+			<div class=" flex flex-row text-text text-xl mx-8">
+				<div class="w-8">
+				{$state.dasDelay}
+				</div>
+				<input
+					class = "mx-4 w-64"
+					type="range"
+					min="0" max="1000" step="1"
+					bind:value={$state.dasDelay}
+				/>
 			</div>
 			<div class="flex flex-row self-center m-4">
 				<button class="text-crust bg-red rounded-md w-16 h-8 mx-2 hover:scale-105" on:click={reset}
