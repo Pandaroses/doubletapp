@@ -35,7 +35,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"randchacha": "^1.0.2",
+		"@types/seedrandom": "^3.0.8",
+		"seedrandom": "^3.0.5",
 		"svelte-material-icons": "^3.0.5"
 	}
 }

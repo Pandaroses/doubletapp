@@ -5,13 +5,20 @@
 	import Meow from 'svelte-material-icons/ViewGrid.svelte';
 	import Party from 'svelte-material-icons/PartyPopper.svelte';
 	import { getContext } from 'svelte';
+	import seedrandom from 'seedrandom';
+	import { json } from '@sveltejs/kit';
+
 	let state: any = getContext('state');
+	let scoreboard: any = 69;
+	let rng: any = seedrandom('balls');
 	let end = true;
 	let interval: any;
 	let dasIntervals = Array(8).fill(0);
 	let gameStarted = false;
+	let gameId = 0;
 	let time = $state.timeLimit;
 	let score = 0;
+	let moves: any = [];
 	let grid = Array(Math.pow($state.size, 2)).fill(false);
 	let cGrid = Array(Math.pow($state.size, 2)).fill('neutral');
 	let wcursorX = 0;
@@ -27,16 +34,6 @@
 		acursorY = $state.size - 1;
 
 		grid = Array(Math.pow($state.size, 2)).fill(false);
-
-		let count = 0;
-		while (count < $state.size) {
-			let x = Math.floor(Math.random() * $state.size);
-			let y = Math.floor(Math.random() * $state.size);
-			if (grid[x * $state.size + y] == false) {
-				grid[x * $state.size + y] = true;
-				count += 1;
-			}
-		}
 	};
 	const endGame = () => {
 		score = 0;
@@ -45,6 +42,7 @@
 		wcursorY = 0;
 		acursorX = $state.size - 1;
 		acursorY = $state.size - 1;
+		moves = [];
 		clearInterval(interval);
 		initGrid();
 	};
@@ -59,19 +57,60 @@
 		}
 	};
 	const startTimer = () => {
+		let data = { dimension: $state.size, time_limit: $state.timeLimit };
+		fetch('/api/get-seed', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data)
+		})
+			.then((res) => {
+				return res.json();
+			})
+			.then((data) => {
+				console.log(data);
+				rng = seedrandom(data.seed);
+				gameId = data.id;
+			});
 		time = $state.timeLimit;
 		interval = setInterval(() => {
 			time -= 1;
 			if (time == 0) {
 				end = false;
+				fetch('/api/submit-game', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ id: gameId, moves: moves })
+				})
+					.then((res) => {
+						return res.json();
+					})
+					.then((data) => {
+						console.log(data);
+						scoreboard = data;
+					})
+					.catch((err) => console.error('wahrt'));
 				clearInterval(interval);
 			}
 		}, 1000);
+		let count = 0;
+		while (count < $state.size) {
+			let x = Math.floor(rng() * $state.size);
+			let y = Math.floor(rng() * $state.size);
+			if (grid[x * $state.size + y] == false) {
+				grid[x * $state.size + y] = true;
+				count += 1;
+			}
+		}
 	};
 	const submit = () => {
 		if (!gameStarted) {
 			startGame();
 		}
+		moves.push('Submit');
 		if (end) {
 			let wIndex = wcursorX * $state.size + wcursorY;
 			let aIndex = acursorX * $state.size + acursorY;
@@ -82,8 +121,8 @@
 				cGrid[aIndex] = 'correct';
 				let count = 0;
 				while (count < 2) {
-					let x = Math.floor(Math.random() * $state.size);
-					let y = Math.floor(Math.random() * $state.size);
+					let x = Math.floor(rng() * $state.size);
+					let y = Math.floor(rng() * $state.size);
 					if (
 						!grid[y * $state.size + x] &&
 						(wIndex !== y * $state.size + x || aIndex !== y * $state.size + x)
@@ -120,122 +159,132 @@
 		let i = 0;
 		switch (e.key) {
 			case $state.keycodes.wU:
-							i = 0
-								break;
+				i = 0;
+				break;
 			case $state.keycodes.wD:
-							i = 1
-								break;
+				i = 1;
+				break;
 			case $state.keycodes.wL:
-							i = 2
-								break;
+				i = 2;
+				break;
 			case $state.keycodes.wR:
-							i = 3
-								break;
+				i = 3;
+				break;
 			case $state.keycodes.aU:
-							i = 4
-								break;
+				i = 4;
+				break;
 			case $state.keycodes.aD:
-							i = 5
-								break;
+				i = 5;
+				break;
 			case $state.keycodes.aL:
-							i = 6
-								break;
+				i = 6;
+				break;
 			case $state.keycodes.aR:
-							i = 7
-								break;
+				i = 7;
+				break;
 		}
 		clearInterval(dasIntervals[i]);
 		dasIntervals[i] = false;
 	};
 	const onKeyDown = (e: any) => {
+		const dir = 0;
+		const idx = null;
 		switch (e.key) {
 			case $state.keycodes.wU:
 				if (dasIntervals[0] == false) {
-					dasIntervals[0] = 
-					setTimeout(() => {
+					dasIntervals[0] = setTimeout(() => {
 						dasIntervals[0] = setInterval(() => {
 							wcursorY = Math.max(wcursorY - 1, 0);
+							moves.push('CursorBlueUp');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorY = Math.max(wcursorY - 1, 0);
+				moves.push('CursorBlueUp');
 				break;
 			case $state.keycodes.wD:
 				if (dasIntervals[1] == false) {
-					dasIntervals[1] = 
-					setTimeout(() => {
+					dasIntervals[1] = setTimeout(() => {
 						dasIntervals[1] = setInterval(() => {
 							wcursorY = Math.min(wcursorY + 1, $state.size - 1);
+							moves.push('CursorBlueDown');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorY = Math.min(wcursorY + 1, $state.size - 1);
+				moves.push('CursorBlueDown');
 				break;
 			case $state.keycodes.wL:
 				if (dasIntervals[2] == false) {
-					dasIntervals[2] = 
-					setTimeout(() => {
+					dasIntervals[2] = setTimeout(() => {
 						dasIntervals[2] = setInterval(() => {
 							wcursorX = Math.max(wcursorX - 1, 0);
+							moves.push('CursorBlueLeft');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorX = Math.max(wcursorX - 1, 0);
+				moves.push('CursorBlueLeft');
 				break;
 			case $state.keycodes.wR:
 				if (dasIntervals[3] == false) {
-					dasIntervals[3] = 
-					setTimeout(() => {
+					dasIntervals[3] = setTimeout(() => {
 						dasIntervals[3] = setInterval(() => {
 							wcursorX = Math.min(wcursorX + 1, $state.size - 1);
+							moves.push('CursorBlueRight');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorX = Math.min(wcursorX + 1, $state.size - 1);
+				moves.push('CursorBlueRight');
 				break;
 			case $state.keycodes.aU:
 				if (dasIntervals[4] == false) {
-				dasIntervals[4] = 
-					setTimeout(() => {
+					dasIntervals[4] = setTimeout(() => {
 						dasIntervals[4] = setInterval(() => {
 							acursorY = Math.max(acursorY - 1, 0);
+							moves.push('CursorRedUp');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorY = Math.max(acursorY - 1, 0);
+				moves.push('CursorRedUp');
 				break;
 			case $state.keycodes.aD:
 				if (dasIntervals[5] == false) {
-					dasIntervals[5] =
-					setTimeout(() => {
+					dasIntervals[5] = setTimeout(() => {
 						dasIntervals[5] = setInterval(() => {
 							acursorY = Math.min(acursorY + 1, $state.size - 1);
+							moves.push('CursorRedDown');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorY = Math.min(acursorY + 1, $state.size - 1);
+				moves.push('CursorRedDown');
 				break;
 			case $state.keycodes.aL:
 				if (dasIntervals[6] == false) {
-				dasIntervals[6] =
-					setTimeout(() => {
+					dasIntervals[6] = setTimeout(() => {
 						dasIntervals[6] = setInterval(() => {
 							acursorX = Math.max(acursorX - 1, 0);
+							moves.push('CursorRedLeft');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorX = Math.max(acursorX - 1, 0);
+				moves.push('CursorRedLeft');
 				break;
 			case $state.keycodes.aR:
 				if (dasIntervals[7] == false) {
-					dasIntervals[7] =
-					setTimeout(() => {
+					dasIntervals[7] = setTimeout(() => {
 						dasIntervals[7] = setInterval(() => {
 							acursorX = Math.min(acursorX + 1, $state.size - 1);
+							moves.push('CursorRedRight');
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorX = Math.min(acursorX + 1, $state.size - 1);
+				moves.push('CursorRedRight');
 				break;
 			case $state.keycodes.submit:
 				submit();
@@ -245,7 +294,6 @@
 				endGame();
 				break;
 		}
-
 	};
 	initGrid();
 </script>
@@ -339,7 +387,7 @@
 			</div>
 			<div class="text-4xl py-2 flex items-center justify-between">
 				score: {score}
-				<div class="text-overlay1">#56719</div>
+				<div class="text-overlay1">#{scoreboard}</div>
 			</div>
 			<div class="flex-col items-center text-3xl justify-between pb-2">
 				<div class="flex items-center my-1">

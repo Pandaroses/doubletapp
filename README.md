@@ -1,10 +1,11 @@
 # mewo meow
 
 #todos
+
 - update readme.md (WHEN DONE)
 - sounds
 - anticheat
--pulse/endless
+  -pulse/endless
 - global leaderboard
 - cta
 - custom backgrounds

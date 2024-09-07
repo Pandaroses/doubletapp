@@ -52,6 +52,10 @@
 	setContext('state', state);
 </script>
 
+<svelte:head>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+</svelte:head>
+
 <main class={FLAVOUR}>
 	<div class="flex flex-col justify-between h-full max-h-screen min-w-screen font-mono">
 		<div class="flex flex-row bg-base justify-between h-fit w-full items-center">

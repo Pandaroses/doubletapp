@@ -217,24 +217,21 @@
 			<div class="text-xl text-text mb-0 m-4">auto repeat rate:</div>
 			<div class="flex flex-row text-text text-xl mx-8">
 				<div class="w-8">
-				{$state.das}
+					{$state.das}
 				</div>
-				<input
-					class = "mx-4 w-64"
-					type="range"
-					min="0" max="1000" step="1"
-					bind:value={$state.das}
-				/>
+				<input class="mx-4 w-64" type="range" min="0" max="1000" step="1" bind:value={$state.das} />
 			</div>
 			<div class="text-xl text-text mb-0 m-4">delayed auto shift:</div>
 			<div class=" flex flex-row text-text text-xl mx-8">
 				<div class="w-8">
-				{$state.dasDelay}
+					{$state.dasDelay}
 				</div>
 				<input
-					class = "mx-4 w-64"
+					class="mx-4 w-64"
 					type="range"
-					min="0" max="1000" step="1"
+					min="0"
+					max="1000"
+					step="1"
 					bind:value={$state.dasDelay}
 				/>
 			</div>
