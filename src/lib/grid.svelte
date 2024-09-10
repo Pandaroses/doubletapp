@@ -5,12 +5,12 @@
 	import Meow from 'svelte-material-icons/ViewGrid.svelte';
 	import Party from 'svelte-material-icons/PartyPopper.svelte';
 	import { getContext } from 'svelte';
-	import seedrandom from 'seedrandom';
 	import { json } from '@sveltejs/kit';
-
+	import alea from 'alea';
+	import Alea from 'alea';
 	let state: any = getContext('state');
 	let scoreboard: any = 69;
-	let rng: any = seedrandom('balls');
+	let rng: any = new Alea("balls");
 	let end = true;
 	let interval: any;
 	let dasIntervals = Array(8).fill(0);
@@ -70,7 +70,7 @@
 			})
 			.then((data) => {
 				console.log(data);
-				rng = seedrandom(data.seed);
+				rng = new Alea(data.seed);
 				gameId = data.id;
 			});
 		time = $state.timeLimit;
@@ -105,6 +105,7 @@
 				count += 1;
 			}
 		}
+		console.log(grid);
 	};
 	const submit = () => {
 		if (!gameStarted) {

@@ -1,0 +1,11 @@
+[package]
+name = "silly-rng"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+
+[lib]
+name = "sillyrng"
+path = "src/lib.rs"
