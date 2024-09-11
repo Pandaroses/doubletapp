@@ -2,8 +2,7 @@ use axum::http::StatusCode;
 use axum::{extract::State, routing::post, Json, Router};
 use scc::HashMap;
 use serde::{Deserialize, Serialize};
-use std::mem::transmute;
-use std::ops::Deref;
+use sillyrng::*;
 use std::{
     sync::Arc,
     time::{Duration, Instant},
@@ -114,7 +113,8 @@ pub async fn submit_game(
 pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
     //this is assuming we start at 0,0 and size,size
     println!("verifying moves");
-    let mut rng = alea::Rng::with_seed(seed as u64);
+
+    let mut rng = sillyrng::Xoshiro256plus::new(Some(seed as u64));
     let mut grid: Vec<bool> = vec![false; (size * size) as usize];
     let mut blue_coords: (u8, u8) = (0, 0);
     let mut red_coords: (u8, u8) = (0, 0);
@@ -122,8 +122,8 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
 
     let mut count = 0;
     while count < size {
-        let x: u8 = (rng.f64_less_than(1.0) * size as f64).floor() as u8;
-        let y: u8 = (rng.f64_less_than(1.0) * size as f64).floor() as u8;
+        let x: u8 = (rng.next() * size as f64).floor() as u8;
+        let y: u8 = (rng.next() * size as f64).floor() as u8;
         if grid[(x * size + y) as usize] == false {
             grid[(x * size + y) as usize] = true;
             count += 1;

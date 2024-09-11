@@ -4,13 +4,17 @@
 	import Dice from 'svelte-material-icons/Dice5.svelte';
 	import Meow from 'svelte-material-icons/ViewGrid.svelte';
 	import Party from 'svelte-material-icons/PartyPopper.svelte';
-	import { getContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import { json } from '@sveltejs/kit';
-	import alea from 'alea';
-	import Alea from 'alea';
+	import * as wasm from 'xoshiro';
+	let rng: any;
+	onMount(() => {
+			 wasm.default();
+			 rng = new wasm.Xoshiro256plus(BigInt(69));
+		
+	})
 	let state: any = getContext('state');
 	let scoreboard: any = 69;
-	let rng: any = new Alea("balls");
 	let end = true;
 	let interval: any;
 	let dasIntervals = Array(8).fill(0);
@@ -21,7 +25,7 @@
 	let moves: any = [];
 	let grid = Array(Math.pow($state.size, 2)).fill(false);
 	let cGrid = Array(Math.pow($state.size, 2)).fill('neutral');
-	let wcursorX = 0;
+	let wcursorX = 0; 
 	let wcursorY = 0;
 	let acursorX = $state.size - 1;
 	let acursorY = $state.size - 1;
@@ -70,7 +74,8 @@
 			})
 			.then((data) => {
 				console.log(data);
-				rng = new Alea(data.seed);
+
+				rng = new wasm.Xoshiro256plus(BigInt(data.seed));				
 				gameId = data.id;
 			});
 		time = $state.timeLimit;
@@ -98,8 +103,8 @@
 		}, 1000);
 		let count = 0;
 		while (count < $state.size) {
-			let x = Math.floor(rng() * $state.size);
-			let y = Math.floor(rng() * $state.size);
+			let x = Math.floor(rng.next() * $state.size);
+			let y = Math.floor(rng.next() * $state.size);
 			if (grid[x * $state.size + y] == false) {
 				grid[x * $state.size + y] = true;
 				count += 1;
@@ -122,8 +127,8 @@
 				cGrid[aIndex] = 'correct';
 				let count = 0;
 				while (count < 2) {
-					let x = Math.floor(rng() * $state.size);
-					let y = Math.floor(rng() * $state.size);
+					let x = Math.floor(rng.next() * $state.size);
+					let y = Math.floor(rng.next() * $state.size);
 					if (
 						!grid[y * $state.size + x] &&
 						(wIndex !== y * $state.size + x || aIndex !== y * $state.size + x)
