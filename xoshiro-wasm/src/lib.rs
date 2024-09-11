@@ -57,7 +57,9 @@ impl Xoshiro256plus {
 
         (result >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
     }
-
+    pub fn get_seed(&self) -> String {
+        format!("{:?}", self.seed)
+    }
     fn rol64(x: u64, k: i32) -> u64 {
         (x << k) | (x >> (64 - k))
     }

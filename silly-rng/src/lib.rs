@@ -24,7 +24,7 @@ impl Gen for SplitMix {
         let mut z: u64 = self.seed;
         z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
         z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
-        return z ^ (z >> 31);
+        z ^ (z >> 31)
     }
 }
 
@@ -41,7 +41,6 @@ impl Gen for Xoshiro256plus {
             seed: [rng.next(), rng.next(), rng.next(), rng.next()],
         }
     }
-
     fn next(&mut self) -> Self::NumberType {
         let result = self.seed[0].wrapping_add(self.seed[3]);
         let t = self.seed[1] << 17;
@@ -60,6 +59,9 @@ impl Gen for Xoshiro256plus {
 
 impl Xoshiro256plus {
     pub fn rol64(x: u64, k: i32) -> u64 {
-        return (x << k) | (x >> (64 - k));
+        (x << k) | (x >> (64 - k))
+    }
+    pub fn get_seed(&self) -> String {
+        format!("{:?}", self.seed)
     }
 }

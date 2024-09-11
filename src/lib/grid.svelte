@@ -4,15 +4,21 @@
 	import Dice from 'svelte-material-icons/Dice5.svelte';
 	import Meow from 'svelte-material-icons/ViewGrid.svelte';
 	import Party from 'svelte-material-icons/PartyPopper.svelte';
+	import { browser } from '$app/environment';
 	import { getContext, onMount } from 'svelte';
 	import { json } from '@sveltejs/kit';
-	import * as wasm from 'xoshiro';
-	let rng: any;
-	onMount(() => {
-			 wasm.default();
-			 rng = new wasm.Xoshiro256plus(BigInt(69));
-		
-	})
+	import init, { Xoshiro256plus } from 'xoshiro';
+
+	async function initWasm() {
+		await init();
+		rng = new Xoshiro256plus(BigInt(69));
+		console.log(rng.next());
+	}
+
+	let rng: Xoshiro256plus;
+	if (browser) {
+		initWasm().catch(console.error);
+	}
 	let state: any = getContext('state');
 	let scoreboard: any = 69;
 	let end = true;
@@ -25,7 +31,7 @@
 	let moves: any = [];
 	let grid = Array(Math.pow($state.size, 2)).fill(false);
 	let cGrid = Array(Math.pow($state.size, 2)).fill('neutral');
-	let wcursorX = 0; 
+	let wcursorX = 0;
 	let wcursorY = 0;
 	let acursorX = $state.size - 1;
 	let acursorY = $state.size - 1;
@@ -60,9 +66,9 @@
 			case 'endless':
 		}
 	};
-	const startTimer = () => {
+	const startTimer = async () => {
 		let data = { dimension: $state.size, time_limit: $state.timeLimit };
-		fetch('/api/get-seed', {
+		await fetch('/api/get-seed', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -75,15 +81,27 @@
 			.then((data) => {
 				console.log(data);
 
-				rng = new wasm.Xoshiro256plus(BigInt(data.seed));				
+				rng = new Xoshiro256plus(BigInt(data.seed));
 				gameId = data.id;
 			});
+
+		let count = 0;
+		console.log(rng.get_seed());
+		while (count < $state.size) {
+			let x = Math.floor(rng.next() * $state.size);
+			let y = Math.floor(rng.next() * $state.size);
+			if (grid[x * $state.size + y] == false) {
+				grid[x * $state.size + y] = true;
+				count += 1;
+			}
+		}
+		console.log(grid);
 		time = $state.timeLimit;
-		interval = setInterval(() => {
+		interval = setInterval(async () => {
 			time -= 1;
 			if (time == 0) {
 				end = false;
-				fetch('/api/submit-game', {
+				await fetch('/api/submit-game', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -101,20 +119,11 @@
 				clearInterval(interval);
 			}
 		}, 1000);
-		let count = 0;
-		while (count < $state.size) {
-			let x = Math.floor(rng.next() * $state.size);
-			let y = Math.floor(rng.next() * $state.size);
-			if (grid[x * $state.size + y] == false) {
-				grid[x * $state.size + y] = true;
-				count += 1;
-			}
-		}
-		console.log(grid);
 	};
 	const submit = () => {
 		if (!gameStarted) {
 			startGame();
+			return;
 		}
 		moves.push('Submit');
 		if (end) {
