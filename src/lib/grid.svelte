@@ -12,7 +12,6 @@
 	async function initWasm() {
 		await init();
 		rng = new Xoshiro256plus(BigInt(69));
-		console.log(rng.next());
 	}
 
 	let rng: Xoshiro256plus;
@@ -79,14 +78,11 @@
 				return res.json();
 			})
 			.then((data) => {
-				console.log(data);
-
 				rng = new Xoshiro256plus(BigInt(data.seed));
 				gameId = data.id;
 			});
 
 		let count = 0;
-		console.log(rng.get_seed());
 		while (count < $state.size) {
 			let x = Math.floor(rng.next() * $state.size);
 			let y = Math.floor(rng.next() * $state.size);
@@ -95,7 +91,6 @@
 				count += 1;
 			}
 		}
-		console.log(grid);
 		time = $state.timeLimit;
 		interval = setInterval(async () => {
 			time -= 1;
@@ -112,7 +107,6 @@
 						return res.json();
 					})
 					.then((data) => {
-						console.log(data);
 						scoreboard = data;
 					})
 					.catch((err) => console.error('wahrt'));

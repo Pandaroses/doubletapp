@@ -10,9 +10,11 @@
 - cta
 - custom backgrounds
 - check user agent, if mobile block
-- custom DAS
 - fix layout.svelte
 - cheater mode
+- refactor grid.svelte to be a component with state instead of whatever i'm doing 
+- unify silly-rng and xoshiro-wasm
+
 
 #FIX
 

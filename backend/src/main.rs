@@ -112,9 +112,7 @@ pub async fn submit_game(
 
 pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
     //this is assuming we start at 0,0 and size,size
-    println!("verifying moves");
     let mut rng = sillyrng::Xoshiro256plus::new(Some(seed as u64));
-    dbg!(rng.get_seed());
     let mut grid: Vec<bool> = vec![false; (size * size) as usize];
     let mut blue_coords: (u8, u8) = (0, 0);
     let mut red_coords: (u8, u8) = (0, 0);
@@ -129,6 +127,5 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
             count += 1;
         }
     }
-    dbg!(grid);
     Ok(4)
 }
