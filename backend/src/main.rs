@@ -29,6 +29,8 @@ pub enum Move {
     Submit,
 }
 
+//TODO use cheater mode to gather heuristics
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -103,11 +105,11 @@ pub async fn submit_game(
     let id = ulid::Ulid::from_string(&game.id).unwrap();
     let deets = state.games.get(&id).unwrap();
     // state.games.remove(&id).unwrap();
-    verify_moves(game.moves, deets.dimension, deets.seed)
+    let score = verify_moves(game.moves, deets.dimension, deets.seed)
         .await
         .unwrap();
-
-    Json(4)
+    dbg!(score);
+    Json(score)
 }
 
 pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
@@ -115,7 +117,7 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
     let mut rng = sillyrng::Xoshiro256plus::new(Some(seed as u64));
     let mut grid: Vec<bool> = vec![false; (size * size) as usize];
     let mut blue_coords: (u8, u8) = (0, 0);
-    let mut red_coords: (u8, u8) = (0, 0);
+    let mut red_coords: (u8, u8) = (size - 1, size - 1);
     let mut score = 0;
 
     let mut count = 0;
@@ -127,5 +129,76 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
             count += 1;
         }
     }
-    Ok(4)
+
+    for i in moves.iter() {
+        match i {
+            Move::CursorRedUp => {
+                if red_coords.1 <= size - 2 {
+                    red_coords.1 += 1;
+                }
+            }
+            Move::CursorRedDown => {
+                if red_coords.1 >= 1 {
+                    red_coords.1 -= 1;
+                }
+            }
+            Move::CursorRedLeft => {
+                if !(red_coords.0 >= 1) {
+                    red_coords.0 -= 1;
+                }
+            }
+            Move::CursorRedRight => {
+                if red_coords.0 <= size - 2 {
+                    red_coords.0 += 1;
+                }
+            }
+            Move::CursorBlueUp => {
+                if blue_coords.1 <= size - 2 {
+                    blue_coords.1 += 1;
+                }
+            }
+            Move::CursorBlueDown => {
+                if blue_coords.1 >= 1 {
+                    blue_coords.1 -= 1;
+                }
+            }
+            Move::CursorBlueLeft => {
+                if !(blue_coords.0 >= 1) {
+                    blue_coords.0 -= 1;
+                }
+            }
+            Move::CursorBlueRight => {
+                if blue_coords.0 <= size - 2 {
+                    blue_coords.0 += 1;
+                }
+            }
+            Move::Submit => {
+                if grid[(red_coords.0 * size + red_coords.1) as usize]
+                    && grid[(blue_coords.0 * size + blue_coords.1) as usize]
+                    && !(blue_coords == red_coords)
+                {
+                    score += 1;
+                    let mut count = 0;
+                    let r = red_coords.0 * size + red_coords.1;
+                    let b = blue_coords.0 * size + blue_coords.1;
+                    while count < 2 {
+                        let x: u8 = (rng.next() * size as f64).floor() as u8;
+                        let y: u8 = (rng.next() * size as f64).floor() as u8;
+                        if !grid[(x * size + y) as usize]
+                            && (x * size + y != r || x * size + y != b)
+                        {
+                            grid[(x * size + y) as usize] = true;
+                            count += 1;
+                        }
+                    }
+                    grid[r as usize] = false;
+                    grid[b as usize] = false;
+                }
+            }
+        }
+        dbg!(red_coords);
+        dbg!(blue_coords);
+    }
+
+    Ok(score)
 }
