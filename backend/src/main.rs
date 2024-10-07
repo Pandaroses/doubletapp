@@ -16,7 +16,7 @@ pub struct AppState {
 }
 
 #[repr(u8)]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug,PartialEq, Eq)]
 pub enum Move {
     CursorRedUp,
     CursorRedDown,
@@ -129,48 +129,31 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
             count += 1;
         }
     }
-
     for i in moves.iter() {
         match i {
             Move::CursorRedUp => {
-                if red_coords.1 <= size - 2 {
-                    red_coords.1 += 1;
-                }
-            }
+                red_coords.1 = (red_coords.1 as i8 - 1).max(0) as u8;
+            },
             Move::CursorRedDown => {
-                if red_coords.1 >= 1 {
-                    red_coords.1 -= 1;
-                }
-            }
+                red_coords.1 = (red_coords.1 + 1).min(size -1);
+            },
             Move::CursorRedLeft => {
-                if !(red_coords.0 >= 1) {
-                    red_coords.0 -= 1;
-                }
+                red_coords.0 = (red_coords.0 as i8 - 1).max(0) as u8;
             }
             Move::CursorRedRight => {
-                if red_coords.0 <= size - 2 {
-                    red_coords.0 += 1;
-                }
+                red_coords.0 = (red_coords.0 + 1).min(size -1);
             }
             Move::CursorBlueUp => {
-                if blue_coords.1 <= size - 2 {
-                    blue_coords.1 += 1;
-                }
-            }
+                blue_coords.1 = (blue_coords.1 as i8 - 1).max(0) as u8;
+            },
             Move::CursorBlueDown => {
-                if blue_coords.1 >= 1 {
-                    blue_coords.1 -= 1;
-                }
-            }
+                blue_coords.1 = (blue_coords.1 + 1).min(size -1);
+            },
             Move::CursorBlueLeft => {
-                if !(blue_coords.0 >= 1) {
-                    blue_coords.0 -= 1;
-                }
+                blue_coords.0 = (blue_coords.0 as i8 - 1).max(0) as u8;
             }
             Move::CursorBlueRight => {
-                if blue_coords.0 <= size - 2 {
-                    blue_coords.0 += 1;
-                }
+                blue_coords.0 = (blue_coords.0 + 1).min(size -1);
             }
             Move::Submit => {
                 if grid[(red_coords.0 * size + red_coords.1) as usize]
@@ -194,11 +177,9 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
                     grid[r as usize] = false;
                     grid[b as usize] = false;
                 }
+                else {score = 0}
             }
         }
-        dbg!(red_coords);
-        dbg!(blue_coords);
     }
-
     Ok(score)
 }

@@ -110,6 +110,7 @@
 						scoreboard = data;
 					})
 					.catch((err) => console.error('wahrt'));
+				moves = [];
 				clearInterval(interval);
 			}
 		}, 1000);
@@ -133,10 +134,10 @@
 					let x = Math.floor(rng.next() * $state.size);
 					let y = Math.floor(rng.next() * $state.size);
 					if (
-						!grid[y * $state.size + x] &&
-						(wIndex !== y * $state.size + x || aIndex !== y * $state.size + x)
+						!grid[x * $state.size + y] &&
+						(wIndex !== x * $state.size + y || aIndex !== x * $state.size + y)
 					) {
-						grid[y * $state.size + x] = true;
+						grid[x * $state.size + y] = true;
 						count += 1;
 					}
 				}
@@ -436,4 +437,4 @@
 	{/if}
 </div>
 
-<svelte:window on:keydown|preventDefault={onKeyDown} on:keyup={onKeyUp} />
+<svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
