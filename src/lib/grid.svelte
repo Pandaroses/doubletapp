@@ -7,10 +7,10 @@
 	import { browser } from '$app/environment';
 	import { getContext, onMount } from 'svelte';
 	import { json } from '@sveltejs/kit';
-	import init, { Xoshiro256plus } from 'xoshiro';
+	import {Xoshiro256plus } from 'xoshiro';
 
 	async function initWasm() {
-		await init();
+		// await init();
 		rng = new Xoshiro256plus(BigInt(69));
 	}
 

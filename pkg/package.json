@@ -1,0 +1,20 @@
+{
+  "name": "xoshiro",
+  "type": "module",
+  "collaborators": [
+    "goer <georgiytnimov@gmail.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "xoshiro_wasm_bg.wasm",
+    "xoshiro_wasm.js",
+    "xoshiro_wasm_bg.js",
+    "xoshiro_wasm.d.ts"
+  ],
+  "main": "xoshiro_wasm.js",
+  "types": "xoshiro_wasm.d.ts",
+  "sideEffects": [
+    "./xoshiro_wasm.js",
+    "./snippets/*"
+  ]
+}
