@@ -6,8 +6,10 @@
 	import { onMount, setContext } from 'svelte';
 	import { browser } from '$app/environment';
 	import { writable } from 'svelte/store';
+	import Information from 'svelte-material-icons/Information.svelte';
 	const FLAVOUR = 'mocha';
 	let showModal = false;
+	let showWelcome = false;
 	//TODO custom bg
 	type gameState = {
 		gameMode: string;
@@ -50,11 +52,24 @@
 	}
 
 	setContext('state', state);
+
+	onMount(() => {
+		if (browser) {
+			const hasSeenWelcome = document.cookie.includes('seenWelcome=true');
+			if (!hasSeenWelcome) {
+				showWelcome = true;
+			}
+		}
+	});
+
+	function closeWelcome(permanent = true) {
+		showWelcome = false;
+		if (permanent) {
+			document.cookie = 'seenWelcome=true; max-age=31536000; path=/';
+		}
+	}
 </script>
 
-<svelte:head>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
-</svelte:head>
 
 <main class={FLAVOUR}>
 	<div class="flex flex-col justify-between h-full max-h-screen min-w-screen font-mono">
@@ -62,13 +77,14 @@
 			<div class="flex flex-row text-4xl text-rosewater p-2">
 				<x class="text-blue">Double</x> <x class="text-mauve font-bold">TAPP</x>
 			</div>
-			<button
-				on:click={() => {
-					showModal = true;
-				}}
-			>
-				<Settings color="#cdd6f4" class=" h-12 w-12 p-2" />
-			</button>
+			<div class="flex flex-row">
+				<button on:click={() => showWelcome = true}>
+					<Information color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+				<button on:click={() => showModal = true}>
+					<Settings color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+			</div>
 		</div>
 		<div class="bg-base h-screen">
 			<slot></slot>
@@ -81,6 +97,29 @@
 			</div>
 		</div>
 	</div>
+
+	{#if showWelcome}
+		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+			<div class="bg-base p-6 rounded-lg max-w-md">
+				<h2 class="text-2xl text-rosewater mb-4">Welcome to DoubleTAPP</h2>
+				<p class="text-text mb-4">
+					In DoubleTAPP, your aim is to move both your cursors onto different active tiles to score points. (WASD and arrow keys as default controls)
+				</p>
+				<p class="text-text mb-4">
+					You get a point for each correct move, and lose all your points if you place your cursors incorrectly, good luck!
+				</p>
+				<p class="text-text mb-4">
+					you can customize your controls and other settings in the settings menu. 
+				</p>
+				<button 
+					class="bg-blue text-base px-4 py-2 rounded"
+					on:click={() => closeWelcome()}
+				>
+					Got it!
+				</button>
+			</div>
+		</div>
+	{/if}
 
 	<Modal bind:showModal />
 </main>

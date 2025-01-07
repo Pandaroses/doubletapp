@@ -1,4 +1,5 @@
 use axum::http::StatusCode;
+use axum::routing::any;
 use axum::{extract::State, routing::post, Json, Router};
 use scc::HashMap;
 use serde::{Deserialize, Serialize};
@@ -13,10 +14,12 @@ use ulid::{self};
 
 pub struct AppState {
     games: HashMap<ulid::Ulid, GameState>,
+    move_timings: Vec<u32>,
+    average_time: f64,
 }
 
 #[repr(u8)]
-#[derive(Serialize, Deserialize, Debug,PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Move {
     CursorRedUp,
     CursorRedDown,
@@ -36,11 +39,14 @@ async fn main() {
     tracing_subscriber::fmt::init();
     let state = Arc::new(AppState {
         games: HashMap::new(),
+        move_timings: Vec::new(),
+        average_time: 150.0,
     });
 
     let app = Router::new()
         .route("/get-seed", post(create_seed))
         .route("/submit-game", post(submit_game))
+        .route("/game:uuid", any(game_handler))
         .with_state(state)
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http());
@@ -94,22 +100,53 @@ pub async fn create_seed(
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameEnd {
     id: String,
-    moves: Vec<Move>,
+    //u32 is time difference in ms
+    moves: Vec<(Move, u32)>,
 }
 #[axum::debug_handler]
 pub async fn submit_game(
     State(state): State<Arc<AppState>>,
     Json(game): Json<GameEnd>,
-) -> Json<u32> {
+) -> (StatusCode, Json<u32>) {
     println!("recieved");
     let id = ulid::Ulid::from_string(&game.id).unwrap();
     let deets = state.games.get(&id).unwrap();
-    // state.games.remove(&id).unwrap();
-    let score = verify_moves(game.moves, deets.dimension, deets.seed)
-        .await
-        .unwrap();
+    if !verify_timings(game.moves.iter().map(|(_, m)| *m).collect(), state.clone()).await {
+        return (StatusCode::NOT_ACCEPTABLE, Json(0));
+    }
+    let score = verify_moves(
+        game.moves.iter().map(|(m, _)| *m).collect(),
+        deets.dimension,
+        deets.seed,
+    )
+    .await
+    .unwrap();
+    //state.games.remove(&id).unwrap();
     dbg!(score);
-    Json(score)
+    (StatusCode::OK, Json(score))
+}
+
+pub async fn verify_timings(timings: Vec<u32>, state: Arc<AppState>) -> bool {
+    let mean = timings.iter().sum::<u32>() as f64 / timings.len() as f64;
+
+    let variance = timings
+        .iter()
+        .map(|&x| {
+            let diff = mean - (x as f64);
+            diff * diff
+        })
+        .sum::<f64>()
+        / timings.len() as f64;
+
+    let std_dev = variance.sqrt();
+
+    let is_significantly_faster = mean < state.average_time * 0.25;
+    if is_significantly_faster || std_dev < 50.0 {
+        return false;
+    }
+    true
+
+    // todo add more thingies
 }
 
 pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
@@ -133,27 +170,27 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
         match i {
             Move::CursorRedUp => {
                 red_coords.1 = (red_coords.1 as i8 - 1).max(0) as u8;
-            },
+            }
             Move::CursorRedDown => {
-                red_coords.1 = (red_coords.1 + 1).min(size -1);
-            },
+                red_coords.1 = (red_coords.1 + 1).min(size - 1);
+            }
             Move::CursorRedLeft => {
                 red_coords.0 = (red_coords.0 as i8 - 1).max(0) as u8;
             }
             Move::CursorRedRight => {
-                red_coords.0 = (red_coords.0 + 1).min(size -1);
+                red_coords.0 = (red_coords.0 + 1).min(size - 1);
             }
             Move::CursorBlueUp => {
                 blue_coords.1 = (blue_coords.1 as i8 - 1).max(0) as u8;
-            },
+            }
             Move::CursorBlueDown => {
-                blue_coords.1 = (blue_coords.1 + 1).min(size -1);
-            },
+                blue_coords.1 = (blue_coords.1 + 1).min(size - 1);
+            }
             Move::CursorBlueLeft => {
                 blue_coords.0 = (blue_coords.0 as i8 - 1).max(0) as u8;
             }
             Move::CursorBlueRight => {
-                blue_coords.0 = (blue_coords.0 + 1).min(size -1);
+                blue_coords.0 = (blue_coords.0 + 1).min(size - 1);
             }
             Move::Submit => {
                 if grid[(red_coords.0 * size + red_coords.1) as usize]
@@ -176,8 +213,9 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
                     }
                     grid[r as usize] = false;
                     grid[b as usize] = false;
+                } else {
+                    score = 0
                 }
-                else {score = 0}
             }
         }
     }

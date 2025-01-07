@@ -7,10 +7,10 @@
 	import { browser } from '$app/environment';
 	import { getContext, onMount } from 'svelte';
 	import { json } from '@sveltejs/kit';
+	import {v4 as uuidv4} from 'uuid';
 	import {Xoshiro256plus } from 'xoshiro';
 
 	async function initWasm() {
-		// await init();
 		rng = new Xoshiro256plus(BigInt(69));
 	}
 
@@ -19,7 +19,7 @@
 		initWasm().catch(console.error);
 	}
 	let state: any = getContext('state');
-	let scoreboard: any = 69;
+	let scoreboard: any = 0;
 	let end = true;
 	let interval: any;
 	let dasIntervals = Array(8).fill(0);
@@ -34,7 +34,9 @@
 	let wcursorY = 0;
 	let acursorX = $state.size - 1;
 	let acursorY = $state.size - 1;
-
+	let lastActionTime = 0;
+	let temp_id: String = "";
+	let ws: WebSocket;
 	const initGrid = () => {
 		gameStarted = false;
 		wcursorX = 0;
@@ -61,10 +63,27 @@
 			case 'timer':
 				startTimer();
 				break;
-			case 'pulse':
-			case 'endless':
+			case 'multiplayer': 
+				
+			// case 'pulse':
+			// case 'endless':
 		}
-	};
+ 	};
+	const startMultiplayerGame = () => {
+		if (ws) {
+			ws.close();
+		}
+		temp_id = uuidv4();
+		ws = new WebSocket("`/api/game?uuid=${temp_id}`");
+		ws.addEventListener("message", (e) => {
+			console.log(e);
+		})
+		ws.addEventListener("close", (e) => {
+			ws.close()
+			temp_id = "";
+		})
+		
+	}
 	const startTimer = async () => {
 		let data = { dimension: $state.size, time_limit: $state.timeLimit };
 		await fetch('/api/get-seed', {
@@ -115,12 +134,13 @@
 			}
 		}, 1000);
 	};
-	const submit = () => {
+	const submit = (time: any) => {
 		if (!gameStarted) {
+			lastActionTime = Date.now();
 			startGame();
 			return;
 		}
-		moves.push('Submit');
+		moves.push(['Submit', time]);
 		if (end) {
 			let wIndex = wcursorX * $state.size + wcursorY;
 			let aIndex = acursorX * $state.size + acursorY;
@@ -197,107 +217,126 @@
 		dasIntervals[i] = false;
 	};
 	const onKeyDown = (e: any) => {
+		//lastActionTime has to be set in every different one because of the way the das works, i.e technically the das is an action, das isn't commonly used but has to be implemented.
 		const dir = 0;
 		const idx = null;
+		const timeDiff = Date.now() - lastActionTime;
 		switch (e.key) {
 			case $state.keycodes.wU:
 				if (dasIntervals[0] == false) {
 					dasIntervals[0] = setTimeout(() => {
 						dasIntervals[0] = setInterval(() => {
 							wcursorY = Math.max(wcursorY - 1, 0);
-							moves.push('CursorBlueUp');
+							moves.push(['CursorBlueUp', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorY = Math.max(wcursorY - 1, 0);
-				moves.push('CursorBlueUp');
+				moves.push(['CursorBlueUp', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.wD:
 				if (dasIntervals[1] == false) {
 					dasIntervals[1] = setTimeout(() => {
 						dasIntervals[1] = setInterval(() => {
 							wcursorY = Math.min(wcursorY + 1, $state.size - 1);
-							moves.push('CursorBlueDown');
+							moves.push(['CursorBlueDown', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorY = Math.min(wcursorY + 1, $state.size - 1);
-				moves.push('CursorBlueDown');
+				moves.push(['CursorBlueDown', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.wL:
 				if (dasIntervals[2] == false) {
 					dasIntervals[2] = setTimeout(() => {
 						dasIntervals[2] = setInterval(() => {
 							wcursorX = Math.max(wcursorX - 1, 0);
-							moves.push('CursorBlueLeft');
+							moves.push(['CursorBlueLeft', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorX = Math.max(wcursorX - 1, 0);
-				moves.push('CursorBlueLeft');
+				moves.push(['CursorBlueLeft', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.wR:
 				if (dasIntervals[3] == false) {
 					dasIntervals[3] = setTimeout(() => {
 						dasIntervals[3] = setInterval(() => {
 							wcursorX = Math.min(wcursorX + 1, $state.size - 1);
-							moves.push('CursorBlueRight');
+							moves.push(['CursorBlueRight', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorX = Math.min(wcursorX + 1, $state.size - 1);
-				moves.push('CursorBlueRight');
+				moves.push(['CursorBlueRight', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.aU:
 				if (dasIntervals[4] == false) {
 					dasIntervals[4] = setTimeout(() => {
 						dasIntervals[4] = setInterval(() => {
 							acursorY = Math.max(acursorY - 1, 0);
-							moves.push('CursorRedUp');
+							moves.push(['CursorRedUp', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorY = Math.max(acursorY - 1, 0);
-				moves.push('CursorRedUp');
+				moves.push(['CursorRedUp', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.aD:
 				if (dasIntervals[5] == false) {
 					dasIntervals[5] = setTimeout(() => {
 						dasIntervals[5] = setInterval(() => {
 							acursorY = Math.min(acursorY + 1, $state.size - 1);
-							moves.push('CursorRedDown');
+							moves.push(['CursorRedDown', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorY = Math.min(acursorY + 1, $state.size - 1);
-				moves.push('CursorRedDown');
+				moves.push(['CursorRedDown', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.aL:
 				if (dasIntervals[6] == false) {
 					dasIntervals[6] = setTimeout(() => {
 						dasIntervals[6] = setInterval(() => {
 							acursorX = Math.max(acursorX - 1, 0);
-							moves.push('CursorRedLeft');
+							moves.push(['CursorRedLeft', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorX = Math.max(acursorX - 1, 0);
-				moves.push('CursorRedLeft');
+				moves.push(['CursorRedLeft', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.aR:
 				if (dasIntervals[7] == false) {
 					dasIntervals[7] = setTimeout(() => {
 						dasIntervals[7] = setInterval(() => {
 							acursorX = Math.min(acursorX + 1, $state.size - 1);
-							moves.push('CursorRedRight');
+							moves.push(['CursorRedRight', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorX = Math.min(acursorX + 1, $state.size - 1);
-				moves.push('CursorRedRight');
+				moves.push(['CursorRedRight', timeDiff]);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.submit:
-				submit();
+				submit(timeDiff);
+				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.reset:
 				end == false ? (end = true) : '';

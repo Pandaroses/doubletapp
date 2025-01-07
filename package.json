@@ -36,6 +36,7 @@
 	"type": "module",
 	"dependencies": {
 		"svelte-material-icons": "^3.0.5",
+		"uuid": "^11.0.4",
 		"vite-plugin-wasm": "^3.4.1",
 		"xoshiro": "file:./pkg"
 	}
