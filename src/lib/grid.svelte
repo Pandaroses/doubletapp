@@ -27,6 +27,8 @@
 	let gameId = 0;
 	let time = $state.timeLimit;
 	let score = 0;
+	let quota = 0;
+	let playersLeft = 0;
 	let moves: any = [];
 	let grid = Array(Math.pow($state.size, 2)).fill(false);
 	let cGrid = Array(Math.pow($state.size, 2)).fill('neutral');
@@ -63,8 +65,8 @@
 			case 'timer':
 				startTimer();
 				break;
-			case 'multiplayer': 
-				
+			case 'multiplayer':
+					startMultiplayerGame();
 			// case 'pulse':
 			// case 'endless':
 		}
@@ -73,16 +75,50 @@
 		if (ws) {
 			ws.close();
 		}
-		temp_id = uuidv4();
-		ws = new WebSocket("`/api/game?uuid=${temp_id}`");
-		ws.addEventListener("message", (e) => {
-			console.log(e);
-		})
+		ws = new WebSocket("/ws/game");
+		ws.onopen = (e) => {
+			console.log("WebSocket opened");
+		}
+		ws.onmessage = (e) => {
+			const data = e.data;
+
+			try {
+				console.log(data);
+				const message = JSON.parse(data);
+				switch (message.type) {
+					case "Start":
+						console.log("Game starting with seed:", message.data);
+						gameStarted = true;
+						rng = new Xoshiro256plus(BigInt(message.data));
+						time = 5;
+						break;
+					case "Quota":
+						console.log("Quota update:", message.data.quota, "players left:", message.data.players_left);
+						quota = message.data.quota;
+						playersLeft = message.data.players_left;
+						time = 5;
+						break;
+					case "Move":
+						console.log("Received move:", message.data);
+						break;
+					case "ID":
+						console.log("Received ID:", message.data);
+						temp_id = message.data;
+						break;
+					case "Ping":
+						console.log("Received ping");
+						break;
+					default:
+						console.log("Unknown message type:", message);
+				}
+			} catch (err) {
+				console.error("Failed to parse message:", err);
+			}
+		}
 		ws.addEventListener("close", (e) => {
-			ws.close()
+			ws.close();
 			temp_id = "";
-		})
-		
+		});
 	}
 	const startTimer = async () => {
 		let data = { dimension: $state.size, time_limit: $state.timeLimit };
@@ -352,13 +388,15 @@
 		<div class="flex flex-row text-3xl text-text justify-between py-2">
 			<div class="flex flex-row items-center">
 				<Clock />
-				<div class="px-2 {time < 15 ? (time < 5 ? 'text-red' : 'text-peach') : 'text-green'}">
+				<div class="px-2 {time < 3 ? (time < 2 ? 'text-red' : 'text-peach') : 'text-green'}">
 					{time}
 				</div>
 			</div>
 			<div class="flex flex-row items-center">
 				<Trophy />
-				<div class="px-2">{score}</div>
+				<div class="px-2">
+					{$state.gameMode === 'multiplayer' ? `${score}/${quota} (${playersLeft})` : score}
+				</div>
 			</div>
 		</div>
 		<div class="w-fit h-fit flex flex-col">
@@ -393,7 +431,7 @@
 					<select id="gamemodes" name="modes" class="bg-surface0 px-2" bind:value={$state.gameMode}>
 						<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
 						<option value="timer"> TIME </option>
-						<option value="pulse"> PULSE </option>
+						<option value="multiplayer"> MULTIPLAYER </option>
 						<option value="endless"> ZEN </option>
 					</select>
 				</div>

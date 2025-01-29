@@ -44,9 +44,9 @@ The Client is Alexander Tahiri, a software developer at Studio Squared and the d
 
 
 == Research
-
+https://rust-lang.github.io/async-book/
 //TBD
-// xoshiro, websockets, tailwindcss
+// xoshiro, websockets, tailwindcss,async
 
 == Prototyping
 A rudimentary prototype has been made, which tested out multiple different input methods for simultaneous inputs, which has finalized in a "cursor"-based system, where you have two cursors controlled by Wasd-like movement, with each set of controls representing their respective cursor, additionally it has been decided that both cursors need to be on individual Tiles, to prevent copying movements on each hand. this prototype also implemented server-side move verification, making it more difficult to cheat. Finally, the UI design of the prototype will be used in later iterations of the project.

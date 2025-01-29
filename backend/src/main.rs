@@ -1,21 +1,29 @@
+use axum::extract::ws::WebSocket;
+use axum::extract::WebSocketUpgrade;
 use axum::http::StatusCode;
+use axum::response::Response;
 use axum::routing::any;
 use axum::{extract::State, routing::post, Json, Router};
-use scc::HashMap;
+use game::GameManager;
 use serde::{Deserialize, Serialize};
 use sillyrng::*;
+use std::collections::HashMap;
 use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
+use tokio::sync::Mutex;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use ulid::{self};
+
+mod game;
 
 pub struct AppState {
     games: HashMap<ulid::Ulid, GameState>,
     move_timings: Vec<u32>,
     average_time: f64,
+    game_manager: GameManager, // multiplayer_games: Vec<(Ulid,Vec)
 }
 
 #[repr(u8)]
@@ -41,12 +49,15 @@ async fn main() {
         games: HashMap::new(),
         move_timings: Vec::new(),
         average_time: 150.0,
+        game_manager: GameManager {
+            loading_games: Arc::new(Mutex::new(HashMap::new())),
+        },
     });
 
     let app = Router::new()
         .route("/get-seed", post(create_seed))
         .route("/submit-game", post(submit_game))
-        .route("/game:uuid", any(game_handler))
+        .route("/game", any(ws_upgrader))
         .with_state(state)
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http());
@@ -61,7 +72,7 @@ pub struct GameForm {
     time_limit: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct GameState {
     seed: u32,
     dimension: u8,
@@ -75,12 +86,22 @@ pub struct Seed {
     seed: u32,
 }
 
+pub async fn ws_upgrader(ws: WebSocketUpgrade, State(state): State<Arc<AppState>>) -> Response {
+    let stat = state.clone();
+    ws.on_upgrade(move |socket| ws_handler(socket, stat))
+}
+
+pub async fn ws_handler(ws: WebSocket, state: Arc<AppState>) {
+    state.game_manager.clone().assign_game(ws).await
+}
+
 #[axum::debug_handler]
 pub async fn create_seed(
     State(state): State<Arc<AppState>>,
     Json(form): Json<GameForm>,
 ) -> (StatusCode, Json<Seed>) {
     let game_id = ulid::Ulid::new();
+    let nstate = state.clone();
     let seed = rand::random::<u32>();
     let game_state = GameState {
         seed,
@@ -88,7 +109,7 @@ pub async fn create_seed(
         time_limit: Duration::from_secs(form.time_limit.into()),
         start_time: Instant::now(),
     };
-    state.games.insert(game_id, game_state).unwrap();
+    nstate.games.clone().insert(game_id, game_state);
     let x = Json(Seed {
         id: game_id.to_string(),
         seed,

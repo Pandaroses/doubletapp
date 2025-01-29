@@ -13,6 +13,11 @@ export default defineConfig({
 				target: 'http://0.0.0.0:3000',
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, '')
+			},
+			'/ws': {
+				target: 'http://0.0.0.0:3000',
+				ws: true,
+				rewrite: (path) => path.replace(/^\/ws/, '')
 			}
 		}
 	}
