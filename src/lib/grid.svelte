@@ -7,8 +7,8 @@
 	import { browser } from '$app/environment';
 	import { getContext, onMount } from 'svelte';
 	import { json } from '@sveltejs/kit';
-	import {v4 as uuidv4} from 'uuid';
-	import {Xoshiro256plus } from 'xoshiro';
+	import { v4 as uuidv4 } from 'uuid';
+	import { Xoshiro256plus } from 'xoshiro';
 
 	async function initWasm() {
 		rng = new Xoshiro256plus(BigInt(69));
@@ -37,7 +37,7 @@
 	let acursorX = $state.size - 1;
 	let acursorY = $state.size - 1;
 	let lastActionTime = 0;
-	let temp_id: String = "";
+	let temp_id: String = '';
 	let ws: WebSocket;
 	const initGrid = () => {
 		gameStarted = false;
@@ -63,22 +63,22 @@
 		gameStarted = true;
 		switch ($state.gameMode) {
 			case 'timer':
-				startTimer();
+				startMultiplayerTimer();
 				break;
 			case 'multiplayer':
-					startMultiplayerGame();
+				startMultiplayerGame();
 			// case 'pulse':
 			// case 'endless':
 		}
- 	};
+	};
 	const startMultiplayerGame = () => {
 		if (ws) {
 			ws.close();
 		}
-		ws = new WebSocket("/ws/game");
+		ws = new WebSocket('/ws/game');
 		ws.onopen = (e) => {
-			console.log("WebSocket opened");
-		}
+			console.log('WebSocket opened');
+		};
 		ws.onmessage = (e) => {
 			const data = e.data;
 
@@ -86,40 +86,58 @@
 				console.log(data);
 				const message = JSON.parse(data);
 				switch (message.type) {
-					case "Start":
-						console.log("Game starting with seed:", message.data);
+					case 'Start':
+						console.log('Game starting with seed:', message.data);
 						gameStarted = true;
 						rng = new Xoshiro256plus(BigInt(message.data));
 						time = 5;
+						interval = setInterval(() => {
+							time -= 1;
+							if (time <= 0) {
+								clearInterval(interval);
+							}
+						}, 1000);
 						break;
-					case "Quota":
-						console.log("Quota update:", message.data.quota, "players left:", message.data.players_left);
+					case 'Quota':
+						console.log(
+							'Quota update:',
+							message.data.quota,
+							'players left:',
+							message.data.players_left
+						);
 						quota = message.data.quota;
 						playersLeft = message.data.players_left;
 						time = 5;
+						clearInterval(interval);
+						interval = setInterval(() => {
+							time -= 1;
+							if (time <= 0) {
+								clearInterval(interval);
+							}
+						}, 1000);
 						break;
-					case "Move":
-						console.log("Received move:", message.data);
+					case 'Move':
+						console.log('Received move:', message.data);
 						break;
-					case "ID":
-						console.log("Received ID:", message.data);
+					case 'ID':
+						console.log('Received ID:', message.data);
 						temp_id = message.data;
 						break;
-					case "Ping":
-						console.log("Received ping");
+					case 'Ping':
+						console.log('Received ping');
 						break;
 					default:
-						console.log("Unknown message type:", message);
+						console.log('Unknown message type:', message);
 				}
 			} catch (err) {
-				console.error("Failed to parse message:", err);
+				console.error('Failed to parse message:', err);
 			}
-		}
-		ws.addEventListener("close", (e) => {
+		};
+		ws.addEventListener('close', (e) => {
 			ws.close();
-			temp_id = "";
+			temp_id = '';
 		});
-	}
+	};
 	const startTimer = async () => {
 		let data = { dimension: $state.size, time_limit: $state.timeLimit };
 		await fetch('/api/get-seed', {
@@ -176,7 +194,13 @@
 			startGame();
 			return;
 		}
-		moves.push(['Submit', time]);
+		if ($state.gameMode === 'time') {
+			moves.push(['Submit', time]);
+		} else if ($state.gameMode === 'multiplayer') {
+			ws.send(
+				JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'Submit' } })
+			);
+		}
 		if (end) {
 			let wIndex = wcursorX * $state.size + wcursorY;
 			let aIndex = acursorX * $state.size + acursorY;
@@ -253,9 +277,6 @@
 		dasIntervals[i] = false;
 	};
 	const onKeyDown = (e: any) => {
-		//lastActionTime has to be set in every different one because of the way the das works, i.e technically the das is an action, das isn't commonly used but has to be implemented.
-		const dir = 0;
-		const idx = null;
 		const timeDiff = Date.now() - lastActionTime;
 		switch (e.key) {
 			case $state.keycodes.wU:
@@ -263,12 +284,25 @@
 					dasIntervals[0] = setTimeout(() => {
 						dasIntervals[0] = setInterval(() => {
 							wcursorY = Math.max(wcursorY - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueUp' }
+									})
+								);
+							}
 							moves.push(['CursorBlueUp', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorY = Math.max(wcursorY - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueUp' } })
+					);
+				}
 				moves.push(['CursorBlueUp', timeDiff]);
 				lastActionTime = Date.now();
 				break;
@@ -277,12 +311,25 @@
 					dasIntervals[1] = setTimeout(() => {
 						dasIntervals[1] = setInterval(() => {
 							wcursorY = Math.min(wcursorY + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueDown' }
+									})
+								);
+							}
 							moves.push(['CursorBlueDown', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorY = Math.min(wcursorY + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueDown' } })
+					);
+				}
 				moves.push(['CursorBlueDown', timeDiff]);
 				lastActionTime = Date.now();
 				break;
@@ -291,12 +338,25 @@
 					dasIntervals[2] = setTimeout(() => {
 						dasIntervals[2] = setInterval(() => {
 							wcursorX = Math.max(wcursorX - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueLeft' }
+									})
+								);
+							}
 							moves.push(['CursorBlueLeft', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorX = Math.max(wcursorX - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueLeft' } })
+					);
+				}
 				moves.push(['CursorBlueLeft', timeDiff]);
 				lastActionTime = Date.now();
 				break;
@@ -305,12 +365,25 @@
 					dasIntervals[3] = setTimeout(() => {
 						dasIntervals[3] = setInterval(() => {
 							wcursorX = Math.min(wcursorX + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueRight' }
+									})
+								);
+							}
 							moves.push(['CursorBlueRight', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				wcursorX = Math.min(wcursorX + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueRight' } })
+					);
+				}
 				moves.push(['CursorBlueRight', timeDiff]);
 				lastActionTime = Date.now();
 				break;
@@ -319,12 +392,25 @@
 					dasIntervals[4] = setTimeout(() => {
 						dasIntervals[4] = setInterval(() => {
 							acursorY = Math.max(acursorY - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedUp' }
+									})
+								);
+							}
 							moves.push(['CursorRedUp', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorY = Math.max(acursorY - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedUp' } })
+					);
+				}
 				moves.push(['CursorRedUp', timeDiff]);
 				lastActionTime = Date.now();
 				break;
@@ -333,12 +419,25 @@
 					dasIntervals[5] = setTimeout(() => {
 						dasIntervals[5] = setInterval(() => {
 							acursorY = Math.min(acursorY + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedDown' }
+									})
+								);
+							}
 							moves.push(['CursorRedDown', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorY = Math.min(acursorY + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedDown' } })
+					);
+				}
 				moves.push(['CursorRedDown', timeDiff]);
 				lastActionTime = Date.now();
 				break;
@@ -347,12 +446,25 @@
 					dasIntervals[6] = setTimeout(() => {
 						dasIntervals[6] = setInterval(() => {
 							acursorX = Math.max(acursorX - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedLeft' }
+									})
+								);
+							}
 							moves.push(['CursorRedLeft', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorX = Math.max(acursorX - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedLeft' } })
+					);
+				}
 				moves.push(['CursorRedLeft', timeDiff]);
 				lastActionTime = Date.now();
 				break;
@@ -361,12 +473,25 @@
 					dasIntervals[7] = setTimeout(() => {
 						dasIntervals[7] = setInterval(() => {
 							acursorX = Math.min(acursorX + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedRight' }
+									})
+								);
+							}
 							moves.push(['CursorRedRight', Date.now() - lastActionTime]);
 							lastActionTime = Date.now();
 						}, $state.das);
 					}, $state.dasDelay);
 				}
 				acursorX = Math.min(acursorX + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedRight' } })
+					);
+				}
 				moves.push(['CursorRedRight', timeDiff]);
 				lastActionTime = Date.now();
 				break;

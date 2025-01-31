@@ -1,7 +1,9 @@
-use std::{collections::HashMap, sync::Arc};
-
 use axum::extract::ws::WebSocket;
+use futures::{SinkExt, StreamExt};
+use std::{collections::HashMap, sync::Arc};
+use tokio::select;
 use tokio::sync::{mpsc, Mutex};
+use tokio::time::{interval, Duration};
 use ulid::Ulid;
 
 use crate::Move;
@@ -42,10 +44,12 @@ impl GameManager {
 
 pub struct Game {
     players: HashMap<Ulid, Player>,
+    inactive_players: HashMap<Ulid, Player>,
     seed: u32,
     quota: u32,
 }
 
+#[derive(Clone, Debug)]
 pub struct Player {
     grid: [bool; 16],
     b_coords: (u8, u8),
@@ -57,6 +61,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
     println!("Game {} initialized, waiting for players", id);
     let mut state = Game {
         players: HashMap::new(),
+        inactive_players: HashMap::new(),
         seed: 0,
         quota: 0,
     };
@@ -68,7 +73,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                 let meow_id = Ulid::new();
                 println!("Player {} joined game {}", meow_id, id);
                 p.send(axum::extract::ws::Message::Text(
-                    serde_json::to_string(&WsMessage::ID(meow_id)).unwrap()
+                    serde_json::to_string(&WsMessage::ID(meow_id)).unwrap(),
                 ))
                 .await
                 .unwrap();
@@ -86,47 +91,96 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
             None => {}
         }
     }
-    
+
     println!("Game {} starting with {} players", id, state.players.len());
     for i in websockets.iter_mut() {
         i.send(axum::extract::ws::Message::Text(
-            serde_json::to_string(&WsMessage::Start(state.seed)).unwrap()
+            serde_json::to_string(&WsMessage::Start(state.seed)).unwrap(),
         ))
         .await
         .unwrap();
     }
-    
+
     println!("Game {} is now running", id);
+    let mut interval = interval(Duration::from_secs(5));
+    let mut senders = vec![];
+    let mut recievers = vec![];
+    for i in websockets {
+        let (mut sender, mut reciever) = i.split();
+        senders.push(sender);
+        recievers.push(reciever)
+    }
+
     loop {
-        let select_result = futures::future::select_all(
-            websockets
+        let websocket_futures = futures::future::select_all(
+            recievers
                 .iter_mut()
                 .enumerate()
-                .map(|(i, ws)| Box::pin(async move {
-                    ws.recv().await.map(|m| (i, m))
-                }))
-        ).await;
+                .map(|(i, ws)| Box::pin(async move { (i, ws.next().await) })),
+        );
 
-        match select_result {
-            (Some((idx, Ok(axum::extract::ws::Message::Text(text)))), _, remaining) => {
-                dbg!(&text);
-                match serde_json::from_str::<MMove>(&text) {
-                    Ok(mrrp) => {
-                        println!("Received move from socket {}: {:?}", idx, mrrp);
-                        // Handle the move
+        select! {
+            (result, _, _) = websocket_futures => {
+                let (idx, msg_result) = result;
+                match msg_result {
+                    Some(Ok(axum::extract::ws::Message::Text(text))) => {
+                        dbg!(&text);
+                        match serde_json::from_str::<WsMessage>(&text) {
+                            Ok(WsMessage::Move(mrrp)) => {
+                                println!("Received move from socket {}: {:?}", idx, mrrp);
+                                dbg!(mrrp.player_id.clone());
+                                let player = state.players.get_mut(&mrrp.player_id);
+                                match player {
+                                    Some(player) => {
+                                        player.current_score += 1;
+                                    }
+                                    None => {
+                                        println!("player doesn't exist, this is concerning");
+                                    }
+                                }
+
+                            }
+                            Ok(_) => {
+                                println!("Received non-move message from socket {}", idx);
+                            }
+                            Err(e) => {
+                                println!("Error parsing message from socket {}: {}", idx, e);
+                            }
+                        }
                     }
-                    Err(e) => {
-                        println!("Error parsing move from socket {}: {}", idx, e);
+                    None => {
+                        println!("Socket {} closed for game {}", idx, id);
+                        break;
                     }
+                    _ => continue,
                 }
             }
-            (None, _, _) => {
-                println!("All websockets closed for game {}", id);
-                break;
-            }
-            _ => {
-                // Handle other message types or errors
-                continue;
+            _ = interval.tick() => {
+                println!("New quota for game {}", id);
+                let mut culled_players = vec![];
+                for (i, p) in state.players.iter_mut() {
+
+                    if (p.current_score as u32) <= state.quota {
+                        state.inactive_players.insert(i.clone(), p.clone());
+                        // culled_players.push(i.clone());
+                    }
+                    p.current_score = 0;
+                }
+                for i in culled_players {
+                    state.players.remove(&i);
+                }
+                state.quota += 1;
+                for sender in &mut senders {
+                    sender.send(axum::extract::ws::Message::Text(
+                        serde_json::to_string(&WsMessage::Quota {
+                            quota: state.quota,
+                            players_left: state.players.len() as u32,
+                        })
+                        .unwrap(),
+                    ))
+                    .await
+                    .unwrap();
+                }
             }
         }
     }
@@ -142,11 +196,9 @@ pub struct MMove {
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type", content = "data")]
 pub enum WsMessage {
-    Move(Move),
+    Move(MMove),
     Quota { quota: u32, players_left: u32 },
     ID(Ulid),
     Start(u32),
     Ping,
 }
-
-
