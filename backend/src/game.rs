@@ -1,5 +1,7 @@
-use axum::extract::ws::WebSocket;
+use axum::extract::ws::{Message, WebSocket};
+use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
+use sillyrng::{Gen, Xoshiro256plus};
 use std::{collections::HashMap, sync::Arc};
 use tokio::select;
 use tokio::sync::{mpsc, Mutex};
@@ -45,7 +47,7 @@ impl GameManager {
 pub struct Game {
     players: HashMap<Ulid, Player>,
     inactive_players: HashMap<Ulid, Player>,
-    seed: u32,
+    seed: u64,
     quota: u32,
 }
 
@@ -55,6 +57,7 @@ pub struct Player {
     b_coords: (u8, u8),
     r_coords: (u8, u8),
     current_score: u8,
+    rng: sillyrng::Xoshiro256plus,
 }
 
 async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
@@ -62,11 +65,11 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
     let mut state = Game {
         players: HashMap::new(),
         inactive_players: HashMap::new(),
-        seed: 0,
+        seed: rand::random::<u64>(),
         quota: 0,
     };
-    let mut websockets = vec![];
-
+    let mut senders: HashMap<Ulid, SplitSink<WebSocket, Message>> = HashMap::new();
+    let mut receivers = vec![];
     while state.players.len() <= 5 {
         match rx.recv().await {
             Some(mut p) => {
@@ -78,24 +81,30 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                 .await
                 .unwrap();
                 state.players.insert(
-                    meow_id,
+                    meow_id.clone(),
                     Player {
                         grid: [false; 16],
                         b_coords: (0, 0),
                         r_coords: (7, 7),
                         current_score: (0),
+                        rng: Xoshiro256plus::new(Some(3)),
                     },
                 );
-                websockets.push(p);
+                let (mut sender, mut receiver) = p.split();
+                senders.insert(meow_id, sender);
+                receivers.push(receiver);
             }
             None => {}
         }
     }
 
     println!("Game {} starting with {} players", id, state.players.len());
-    for i in websockets.iter_mut() {
+    for i in state.players.iter_mut() {
+        i.1.rng = Xoshiro256plus::new(Some(state.seed.clone()));
+    }
+    for (p, i) in senders.iter_mut() {
         i.send(axum::extract::ws::Message::Text(
-            serde_json::to_string(&WsMessage::Start(state.seed)).unwrap(),
+            serde_json::to_string(&WsMessage::Start(state.seed as u64)).unwrap(),
         ))
         .await
         .unwrap();
@@ -103,17 +112,10 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
 
     println!("Game {} is now running", id);
     let mut interval = interval(Duration::from_secs(5));
-    let mut senders = vec![];
-    let mut recievers = vec![];
-    for i in websockets {
-        let (mut sender, mut reciever) = i.split();
-        senders.push(sender);
-        recievers.push(reciever)
-    }
 
     loop {
         let websocket_futures = futures::future::select_all(
-            recievers
+            receivers
                 .iter_mut()
                 .enumerate()
                 .map(|(i, ws)| Box::pin(async move { (i, ws.next().await) })),
@@ -135,7 +137,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                                         player.current_score += 1;
                                     }
                                     None => {
-                                        println!("player doesn't exist, this is concerning");
+                                        println!("player doesn't exist, or player is out of the game");
                                     }
                                 }
 
@@ -150,6 +152,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                     }
                     None => {
                         println!("Socket {} closed for game {}", idx, id);
+                        // handle socket closed while keeping game running TODO
                         break;
                     }
                     _ => continue,
@@ -161,6 +164,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                 for (i, p) in state.players.iter_mut() {
 
                     if (p.current_score as u32) <= state.quota {
+                        senders.get_mut(&i.clone()).unwrap().send(axum::extract::ws::Message::Text(serde_json::to_string(&WsMessage::Out).unwrap())).await.unwrap();
                         state.inactive_players.insert(i.clone(), p.clone());
                         // culled_players.push(i.clone());
                     }
@@ -170,7 +174,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                     state.players.remove(&i);
                 }
                 state.quota += 1;
-                for sender in &mut senders {
+                for (i,sender) in &mut senders {
                     sender.send(axum::extract::ws::Message::Text(
                         serde_json::to_string(&WsMessage::Quota {
                             quota: state.quota,
@@ -199,6 +203,7 @@ pub enum WsMessage {
     Move(MMove),
     Quota { quota: u32, players_left: u32 },
     ID(Ulid),
-    Start(u32),
+    Start(u64),
+    Out,
     Ping,
 }

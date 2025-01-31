@@ -97,6 +97,16 @@
 								clearInterval(interval);
 							}
 						}, 1000);
+						let count = 0;
+						while (count < $state.size) {
+							let x = Math.floor(rng.next() * $state.size);
+							let y = Math.floor(rng.next() * $state.size);
+							if (grid[x * $state.size + y] == false) {
+								grid[x * $state.size + y] = true;
+								count += 1;
+							}
+						}
+
 						break;
 					case 'Quota':
 						console.log(
@@ -108,6 +118,7 @@
 						quota = message.data.quota;
 						playersLeft = message.data.players_left;
 						time = 5;
+						score = 0;
 						clearInterval(interval);
 						interval = setInterval(() => {
 							time -= 1;
@@ -300,7 +311,10 @@
 				wcursorY = Math.max(wcursorY - 1, 0);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueUp' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueUp' }
+						})
 					);
 				}
 				moves.push(['CursorBlueUp', timeDiff]);
@@ -327,7 +341,10 @@
 				wcursorY = Math.min(wcursorY + 1, $state.size - 1);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueDown' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueDown' }
+						})
 					);
 				}
 				moves.push(['CursorBlueDown', timeDiff]);
@@ -354,7 +371,10 @@
 				wcursorX = Math.max(wcursorX - 1, 0);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueLeft' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueLeft' }
+						})
 					);
 				}
 				moves.push(['CursorBlueLeft', timeDiff]);
@@ -381,7 +401,10 @@
 				wcursorX = Math.min(wcursorX + 1, $state.size - 1);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorBlueRight' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueRight' }
+						})
 					);
 				}
 				moves.push(['CursorBlueRight', timeDiff]);
@@ -408,7 +431,10 @@
 				acursorY = Math.max(acursorY - 1, 0);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedUp' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedUp' }
+						})
 					);
 				}
 				moves.push(['CursorRedUp', timeDiff]);
@@ -435,7 +461,10 @@
 				acursorY = Math.min(acursorY + 1, $state.size - 1);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedDown' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedDown' }
+						})
 					);
 				}
 				moves.push(['CursorRedDown', timeDiff]);
@@ -462,7 +491,10 @@
 				acursorX = Math.max(acursorX - 1, 0);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedLeft' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedLeft' }
+						})
 					);
 				}
 				moves.push(['CursorRedLeft', timeDiff]);
@@ -489,7 +521,10 @@
 				acursorX = Math.min(acursorX + 1, $state.size - 1);
 				if ($state.gameMode === 'multiplayer') {
 					ws.send(
-						JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'CursorRedRight' } })
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedRight' }
+						})
 					);
 				}
 				moves.push(['CursorRedRight', timeDiff]);

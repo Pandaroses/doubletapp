@@ -28,6 +28,7 @@ impl Gen for SplitMix {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Xoshiro256plus {
     seed: [u64; 4],
 }
