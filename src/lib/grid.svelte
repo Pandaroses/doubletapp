@@ -63,7 +63,7 @@
 		gameStarted = true;
 		switch ($state.gameMode) {
 			case 'timer':
-				startMultiplayerTimer();
+				startTimer();
 				break;
 			case 'multiplayer':
 				startMultiplayerGame();
