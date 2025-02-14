@@ -85,12 +85,12 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                     Player {
                         grid: [false; 16],
                         b_coords: (0, 0),
-                        r_coords: (7, 7),
+                        r_coords: (3, 3),
                         current_score: (0),
                         rng: Xoshiro256plus::new(Some(3)),
                     },
                 );
-                let (mut sender, mut receiver) = p.split();
+                let (sender, receiver) = p.split();
                 senders.insert(meow_id, sender);
                 receivers.push(receiver);
             }
@@ -101,8 +101,17 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
     println!("Game {} starting with {} players", id, state.players.len());
     for i in state.players.iter_mut() {
         i.1.rng = Xoshiro256plus::new(Some(state.seed.clone()));
+        let mut count = 0;
+        while count < 4 {
+            let x: u8 = (i.1.rng.next() * 4 as f64).floor() as u8;
+            let y: u8 = (i.1.rng.next() * 4 as f64).floor() as u8;
+            if i.1.grid[(x * 4 + y) as usize] == false {
+                i.1.grid[(x * 4 + y) as usize] = true;
+                count += 1;
+            }
+        }
     }
-    for (p, i) in senders.iter_mut() {
+    for (_p, i) in senders.iter_mut() {
         i.send(axum::extract::ws::Message::Text(
             serde_json::to_string(&WsMessage::Start(state.seed as u64)).unwrap(),
         ))
@@ -126,15 +135,46 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                 let (idx, msg_result) = result;
                 match msg_result {
                     Some(Ok(axum::extract::ws::Message::Text(text))) => {
-                        dbg!(&text);
                         match serde_json::from_str::<WsMessage>(&text) {
                             Ok(WsMessage::Move(mrrp)) => {
                                 println!("Received move from socket {}: {:?}", idx, mrrp);
-                                dbg!(mrrp.player_id.clone());
-                                let player = state.players.get_mut(&mrrp.player_id);
+                                let mut player = state.players.get_mut(&mrrp.player_id);
                                 match player {
-                                    Some(player) => {
-                                        player.current_score += 1;
+                                    Some(p) => {
+                                        match mrrp.action {
+                                            Move::CursorRedUp => p.r_coords.1 = (p.r_coords.1 as i8 - 1).max(0) as u8,
+                                            // 3 should be constant, but multilpayer is only 4x4
+                                            Move::CursorRedDown => p.r_coords.1 = (p.r_coords.1 + 1).min(3),
+                                            Move::CursorRedLeft => p.r_coords.0 = (p.r_coords.0 as i8 - 1).max(0) as u8,
+                                            Move::CursorRedRight => p.r_coords.0 = (p.r_coords.0 + 1).min(3),
+                                            Move::CursorBlueUp => p.b_coords.1 = (p.b_coords.1 as i8 - 1).max(0) as u8,
+                                            Move::CursorBlueDown => p.b_coords.1 = (p.b_coords.1 + 1).min(3),
+                                            Move::CursorBlueLeft => p.b_coords.0 = (p.b_coords.0 as i8 - 1).max(0) as u8,
+                                            Move::CursorBlueRight => p.b_coords.0 = (p.b_coords.0 + 1).min(3),
+                                            Move::Submit => {
+                                                println!("player grid: {:?} | b_coords: {:?}, r_coords: {:?}",p.grid, p.b_coords,p.b_coords);
+                                                if p.grid[(p.r_coords.0 * 4 + p.r_coords.1) as usize] && p.grid[(p.b_coords.0 * 4 + p.b_coords.1) as usize] && !(p.b_coords == p.r_coords) {
+                                                    p.current_score += 1;
+                                                    let mut count = 0;
+                                                    let r = p.r_coords.0 * 4 + p.r_coords.1;
+                                                    let b = p.b_coords.0 * 4 + p.b_coords.1;
+                                                    while count < 2 {
+                                                        let x: u8 = (p.rng.next() * 4 as f64).floor() as u8;
+                                                        let y: u8 = (p.rng.next() * 4 as f64).floor() as u8;
+                                                        if !p.grid[(x * 4 + y) as usize]
+                                                            && (x * 4 + y != r || x * 4 + y != b)
+                                                        {
+                                                            p.grid[(x * 4 + y) as usize] = true;
+                                                            count += 1;
+                                                        }
+                                                    }
+                                                    p.grid[r as usize] = false;
+                                                    p.grid[b as usize] = false;
+                                                } else {
+                                                p.current_score = 0;
+                                            }
+                                        },
+                                    }
                                     }
                                     None => {
                                         println!("player doesn't exist, or player is out of the game");
