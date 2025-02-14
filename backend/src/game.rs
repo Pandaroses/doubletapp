@@ -1,6 +1,6 @@
 use axum::extract::ws::{Message, WebSocket};
 use futures::stream::SplitSink;
-use futures::{SinkExt, StreamExt};
+use futures::{SinkExt, StreamExt, TryFutureExt};
 use sillyrng::{Gen, Xoshiro256plus};
 use std::{collections::HashMap, sync::Arc};
 use tokio::select;
@@ -152,7 +152,6 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                                             Move::CursorBlueLeft => p.b_coords.0 = (p.b_coords.0 as i8 - 1).max(0) as u8,
                                             Move::CursorBlueRight => p.b_coords.0 = (p.b_coords.0 + 1).min(3),
                                             Move::Submit => {
-                                                println!("player grid: {:?} | b_coords: {:?}, r_coords: {:?}",p.grid, p.b_coords,p.b_coords);
                                                 if p.grid[(p.r_coords.0 * 4 + p.r_coords.1) as usize] && p.grid[(p.b_coords.0 * 4 + p.b_coords.1) as usize] && !(p.b_coords == p.r_coords) {
                                                     p.current_score += 1;
                                                     let mut count = 0;
@@ -193,7 +192,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                     None => {
                         println!("Socket {} closed for game {}", idx, id);
                         // handle socket closed while keeping game running TODO
-                        break;
+                        let _ = receivers.remove(idx);
                     }
                     _ => continue,
                 }
@@ -202,17 +201,35 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                 println!("New quota for game {}", id);
                 let mut culled_players = vec![];
                 for (i, p) in state.players.iter_mut() {
-
+                    dbg!(p.current_score);
                     if (p.current_score as u32) <= state.quota {
-                        senders.get_mut(&i.clone()).unwrap().send(axum::extract::ws::Message::Text(serde_json::to_string(&WsMessage::Out).unwrap())).await.unwrap();
+                        if let Err(e) = senders.get_mut(&i.clone()).unwrap()
+                            .send(axum::extract::ws::Message::Text(
+                                serde_json::to_string(&WsMessage::Out)
+                                    .expect("Failed to serialize Out message")
+                            )).await
+                        {
+                            println!("Failed to send message to player, removing {}: {}", i, e);
+                            culled_players.push(i.clone());
+                            senders.remove(&i);
+                            continue;
+                        }
                         state.inactive_players.insert(i.clone(), p.clone());
-                        // culled_players.push(i.clone());
                     }
                     p.current_score = 0;
                 }
                 for i in culled_players {
                     state.players.remove(&i);
                 }
+                if state.players.len() <= 1 {
+                    println!("Game {} ended - {} player(s) remaining", id, state.players.len());
+                    for (i,_) in state.players.iter() {
+                        // add to database when that gets done
+                        senders.get_mut(&i.clone()).unwrap().send(axum::extract::ws::Message::Text(serde_json::to_string(&WsMessage::Win).unwrap())).await.unwrap();
+                    }
+                    break;
+                }
+
                 state.quota += 1;
                 for (i,sender) in &mut senders {
                     sender.send(axum::extract::ws::Message::Text(
@@ -245,5 +262,6 @@ pub enum WsMessage {
     ID(Ulid),
     Start(u64),
     Out,
+    Win,
     Ping,
 }
