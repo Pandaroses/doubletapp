@@ -204,12 +204,12 @@
 		}, 1000);
 	};
 	const submit = (time: any) => {
-		if (!gameStarted && $state.gameMode === 'time') {
+		if (!gameStarted && $state.gameMode === 'timer') {
 			lastActionTime = Date.now();
 			startGame();
 			return;
 		}
-		if ($state.gameMode === 'time') {
+		if ($state.gameMode === 'timer') {
 			moves.push(['Submit', time]);
 		} else if ($state.gameMode === 'multiplayer') {
 			ws.send(
@@ -702,5 +702,6 @@
 		</div>
 	{/if}
 </div>
+
 
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />

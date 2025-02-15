@@ -16,14 +16,14 @@ use tokio::sync::Mutex;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use ulid::{self};
+use sqlx::{Pool, Postgres, PgPool};
 
 mod game;
 
 pub struct AppState {
-    games: HashMap<ulid::Ulid, GameState>,
-    move_timings: Vec<u32>,
-    average_time: f64,
+    games: Mutex<HashMap<ulid::Ulid, GameState>>,
     game_manager: GameManager, // multiplayer_games: Vec<(Ulid,Vec)
+    db: Pool<Postgres>,
 }
 
 #[repr(u8)]
@@ -43,15 +43,18 @@ pub enum Move {
 //TODO use cheater mode to gather heuristics
 
 #[tokio::main]
+
 async fn main() {
+    dotenvy::dotenv().ok();
+    let database_url = std::env::var("DB_URL").expect("DB_URL must be set");
+    let pool = PgPool::connect(&database_url).await.unwrap();
     tracing_subscriber::fmt::init();
     let state = Arc::new(AppState {
-        games: HashMap::new(),
-        move_timings: Vec::new(),
-        average_time: 150.0,
+        games: Mutex::new(HashMap::new()),
         game_manager: GameManager {
-            loading_games: Arc::new(Mutex::new(HashMap::new())),
+            loading_games: Arc::new(Mutex::new(HashMap::new())), 
         },
+        db: pool,
     });
 
     let app = Router::new()
@@ -101,6 +104,7 @@ pub async fn create_seed(
     Json(form): Json<GameForm>,
 ) -> (StatusCode, Json<Seed>) {
     let game_id = ulid::Ulid::new();
+    println!("Creating game {} with dimension {} and time limit {}s", game_id, form.dimension, form.time_limit);
     let nstate = state.clone();
     let seed = rand::random::<u32>();
     let game_state = GameState {
@@ -109,12 +113,12 @@ pub async fn create_seed(
         time_limit: Duration::from_secs(form.time_limit.into()),
         start_time: Instant::now(),
     };
-    nstate.games.clone().insert(game_id, game_state);
+    state.games.lock().await.insert(game_id, game_state);
     let x = Json(Seed {
         id: game_id.to_string(),
         seed,
     });
-    println!("{}", game_id.to_string());
+
     (StatusCode::OK, x)
 }
 
@@ -129,10 +133,12 @@ pub async fn submit_game(
     State(state): State<Arc<AppState>>,
     Json(game): Json<GameEnd>,
 ) -> (StatusCode, Json<u32>) {
-    println!("recieved");
+    println!("Received submission for game {} with {} moves", game.id, game.moves.len());
     let id = ulid::Ulid::from_string(&game.id).unwrap();
-    let deets = state.games.get(&id).unwrap();
+    let games_lock = state.games.lock().await;
+    let deets = games_lock.get(&id).unwrap();
     if !verify_timings(game.moves.iter().map(|(_, m)| *m).collect(), state.clone()).await {
+        println!("Rejected game {} due to suspicious timings", game.id);
         return (StatusCode::NOT_ACCEPTABLE, Json(0));
     }
     let score = verify_moves(
@@ -143,7 +149,6 @@ pub async fn submit_game(
     .await
     .unwrap();
     //state.games.remove(&id).unwrap();
-    dbg!(score);
     (StatusCode::OK, Json(score))
 }
 
@@ -161,8 +166,9 @@ pub async fn verify_timings(timings: Vec<u32>, state: Arc<AppState>) -> bool {
 
     let std_dev = variance.sqrt();
 
-    let is_significantly_faster = mean < state.average_time * 0.25;
-    if is_significantly_faster || std_dev < 50.0 {
+    //let is_significantly_faster = mean < state.average_time * 0.25;
+    if std_dev < 50.0 {
+        println!("Timing anomaly detected: mean={:.2}ms, std_dev={:.2}ms", mean, std_dev);
         return false;
     }
     true
@@ -177,7 +183,9 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
     let mut blue_coords: (u8, u8) = (0, 0);
     let mut red_coords: (u8, u8) = (size - 1, size - 1);
     let mut score = 0;
-
+    let mut distance = 0;
+    let mut anomalous_distances = 0;
+    let mut optimal_distance = 0;
     let mut count = 0;
     while count < size {
         let x: u8 = (rng.next() * size as f64).floor() as u8;
@@ -191,29 +199,42 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
         match i {
             Move::CursorRedUp => {
                 red_coords.1 = (red_coords.1 as i8 - 1).max(0) as u8;
+                distance += 1;
             }
             Move::CursorRedDown => {
                 red_coords.1 = (red_coords.1 + 1).min(size - 1);
+                distance += 1;
             }
             Move::CursorRedLeft => {
                 red_coords.0 = (red_coords.0 as i8 - 1).max(0) as u8;
+                distance += 1;
             }
             Move::CursorRedRight => {
                 red_coords.0 = (red_coords.0 + 1).min(size - 1);
+                distance += 1;
             }
             Move::CursorBlueUp => {
                 blue_coords.1 = (blue_coords.1 as i8 - 1).max(0) as u8;
+                distance += 1;
             }
             Move::CursorBlueDown => {
                 blue_coords.1 = (blue_coords.1 + 1).min(size - 1);
+                distance += 1;
             }
             Move::CursorBlueLeft => {
                 blue_coords.0 = (blue_coords.0 as i8 - 1).max(0) as u8;
+                distance += 1;
             }
             Move::CursorBlueRight => {
                 blue_coords.0 = (blue_coords.0 + 1).min(size - 1);
+                distance += 1;
             }
             Move::Submit => {
+                if distance <= optimal_distance {
+                    anomalous_distances += 1;
+                }
+                distance = 0;
+
                 if grid[(red_coords.0 * size + red_coords.1) as usize]
                     && grid[(blue_coords.0 * size + blue_coords.1) as usize]
                     && !(blue_coords == red_coords)
@@ -234,11 +255,42 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
                     }
                     grid[r as usize] = false;
                     grid[b as usize] = false;
+                    optimal_distance = get_optimal_paths(grid.clone(), red_coords, blue_coords, size)
+                        .await
+                        .iter()
+                        .min()
+                        .unwrap_or(&0)
+                        .to_owned();
                 } else {
                     score = 0
                 }
             }
         }
     }
+    println!("Game completed with score {} (anomaly ratio: {:.2})", score, anomalous_distances as f64 / score as f64);
     Ok(score)
 }
+
+pub async fn get_optimal_paths(grid: Vec<bool>, r: (u8, u8), b: (u8, u8), size: u8) -> Vec<u32> {
+    let mut paths = Vec::new();
+    for i in 0..grid.len() {
+        for j in 0..grid.len() {
+            if grid[i] && grid[j] && i != j {
+                let r_cell = (
+                    (i / size as usize) as u8,
+                    (i % size as usize) as u8
+                );
+                let b_cell = (
+                    (j / size as usize) as u8,
+                    (j % size as usize) as u8
+                );
+                let r_dist = (r.0.abs_diff(r_cell.0) + r.1.abs_diff(r_cell.1)) as u32;
+                let b_dist = (b.0.abs_diff(b_cell.0) + b.1.abs_diff(b_cell.1)) as u32;
+                paths.push(r_dist + b_dist);
+            }
+        }
+    }
+    paths
+}
+
+
