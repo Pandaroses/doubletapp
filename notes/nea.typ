@@ -63,7 +63,7 @@ A rudimentary prototype has been made, which tested out multiple different input
   + user can "submit" moves using a keybind
   + user can reset game (in single player) via a keybind
 + user can change gamemode (singleplayer,multiplayer) on the main page
-  + user can change grid size (4x4,5x5,6x6)
+  + user can change grid size (4x4,5x5,6x6) in singleplayer
   + in singleplayer, user can change time limit
 + user can access settings
   + user can modify keybinds for each action in the game
@@ -76,6 +76,8 @@ A rudimentary prototype has been made, which tested out multiple different input
   + on game start, user sees the starting active tiles
   + user can view current game score
   + in singleplayer, user sees time remaining
+  + in multiplayer, user can see time remaining for current quota, players remaining and current score
+  + user is notified of their position in the multiplayer game
   + user can "submit" their move
     + user can interactively see if the move was valid via a colour interaction which flashes green or red depending on if the move was valid, a valid move is when the two cursors are on two active grid tiles within the grid boundary and they are distinct active tiles
     + on successfull submit, user sees two new tiles become active, which were previously inactive and are not on current cursor location
@@ -88,8 +90,8 @@ A rudimentary prototype has been made, which tested out multiple different input
   + user can see if it is their personal best
   + user has the option to start a new game from the results menu
 + user can view leaderboard
-  + user can view the top 10 highest scoring games
-  + user can view their personal top 10 highest scores
+  + user can view the top 10 highest scoring games with corresponding usernames
+  + user can view their personal top 10 highest scores with corresponding dates
 + user can play the multiplayer gamemode
   + user can see the other players movements on other grids in the game
   + user can see their remaining score quota for each 5 second interval period

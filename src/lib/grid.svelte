@@ -170,6 +170,11 @@
 				gameId = data.id;
 			});
 
+		wcursorX = 0;
+		wcursorY = 0;
+		acursorX = $state.size - 1;
+		acursorY = $state.size - 1;
+
 		let count = 0;
 		while (count < $state.size) {
 			let x = Math.floor(rng.next() * $state.size);
@@ -189,7 +194,7 @@
 					headers: {
 						'Content-Type': 'application/json'
 					},
-					body: JSON.stringify({ id: gameId, moves: moves })
+					body: JSON.stringify({ id: gameId, moves: moves, score: score })
 				})
 					.then((res) => {
 						return res.json();

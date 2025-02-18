@@ -8,15 +8,21 @@ use tokio::sync::{mpsc, Mutex};
 use tokio::time::{interval, Duration};
 use ulid::Ulid;
 
+use crate::misc::Queue;
+use crate::models::UserExt;
 use crate::Move;
 
 #[derive(Clone)]
 pub struct GameManager {
     pub loading_games: Arc<Mutex<HashMap<ulid::Ulid, mpsc::Sender<WebSocket>>>>,
+    pub user_games: Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>,
+    pub anon_games: Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>,
+    pub cheater_games: Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>,
 }
 
 impl GameManager {
-    pub async fn assign_game(&self, mut ws: WebSocket) {
+    // matchmaking / queueus or whatever, maybe instead of a hashmap use a queue
+    pub async fn assign_game(&self, mut ws: WebSocket, user: Option<UserExt>) {
         println!("Attempting to assign player to a game");
         let mut games = self.loading_games.lock().await;
         let mut dead_games = vec![];
@@ -176,7 +182,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                                     }
                                     }
                                     None => {
-                                        println!("player doesn't exist, or player is out of the game");
+                                        println!("Recieved message from invalid player");
                                     }
                                 }
 
