@@ -14,30 +14,52 @@ use crate::Move;
 
 #[derive(Clone)]
 pub struct GameManager {
-    pub loading_games: Arc<Mutex<HashMap<ulid::Ulid, mpsc::Sender<WebSocket>>>>,
-    pub user_games: Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>,
-    pub anon_games: Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>,
-    pub cheater_games: Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>,
+    pub user_games: Queue<Arc<(ulid::Ulid, mpsc::Sender<WebSocket>)>>,
+    pub anon_games: Queue<Arc<(ulid::Ulid, mpsc::Sender<WebSocket>)>>,
+    pub cheater_games: Queue<Arc<(ulid::Ulid, mpsc::Sender<WebSocket>)>>,
 }
 
 impl GameManager {
     // matchmaking / queueus or whatever, maybe instead of a hashmap use a queue
-    pub async fn assign_game(&self, mut ws: WebSocket, user: Option<UserExt>) {
+    pub async fn assign_game(&self, ws: WebSocket, user: Option<UserExt>) {
         println!("Attempting to assign player to a game");
-        let mut games = self.loading_games.lock().await;
-        let mut dead_games = vec![];
-        for (i, tx) in games.iter() {
-            match tx.send(ws).await {
-                Ok(()) => return,
-                Err(mpsc::error::SendError(rws)) => {
-                    ws = rws;
-                    dead_games.push(i.clone());
+        let mut games = match user {
+            Some(u) => {
+                //innocent until proven guilty, very demure, very fashionable
+                if u.cheater.unwrap_or(false) {
+                    self.cheater_games.clone()
+                } else {
+                    self.user_games.clone()
                 }
             }
-        }
-
-        for i in dead_games.iter() {
-            games.remove(&i);
+            None => self.anon_games.clone(),
+        };
+        // for (i, tx) in games.iter() {
+        //     match tx.send(ws).await {
+        //         Ok(()) => return,
+        //         Err(mpsc::error::SendError(rws)) => {
+        //             ws = rws;
+        //             dead_games.push(i.clone());
+        //         }
+        //     }
+        // }
+        let mut attempts = games.size;
+        let mut ws = ws;
+        while attempts > 0 {
+            if let Some(game) = games.dequeue() {
+                match game.1.send(ws).await {
+                    Ok(()) => {
+                        games.enqueue::<(Ulid, mpsc::Sender<WebSocket>)>(game);
+                        return;
+                    }
+                    Err(mpsc::error::SendError(rws)) => {
+                        ws = rws;
+                        attempts -= 1;
+                    }
+                }
+            } else {
+                break;
+            }
         }
 
         let (tx, rx) = mpsc::channel(40);
@@ -46,7 +68,9 @@ impl GameManager {
 
         tx.send(ws).await.unwrap();
         println!("Created new game with ID: {}", game_id);
-        games.insert(game_id, tx);
+        games
+            .clone()
+            .enqueue::<(Ulid, mpsc::Sender<WebSocket>)>(Arc::new((game_id, tx)));
     }
 }
 

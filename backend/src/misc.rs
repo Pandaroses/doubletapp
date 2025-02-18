@@ -143,16 +143,17 @@ pub async fn authorization(
 
 // TODO logout function that deletes the session from the database
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq, PartialOrd)]
 pub struct Queue<T> {
-    items: [T; 32],
-    size: usize,
+    items: Vec<T>,
+    pub size: usize,
     capacity: usize,
     front: usize,
 }
 
-impl<T: Copy> Queue<T> {
-    fn enqueue<U>(&mut self, item: T) -> bool {
+impl<T: Clone> Queue<T> {
+    /// see how i use proper naming convention
+    pub fn enqueue<U>(&mut self, item: T) -> bool {
         if self.size == self.capacity {
             return false;
         }
@@ -161,13 +162,22 @@ impl<T: Copy> Queue<T> {
         return true;
     }
     /// Returns the dequeue of this [`Queue<T>`].
-    fn dequeue(&mut self) -> Option<T> {
+    pub fn dequeue(&mut self) -> Option<T> {
         if self.size == 0 {
             return None;
         }
-        let res = self.items[self.front];
+        let res = self.items[self.front].clone();
         self.front = (self.front + 1) % self.capacity;
         self.size -= 1;
         Some(res)
+    }
+
+    pub(crate) fn default_sized(size: usize) -> Self {
+        Self {
+            items: Vec::with_capacity(size),
+            size: 0,
+            capacity: size,
+            front: 0,
+        }
     }
 }

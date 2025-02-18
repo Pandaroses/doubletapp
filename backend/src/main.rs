@@ -7,6 +7,7 @@ use axum::{extract::State, routing::post, Json, Router};
 use axum::{middleware, Extension};
 use error::AppError;
 use game::GameManager;
+use misc::Queue;
 use models::UserExt;
 use serde::{Deserialize, Serialize};
 use sillyrng::*;
@@ -28,7 +29,7 @@ mod models;
 
 pub struct AppState {
     games: Mutex<HashMap<ulid::Ulid, GameState>>,
-    game_manager: GameManager, // multiplayer_games: Vec<(Ulid,Vec)
+    game_manager: GameManager,
     db: Pool<Postgres>,
 }
 
@@ -57,7 +58,12 @@ async fn main() {
     let state = Arc::new(AppState {
         games: Mutex::new(HashMap::new()),
         game_manager: GameManager {
-            loading_games: Arc::new(Mutex::new(HashMap::new())),
+            user_games:
+                Queue::<Arc<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>::default_sized(32),
+            cheater_games:
+                Queue::<Arc<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>::default_sized(32),
+            anon_games:
+                Queue::<Arc<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>::default_sized(32),
         },
         db: pool,
     });
