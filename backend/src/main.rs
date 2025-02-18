@@ -67,7 +67,7 @@ async fn main() {
         },
         db: pool,
     });
-
+    //TODO add half the new routes that i just made
     let app = Router::new()
         .route("/get-seed", post(create_seed))
         .route("/submit-game", post(submit_game))

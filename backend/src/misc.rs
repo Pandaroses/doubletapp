@@ -1,7 +1,3 @@
-// pub async fn get_scores(state: State<Arc<AppState>>, page: u32, dimension: u8, time_limit: u8) -> Vec<u32> {
-//     todo!()
-// }
-
 // pub async fn create_replay(state: State<Arc<AppState>>, id: String) -> impl IntoResponse {
 //     todo!()
 // }
@@ -11,11 +7,13 @@ use std::sync::Arc;
 
 use axum::extract::Request;
 use axum::http::{HeaderMap, StatusCode};
+use axum::Json;
 use axum::{extract::State, middleware::Next, response::Response, Form};
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::cookie::CookieJar;
 use bcrypt;
 use serde::{Deserialize, Serialize};
+use sqlx::Acquire;
 use uuid;
 use validator::Validate;
 
@@ -27,6 +25,42 @@ use crate::{error::AppError, AppState};
 // }
 //
 
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+pub struct Score {
+    username: String,
+    score: Option<i16>,
+}
+
+pub async fn get_scores(
+    State(state): State<Arc<AppState>>,
+    page: u32,
+    dimension: u8,
+    time_limit: u8,
+) -> Result<Json<Vec<(String, usize)>>, AppError> {
+    let res = sqlx::query_as!(
+        Score,
+        r#"
+    SELECT "game".score, "user".username
+    FROM "game"
+    JOIN "user" ON "game".user_id = "user".id
+    WHERE dimension = $1
+    AND time_limit = $2
+    ORDER BY score
+    OFFSET ($3 - 1) * 100 
+    FETCH NEXT 100 ROWS ONLY
+    "#,
+        dimension as i32,
+        time_limit as i32,
+        page as i32
+    )
+    .fetch_all(&mut *state.db.acquire().await?)
+    .await?
+    .iter()
+    .map(|x| (x.username.clone(), x.score.unwrap() as usize))
+    .collect();
+
+    Ok(Json(res))
+}
 #[derive(Deserialize, Serialize, Validate)]
 pub struct SignForm {
     pub(crate) username: String,
