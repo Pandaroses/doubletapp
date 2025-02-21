@@ -2,7 +2,7 @@ use axum::extract::ws::WebSocket;
 use axum::extract::WebSocketUpgrade;
 use axum::http::StatusCode;
 use axum::response::Response;
-use axum::routing::any;
+use axum::routing::{any, get};
 use axum::{extract::State, routing::post, Json, Router};
 use axum::{middleware, Extension};
 use error::AppError;
@@ -72,6 +72,9 @@ async fn main() {
         .route("/get-seed", post(create_seed))
         .route("/submit-game", post(submit_game))
         .route("/game", any(ws_upgrader))
+        .route("/get_scores", post(misc::get_scores))
+        .route("/user/signup", post(misc::signup))
+        .route("/user/login", post(misc::login))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             misc::authorization,
@@ -193,8 +196,15 @@ pub async fn submit_game(
     };
     if score == game.score {
         //state.games.remove(&id).unwrap();
+
         if let Some(u) = user {
-            sqlx::query!("INSERT INTO \"game\" (game_id,score,average_time,dimension,time_limit,user_id) VALUES ($1,$2,$3,$4,$5,$6)",uuid::Uuid::new_v4(),score as i32,time.1, details.dimension as i32,0,u.id).execute(&mut *conn).await?;
+            println!(
+                "Game {} submitted with score {}, user exists : {}",
+                game.id,
+                score,
+                u.clone().username
+            );
+            let x = sqlx::query!("INSERT INTO \"game\" (game_id,score,average_time,dimension,time_limit,user_id) VALUES ($1,$2,$3,$4,$5,$6)",uuid::Uuid::new_v4(),score as i32,time.1, details.dimension as i32,30,u.id).execute(&mut *conn).await?;
         }
         Ok((StatusCode::OK, Json(score)))
     } else {

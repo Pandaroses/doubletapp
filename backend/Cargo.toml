@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 alea = "0.2.2"
 axum = { version = "0.7.5", features = ["macros", "ws"] }
-axum-extra = { version = "0.10.0", features = ["cookie"] }
+axum-extra = { version = "0.9.4", features = ["cookie"] }
 bcrypt = "0.17.0"
 cookie = "0.18.1"
 dotenvy = "0.15.7"

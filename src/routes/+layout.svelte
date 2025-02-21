@@ -2,11 +2,15 @@
 	import '../app.css';
 	import studio from '$lib/assets/studio.png';
 	import Modal from '$lib/settings.svelte';
+	import Trophy from 'svelte-material-icons/Trophy.svelte';
+	import AccountCircle from 'svelte-material-icons/AccountCircle.svelte';
 	import Settings from 'svelte-material-icons/Cog.svelte';
 	import { onMount, setContext } from 'svelte';
 	import { browser } from '$app/environment';
 	import { writable } from 'svelte/store';
 	import Information from 'svelte-material-icons/Information.svelte';
+	import { redirect } from '@sveltejs/kit';
+	import { goto } from '$app/navigation';
 	const FLAVOUR = 'mocha';
 	let showModal = false;
 	let showWelcome = false;
@@ -68,21 +72,28 @@
 			document.cookie = 'seenWelcome=true; max-age=31536000; path=/';
 		}
 	}
+	// TODO create other pages that exist!!!!! and handle login and all that bullshit
 </script>
 
 
 <main class={FLAVOUR}>
 	<div class="flex flex-col justify-between h-full max-h-screen min-w-screen font-mono">
 		<div class="flex flex-row bg-base justify-between h-fit w-full items-center">
-			<div class="flex flex-row text-4xl text-rosewater p-2">
+			<a class="flex flex-row text-4xl text-rosewater p-2" href="/">
 				<x class="text-blue">Double</x> <x class="text-mauve font-bold">TAPP</x>
-			</div>
+			</a>
 			<div class="flex flex-row">
 				<button on:click={() => showWelcome = true}>
 					<Information color="#cdd6f4" class="h-12 w-12 p-2" />
 				</button>
 				<button on:click={() => showModal = true}>
 					<Settings color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+				<button on:click={() => goto('/leaderboards')}>
+					<Trophy color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+				<button on:click={() => goto('/signup')}>
+					<AccountCircle color="#cdd6f4" class="h-12 w-12 p-2" />
 				</button>
 			</div>
 		</div>
