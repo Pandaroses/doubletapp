@@ -20,7 +20,6 @@ pub struct GameManager {
 }
 
 impl GameManager {
-    // matchmaking / queueus or whatever, maybe instead of a hashmap use a queue
     pub async fn assign_game(&self, ws: WebSocket, user: Option<UserExt>) {
         println!("Attempting to assign player to a game");
         let mut games = match user {
@@ -34,15 +33,6 @@ impl GameManager {
             }
             None => self.anon_games.clone(),
         };
-        // for (i, tx) in games.iter() {
-        //     match tx.send(ws).await {
-        //         Ok(()) => return,
-        //         Err(mpsc::error::SendError(rws)) => {
-        //             ws = rws;
-        //             dead_games.push(i.clone());
-        //         }
-        //     }
-        // }
         let mut attempts = games.size;
         let mut ws = ws;
         while attempts > 0 {
@@ -53,6 +43,7 @@ impl GameManager {
                         return;
                     }
                     Err(mpsc::error::SendError(rws)) => {
+                        // as game is dequeued and we know its a dead game it gets removed
                         ws = rws;
                         attempts -= 1;
                     }

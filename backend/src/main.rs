@@ -33,6 +33,7 @@ pub struct AppState {
     db: Pool<Postgres>,
 }
 
+/// enum representing all possible moves done by the client
 #[repr(u8)]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Move {
@@ -51,10 +52,15 @@ pub enum Move {
 
 #[tokio::main]
 async fn main() {
+    // basic initialization
     dotenvy::dotenv().ok();
+
     let database_url = std::env::var("DATABASE_URL").expect("DB_URL must be set");
+
     let pool = PgPool::connect(&database_url).await.unwrap();
+
     tracing_subscriber::fmt::init();
+
     let state = Arc::new(AppState {
         games: Mutex::new(HashMap::new()),
         game_manager: GameManager {
@@ -67,7 +73,6 @@ async fn main() {
         },
         db: pool,
     });
-    //TODO add half the new routes that i just made
     let app = Router::new()
         .route("/get-seed", post(create_seed))
         .route("/submit-game", post(submit_game))
@@ -112,6 +117,7 @@ pub async fn ws_upgrader(
     State(state): State<Arc<AppState>>,
     Extension(user): Extension<Option<UserExt>>,
 ) -> Response {
+    // required due to state not implementing copy
     let cloned_state = state.clone();
     ws.on_upgrade(move |socket| ws_handler(socket, cloned_state, user))
 }
@@ -120,13 +126,13 @@ pub async fn ws_handler(ws: WebSocket, state: Arc<AppState>, user: Option<UserEx
     state.game_manager.clone().assign_game(ws, user).await
 }
 
+/// creates a new seed using the implemented splitmix and xoshiro256+ algorithms from sillyrng
 #[axum::debug_handler]
 pub async fn create_seed(
     State(state): State<Arc<AppState>>,
     Json(form): Json<GameForm>,
 ) -> (StatusCode, Json<Seed>) {
     let game_id = ulid::Ulid::new();
-    let cloned_state = state.clone();
     let seed = rand::random::<u32>();
     let game_state = GameState {
         seed,
@@ -163,7 +169,6 @@ pub async fn submit_game(
     Extension(user): Extension<Option<UserExt>>,
     Json(game): Json<GameEnd>,
 ) -> Result<(StatusCode, Json<u32>), AppError> {
-    //TODO game removal (although how do?)
     println!(
         "Received submission for game {} with {} moves",
         game.id,
@@ -177,7 +182,6 @@ pub async fn submit_game(
 
     if !time.0 {
         println!("Rejected game {} due to suspicious timings", game.id);
-        // state.games.remove(&id).unwrap();
         return Ok((StatusCode::NOT_ACCEPTABLE, Json(0)));
     }
     let score = match verify_moves(
@@ -195,8 +199,6 @@ pub async fn submit_game(
         }
     };
     if score == game.score {
-        //state.games.remove(&id).unwrap();
-
         if let Some(u) = user {
             println!(
                 "Game {} submitted with score {}, user exists : {}",
@@ -204,11 +206,10 @@ pub async fn submit_game(
                 score,
                 u.clone().username
             );
-            let x = sqlx::query!("INSERT INTO \"game\" (game_id,score,average_time,dimension,time_limit,user_id) VALUES ($1,$2,$3,$4,$5,$6)",uuid::Uuid::new_v4(),score as i32,time.1, details.dimension as i32,30,u.id).execute(&mut *conn).await?;
+            sqlx::query!("INSERT INTO \"game\" (game_id,score,average_time,dimension,time_limit,user_id) VALUES ($1,$2,$3,$4,$5,$6)",uuid::Uuid::new_v4(),score as i32,time.1, details.dimension as i32,30,u.id).execute(&mut *conn).await?;
         }
         Ok((StatusCode::OK, Json(score)))
     } else {
-        // state.games.remove(&id).unwrap();
         Ok((StatusCode::NOT_ACCEPTABLE, Json(0)))
     }
 }
@@ -227,7 +228,7 @@ pub async fn verify_timings(timings: Vec<u32>, state: Arc<AppState>) -> (bool, f
 
     let std_dev = variance.sqrt();
 
-    //let is_significantly_faster = mean < state.average_time * 0.25;
+    // from testing, due to being able to think you can technically beat human reaction time, but anything less than 100 is already suspicious
     if std_dev < 50.0 {
         println!(
             "Timing anomaly detected: mean={:.2}ms, std_dev={:.2}ms",
@@ -241,7 +242,7 @@ pub async fn verify_timings(timings: Vec<u32>, state: Arc<AppState>) -> (bool, f
 }
 
 pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
-    //this is assuming we start at 0,0 and size,size (should be a client side force)
+    //this is assuming we start at 0,0 and size,size (should be a client side force, now enforced)
     let mut rng = sillyrng::Xoshiro256plus::new(Some(seed as u64));
     let mut grid: Vec<bool> = vec![false; (size * size) as usize];
     let mut blue_coords: (u8, u8) = (0, 0);
@@ -340,7 +341,7 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
     Ok(score)
 }
 
-// more "difficult algorithm"
+// more "difficult algorithm" TODO
 pub async fn get_optimal_paths(grid: Vec<bool>, r: (u8, u8), b: (u8, u8), size: u8) -> Vec<u32> {
     let mut paths = Vec::new();
     for i in 0..grid.len() {

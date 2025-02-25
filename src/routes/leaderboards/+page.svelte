@@ -42,7 +42,7 @@
 	//TODO make the dimension and timelimit a select
 </script>
 
-<div class="min-h-screen bg-[#232634] text-[#c6d0f5] p-8">
+<div class="min-h-screen bg-mantle text-text p-8">
 	<div class="text-3xl font-bold mb-6">Leaderboards</div>
 	<div class="flex gap-4 items-center mb-6">
 		<div class="font-semibold">Dimension:</div>
@@ -59,20 +59,20 @@
 		</select>
 		<div class="font-semibold">Personal Bests:</div>
 		<input type="checkbox" bind:checked={userOwned} class="bg-surface0 px-2">
-		<button on:click={fetchScores} class="px-4 py-1 rounded bg-[#a6e3a1] text-[#1e2030] font-semibold hover:bg-[#8bd49e]">Refresh</button>
+		<button on:click={fetchScores} class="px-4 py-1 rounded bg-green text-text font-semibold hover:bg-sky">Refresh</button>
 	</div>
 	<table class="min-w-full border-collapse">
 		<thead class="bg-[#1e2030]">
 			<tr>
-				<th class="px-4 py-2 border border-[#393f4a]">Username</th>
-				<th class="px-4 py-2 border border-[#393f4a]">Score</th>
+				<th class="px-4 py-2 border border-text">Username</th>
+				<th class="px-4 py-2 border border-text">Score</th>
 			</tr>
 		</thead>
 		<tbody>
 			{#each leaderboard as [user, score]}
-				<tr class="hover:bg-[#393f4a]">
-					<td class="px-4 py-2 border border-[#393f4a]">{user}</td>
-					<td class="px-4 py-2 border border-[#393f4a]">{score}</td>
+				<tr class="hover:bg-text">
+					<td class="px-4 py-2 border border-text">{user}</td>
+					<td class="px-4 py-2 border border-text">{score}</td>
 				</tr>
 			{/each}
 		</tbody>
