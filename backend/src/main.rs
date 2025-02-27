@@ -61,18 +61,23 @@ async fn main() {
 
     tracing_subscriber::fmt::init();
 
-    let state = Arc::new(AppState {
-        games: Mutex::new(HashMap::new()),
-        game_manager: GameManager {
-            user_games:
-                Queue::<Arc<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>::default_sized(32),
-            cheater_games:
-                Queue::<Arc<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>::default_sized(32),
-            anon_games:
-                Queue::<Arc<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>::default_sized(32),
-        },
-        db: pool,
-    });
+    let state =
+        Arc::new(AppState {
+            games: Mutex::new(HashMap::new()),
+            game_manager:
+                GameManager {
+                    user_games: Arc::new(Mutex::new(Queue::<
+                        Arc<Mutex<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>,
+                    >::new())),
+                    cheater_games: Arc::new(Mutex::new(Queue::<
+                        Arc<Mutex<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>,
+                    >::new())),
+                    anon_games: Arc::new(Mutex::new(Queue::<
+                        Arc<Mutex<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>,
+                    >::new())),
+                },
+            db: pool,
+        });
     let app = Router::new()
         .route("/get-seed", post(create_seed))
         .route("/submit-game", post(submit_game))

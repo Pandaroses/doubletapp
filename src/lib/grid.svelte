@@ -83,7 +83,6 @@
 			const data = e.data;
 
 			try {
-				console.log(data);
 				const message = JSON.parse(data);
 				switch (message.type) {
 					case 'Start':
@@ -101,16 +100,7 @@
 								clearInterval(interval);
 							}
 						}, 1000);
-						let count = 0;
-						while (count < $state.size) {
-							let x = Math.floor(rng.next() * $state.size);
-							let y = Math.floor(rng.next() * $state.size);
-							if (grid[x * $state.size + y] == false) {
-								grid[x * $state.size + y] = true;
-								count += 1;
-							}
-						}
-
+						fillGrid($state.size);
 						break;
 					case 'Quota':
 						console.log(
@@ -152,6 +142,7 @@
 			ws.close();
 			temp_id = '';
 		});
+		fillGrid($state.size);
 	};
 	const startTimer = async () => {
 		let data = { dimension: $state.size, time_limit: $state.timeLimit };
@@ -175,15 +166,7 @@
 		acursorX = $state.size - 1;
 		acursorY = $state.size - 1;
 
-		let count = 0;
-		while (count < $state.size) {
-			let x = Math.floor(rng.next() * $state.size);
-			let y = Math.floor(rng.next() * $state.size);
-			if (grid[x * $state.size + y] == false) {
-				grid[x * $state.size + y] = true;
-				count += 1;
-			}
-		}
+		fillGrid($state.size);
 		time = $state.timeLimit;
 		interval = setInterval(async () => {
 			time -= 1;
@@ -547,6 +530,17 @@
 				end == false ? (end = true) : '';
 				endGame();
 				break;
+		}
+	};
+	const fillGrid = (count: number) => {
+		let placed = 0;
+		while (placed < count) {
+			let x = Math.floor(rng.next() * $state.size);
+			let y = Math.floor(rng.next() * $state.size);
+			if (grid[x * $state.size + y] == false) {
+				grid[x * $state.size + y] = true;
+				placed += 1;
+			}
 		}
 	};
 	initGrid();

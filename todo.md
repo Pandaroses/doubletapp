@@ -1,5 +1,5 @@
 ### analysis
-- [X ] scoped analysis
+- [X] scoped analysis
 - [X] documented requirements
 - [X] interview yap
 - [ ] well modelled program 

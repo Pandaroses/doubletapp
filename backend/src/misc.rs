@@ -74,18 +74,16 @@ pub async fn get_scores(
         true => user.unwrap().id,
         false => uuid::Uuid::new_v4(),
     };
-    let res: Vec<(String, usize)> = sqlx::query_as::<_, Score>(
-        query_string
-    )
-    .bind(data.dimension as i32)
-    .bind(data.time_limit as i32)
-    .bind(data.page as i32)
-    .bind(user_id)
-    .fetch_all(&mut *state.db.acquire().await?)
-    .await?
-    .iter()
-    .map(|x| (x.username.clone(), x.score.unwrap() as usize))
-    .collect();
+    let res: Vec<(String, usize)> = sqlx::query_as::<_, Score>(query_string)
+        .bind(data.dimension as i32)
+        .bind(data.time_limit as i32)
+        .bind(data.page as i32)
+        .bind(user_id)
+        .fetch_all(&mut *state.db.acquire().await?)
+        .await?
+        .iter()
+        .map(|x| (x.username.clone(), x.score.unwrap() as usize))
+        .collect();
     Ok(Json(res))
 }
 #[derive(Deserialize, Serialize, Validate)]
@@ -212,41 +210,45 @@ pub async fn authorization(
 
 // TODO logout function that deletes the session from the database
 
-#[derive(Default, Clone, PartialEq, PartialOrd)]
+#[derive(Debug)]
 pub struct Queue<T> {
-    items: Vec<T>,
+    items: [Option<T>; 64],
     pub size: usize,
-    capacity: usize,
     front: usize,
 }
 
-impl<T: Clone> Queue<T> {
-    /// see how i use proper naming convention
-    pub fn enqueue<U>(&mut self, item: T) -> bool {
-        if self.size == self.capacity {
+impl<T> Queue<T> {
+    pub fn new() -> Self {
+        Self {
+            items: std::array::from_fn(|_| None),
+            size: 0,
+            front: 0,
+        }
+    }
+
+    pub fn enqueue(&mut self, item: T) -> bool {
+        if self.size == self.items.len() {
             return false;
         }
-        let rear = (self.front + self.size) % self.capacity;
-        self.items[rear as usize] = item;
-        return true;
+        let rear = (self.front + self.size) % self.items.len();
+        self.items[rear] = Some(item);
+        self.size += 1;
+        true
     }
-    /// Returns the dequeue of this [`Queue<T>`].
+
     pub fn dequeue(&mut self) -> Option<T> {
         if self.size == 0 {
             return None;
         }
-        let res = self.items[self.front].clone();
-        self.front = (self.front + 1) % self.capacity;
+        let item = self.items[self.front].take();
+        self.front = (self.front + 1) % self.items.len();
         self.size -= 1;
-        Some(res)
+        item
     }
+}
 
-    pub(crate) fn default_sized(size: usize) -> Self {
-        Self {
-            items: Vec::with_capacity(size),
-            size: 0,
-            capacity: size,
-            front: 0,
-        }
+impl<T> Default for Queue<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }

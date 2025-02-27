@@ -14,9 +14,9 @@ use crate::Move;
 
 #[derive(Clone)]
 pub struct GameManager {
-    pub user_games: Queue<Arc<(ulid::Ulid, mpsc::Sender<WebSocket>)>>,
-    pub anon_games: Queue<Arc<(ulid::Ulid, mpsc::Sender<WebSocket>)>>,
-    pub cheater_games: Queue<Arc<(ulid::Ulid, mpsc::Sender<WebSocket>)>>,
+    pub user_games: Arc<Mutex<Queue<Arc<Mutex<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>>>,
+    pub anon_games: Arc<Mutex<Queue<Arc<Mutex<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>>>,
+    pub cheater_games: Arc<Mutex<Queue<Arc<Mutex<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>>>,
 }
 
 impl GameManager {
@@ -33,13 +33,14 @@ impl GameManager {
             }
             None => self.anon_games.clone(),
         };
-        let mut attempts = games.size;
+        let mut attempts = games.lock().await.size.clone();
+        dbg!(attempts.clone());
         let mut ws = ws;
         while attempts > 0 {
-            if let Some(game) = games.dequeue() {
-                match game.1.send(ws).await {
+            if let Some(game) = games.lock().await.dequeue() {
+                match game.lock().await.1.send(ws).await {
                     Ok(()) => {
-                        games.enqueue::<(Ulid, mpsc::Sender<WebSocket>)>(game);
+                        games.lock().await.enqueue(game.clone());
                         return;
                     }
                     Err(mpsc::error::SendError(rws)) => {
@@ -60,8 +61,9 @@ impl GameManager {
         tx.send(ws).await.unwrap();
         println!("Created new game with ID: {}", game_id);
         games
-            .clone()
-            .enqueue::<(Ulid, mpsc::Sender<WebSocket>)>(Arc::new((game_id, tx)));
+            .lock()
+            .await
+            .enqueue(Arc::new(Mutex::new((game_id, tx))));
     }
 }
 
