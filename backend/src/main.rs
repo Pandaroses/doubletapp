@@ -61,23 +61,24 @@ async fn main() {
 
     tracing_subscriber::fmt::init();
 
-    let state =
-        Arc::new(AppState {
-            games: Mutex::new(HashMap::new()),
-            game_manager:
-                GameManager {
-                    user_games: Arc::new(Mutex::new(Queue::<
-                        Arc<Mutex<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>,
-                    >::new())),
-                    cheater_games: Arc::new(Mutex::new(Queue::<
-                        Arc<Mutex<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>,
-                    >::new())),
-                    anon_games: Arc::new(Mutex::new(Queue::<
-                        Arc<Mutex<(ulid::Ulid, tokio::sync::mpsc::Sender<WebSocket>)>>,
-                    >::new())),
-                },
-            db: pool,
-        });
+    let state = Arc::new(AppState {
+        games: Mutex::new(HashMap::new()),
+        game_manager: GameManager {
+            user_games: Arc::new(Mutex::new(Queue::<(
+                ulid::Ulid,
+                tokio::sync::mpsc::Sender<WebSocket>,
+            )>::new())),
+            cheater_games: Arc::new(Mutex::new(Queue::<(
+                ulid::Ulid,
+                tokio::sync::mpsc::Sender<WebSocket>,
+            )>::new())),
+            anon_games: Arc::new(Mutex::new(Queue::<(
+                ulid::Ulid,
+                tokio::sync::mpsc::Sender<WebSocket>,
+            )>::new())),
+        },
+        db: pool,
+    });
     let app = Router::new()
         .route("/get-seed", post(create_seed))
         .route("/submit-game", post(submit_game))
@@ -92,6 +93,8 @@ async fn main() {
         .with_state(state)
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http());
+
+    // queue testing
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -179,6 +182,7 @@ pub async fn submit_game(
         game.id,
         game.moves.len()
     );
+    // todo check time
     let id = ulid::Ulid::from_string(&game.id).unwrap();
     let lock = state.games.lock().await;
     let mut conn = state.db.acquire().await?;

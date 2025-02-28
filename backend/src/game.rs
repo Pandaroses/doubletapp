@@ -14,15 +14,15 @@ use crate::Move;
 
 #[derive(Clone)]
 pub struct GameManager {
-    pub user_games: Arc<Mutex<Queue<Arc<Mutex<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>>>,
-    pub anon_games: Arc<Mutex<Queue<Arc<Mutex<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>>>,
-    pub cheater_games: Arc<Mutex<Queue<Arc<Mutex<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>>>,
+    pub user_games: Arc<Mutex<Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>,
+    pub anon_games: Arc<Mutex<Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>,
+    pub cheater_games: Arc<Mutex<Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>,
 }
 
 impl GameManager {
     pub async fn assign_game(&self, ws: WebSocket, user: Option<UserExt>) {
         println!("Attempting to assign player to a game");
-        let mut games = match user {
+        let games = match user {
             Some(u) => {
                 //innocent until proven guilty, very demure, very fashionable
                 if u.cheater.unwrap_or(false) {
@@ -33,18 +33,18 @@ impl GameManager {
             }
             None => self.anon_games.clone(),
         };
-        let mut attempts = games.lock().await.size.clone();
-        dbg!(attempts.clone());
+        let mut attempts = games.lock().await.size;
         let mut ws = ws;
         while attempts > 0 {
-            if let Some(game) = games.lock().await.dequeue() {
-                match game.lock().await.1.send(ws).await {
+            let mut lock = games.lock().await;
+            if let Some(game) = lock.dequeue() {
+                match game.1.send(ws).await {
                     Ok(()) => {
-                        games.lock().await.enqueue(game.clone());
+                        lock.enqueue(game.clone());
                         return;
                     }
                     Err(mpsc::error::SendError(rws)) => {
-                        // as game is dequeued and we know its a dead game it gets removed
+                        println!("there was an error");
                         ws = rws;
                         attempts -= 1;
                     }
@@ -58,12 +58,15 @@ impl GameManager {
         let game_id = Ulid::new();
         tokio::spawn(game_handler(game_id.clone(), rx));
 
-        tx.send(ws).await.unwrap();
-        println!("Created new game with ID: {}", game_id);
-        games
-            .lock()
-            .await
-            .enqueue(Arc::new(Mutex::new((game_id, tx))));
+        match tx.send(ws).await {
+            Ok(_) => {
+                println!("Created new game with ID: {}", game_id);
+                games.lock().await.enqueue((game_id, tx));
+            }
+            Err(e) => {
+                println!("failed to send to game error: {}", e);
+            }
+        };
     }
 }
 
