@@ -18,6 +18,7 @@
 	if (browser) {
 		initWasm().catch(console.error);
 	}
+	export let showModal;
 	let state: any = getContext('state');
 	let scoreboard: any = 0;
 	let end = true;
@@ -60,9 +61,9 @@
 		initGrid();
 	};
 	const startGame = () => {
-		gameStarted = true;
 		switch ($state.gameMode) {
 			case 'timer':
+				gameStarted = true;
 				startTimer();
 				break;
 			case 'multiplayer':
@@ -124,6 +125,10 @@
 					case 'Move':
 						console.log('Received move:', message.data);
 						break;
+					case 'Out':
+						console.log('player out placed',message.data);
+						end = false;
+						ws.close();
 					case 'ID':
 						console.log('Received ID:', message.data);
 						temp_id = message.data;
@@ -142,7 +147,6 @@
 			ws.close();
 			temp_id = '';
 		});
-		fillGrid($state.size);
 	};
 	const startTimer = async () => {
 		let data = { dimension: $state.size, time_limit: $state.timeLimit };
@@ -280,6 +284,9 @@
 		dasIntervals[i] = false;
 	};
 	const onKeyDown = (e: any) => {
+		if (!gameStarted && $state.gameMode === 'multiplayer') {
+			return;
+		}
 		const timeDiff = Date.now() - lastActionTime;
 		switch (e.key) {
 			case $state.keycodes.wU:
@@ -565,9 +572,11 @@
 		<div class="flex flex-col items-center">
 			<div class="relative w-fit h-fit">
 				{#if $state.gameMode === 'multiplayer' && (!temp_id || !gameStarted)}
-					<div class="absolute top-0 left-0 right-0 bottom-[4.5rem] flex items-center justify-center z-10 bg-base/80">
+					<div
+						class="absolute top-0 left-0 right-0 bottom-[4.5rem] flex items-center justify-center z-10 bg-base/80"
+					>
 						{#if !temp_id}
-							<button 
+							<button
 								class="px-4 py-2 rounded-lg transition-colors duration-300 bg-lavender text-mantle hover:bg-rosewater"
 								on:click={startMultiplayerGame}
 							>
@@ -575,84 +584,85 @@
 							</button>
 						{:else}
 							<div class="text-text text-3xl flex flex-col items-center gap-4">
-								<div class="flex items-center gap-2">
-									Waiting for players...
-								</div>
-								<div class="text-subtext0 text-xl">
-									Press {$state.keycodes.submit} to ready up
-								</div>
+								<div class="flex items-center gap-2">Waiting for players...</div>
 							</div>
 						{/if}
 					</div>
 				{/if}
-				<div class="w-fit h-fit flex flex-col">
-					{#each Array($state.size) as _, col}
-						<div class="w-fit h-fit flex flex-row">
-							{#each Array($state.size) as _, row}
-								<div
-									id={grid[row * $state.size + col]}
-									class="{cGrid[row * $state.size + col] === 'correct'
-										? 'bg-green'
-										: cGrid[row * $state.size + col] === 'incorrect'
-											? 'bg-red'
-											: grid[row * $state.size + col]
-												? 'bg-crust'
-												: 'bg-text'}
+				<!-- svelte-ignore a11y-autofocus -->
+					<div class="w-fit h-fit flex flex-col" autofocus>
+						{#each Array($state.size) as _, col}
+							<div class="w-fit h-fit flex flex-row">
+								{#each Array($state.size) as _, row}
+									<div
+										id={grid[row * $state.size + col]}
+										class="{cGrid[row * $state.size + col] === 'correct'
+											? 'bg-green'
+											: cGrid[row * $state.size + col] === 'incorrect'
+												? 'bg-red'
+												: grid[row * $state.size + col]
+													? 'bg-crust'
+													: 'bg-text'}
 						
 							  w-32 h-32 border-crust border flex items-center justify-center transition-colors duration-100"
+									>
+										<div
+											class="h-8 w-8 {row == wcursorX && col == wcursorY
+												? 'border-t-blue border-l-blue border-t-8 border-l-8'
+												: ''}  {row == acursorX && col == acursorY
+												? 'border-b-red border-r-red border-b-8 border-r-8'
+												: ''}"
+										/>
+									</div>
+								{/each}
+							</div>
+						{/each}
+						<div class="text-text flex flex-row text-2xl py-4 justify-between">
+							<div class="flex flex-row">
+								<select
+									id="gamemodes"
+									name="modes"
+									class="bg-surface0 px-2"
+									bind:value={$state.gameMode}
 								>
-									<div
-										class="h-8 w-8 {row == wcursorX && col == wcursorY
-											? 'border-t-blue border-l-blue border-t-8 border-l-8'
-											: ''}  {row == acursorX && col == acursorY
-											? 'border-b-red border-r-red border-b-8 border-r-8'
-											: ''}"
-									/>
-								</div>
-							{/each}
-						</div>
-					{/each}
-					<div class="text-text flex flex-row text-2xl py-4 justify-between">
-						<div class="flex flex-row">
-							<select id="gamemodes" name="modes" class="bg-surface0 px-2" bind:value={$state.gameMode}>
-								<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
-								<option value="timer"> TIME </option>
-								<option value="multiplayer"> MULTIPLAYER </option>
-								<option value="endless"> ZEN </option>
+									<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
+									<option value="timer"> TIME </option>
+									<option value="multiplayer"> MULTIPLAYER </option>
+									<option value="endless"> ZEN </option>
+								</select>
+							</div>
+							<select
+								id="size"
+								name="sizes"
+								class="bg-surface0 px-2"
+								bind:value={$state.size}
+								on:change={() => {
+									endGame();
+								}}
+							>
+								<option value={4}> 4x4 </option>
+								<option value={5}> 5x5 </option>
+								<option value={6}> 6x6 </option>
 							</select>
+							<select
+								id="time"
+								name="times"
+								class="bg-surface0 px-2 {$state.gameMode == 'timer'
+									? 'bg-surface0'
+									: 'bg-surface0/0 text-crust/0'}"
+								bind:value={$state.timeLimit}
+								on:change={() => {
+									time = $state.timeLimit;
+									endGame();
+								}}
+							>
+								<option value={30}> 30s </option>
+								<option value={45}> 45s </option>
+								<option value={60}> 60s </option>
+							</select>
+							<button class="bg-surface0 px-2" on:click={endGame}> RESET </button>
 						</div>
-						<select
-							id="size"
-							name="sizes"
-							class="bg-surface0 px-2"
-							bind:value={$state.size}
-							on:change={() => {
-								endGame();
-							}}
-						>
-							<option value={4}> 4x4 </option>
-							<option value={5}> 5x5 </option>
-							<option value={6}> 6x6 </option>
-						</select>
-						<select
-							id="time"
-							name="times"
-							class="bg-surface0 px-2 {$state.gameMode == 'timer'
-								? 'bg-surface0'
-								: 'bg-surface0/0 text-crust/0'}"
-							bind:value={$state.timeLimit}
-							on:change={() => {
-								time = $state.timeLimit;
-								endGame();
-							}}
-						>
-							<option value={30}> 30s </option>
-							<option value={45}> 45s </option>
-							<option value={60}> 60s </option>
-						</select>
-						<button class="bg-surface0 px-2" on:click={endGame}> RESET </button>
 					</div>
-				</div>
 			</div>
 		</div>
 	{:else}
@@ -701,6 +711,5 @@
 		</div>
 	{/if}
 </div>
-
 
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />

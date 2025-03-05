@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	let meow = 0;
 	export let showModal: boolean;
+	export let closeModal: any;
 	let dialog: any;
 	let idx: any;
 	let state: any = getContext('state');
@@ -147,7 +148,7 @@
 
 <dialog
 	bind:this={dialog}
-	on:close={() => (showModal = false)}
+	on:close={closeModal}
 	class="h-screen w-screen bg-crust/0 flex items-center justify-center {showModal ? '' : 'hidden'}"
 >
 	{#key meow}

@@ -14,6 +14,7 @@
 	const FLAVOUR = 'mocha';
 	let showModal = false;
 	let showWelcome = false;
+	let selectedElement: { focus: () => void; };
 	//TODO custom bg
 	type gameState = {
 		gameMode: string;
@@ -66,13 +67,26 @@
 		}
 	});
 
-	function closeWelcome(permanent = true) {
+	const closeWelcome = (permanent: boolean) =>{
 		showWelcome = false;
 		if (permanent) {
 			document.cookie = 'seenWelcome=true; max-age=31536000; path=/';
 		}
 	}
-	// TODO create other pages that exist!!!!! and handle login and all that bullshit
+
+	const openModal = (e: any) => {
+		selectedElement = e.currentTarget;
+		showModal = true;
+	}
+
+	const closeModal = () => {
+		showModal = false;
+		if (selectedElement) {
+			selectedElement.focus();
+		}
+	}
+
+	
 </script>
 
 
@@ -86,7 +100,7 @@
 				<button on:click={() => showWelcome = true}>
 					<Information color="#cdd6f4" class="h-12 w-12 p-2" />
 				</button>
-				<button on:click={() => showModal = true}>
+				<button on:click={openModal}>
 					<Settings color="#cdd6f4" class="h-12 w-12 p-2" />
 				</button>
 				<button on:click={() => goto('/leaderboards')}>
@@ -124,7 +138,7 @@
 				</p>
 				<button 
 					class="bg-blue text-base px-4 py-2 rounded"
-					on:click={() => closeWelcome()}
+					on:click={() => closeWelcome(true)}
 				>
 					Got it!
 				</button>

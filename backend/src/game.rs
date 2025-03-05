@@ -44,7 +44,6 @@ impl GameManager {
                         return;
                     }
                     Err(mpsc::error::SendError(rws)) => {
-                        println!("there was an error");
                         ws = rws;
                         attempts -= 1;
                     }
@@ -73,7 +72,7 @@ impl GameManager {
 pub struct Game {
     players: HashMap<Ulid, Player>,
     inactive_players: HashMap<Ulid, Player>,
-    seed: u64,
+    seed: u32,
     quota: u32,
 }
 
@@ -91,7 +90,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
     let mut state = Game {
         players: HashMap::new(),
         inactive_players: HashMap::new(),
-        seed: rand::random::<u64>(),
+        seed: rand::random::<u32>(),
         quota: 0,
     };
     let mut senders: HashMap<Ulid, SplitSink<WebSocket, Message>> = HashMap::new();
@@ -126,7 +125,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
 
     println!("Game {} starting with {} players", id, state.players.len());
     for i in state.players.iter_mut() {
-        i.1.rng = Xoshiro256plus::new(Some(state.seed.clone()));
+        i.1.rng = Xoshiro256plus::new(Some(state.seed.clone() as u64));
         let mut count = 0;
         while count < 4 {
             let x: u8 = (i.1.rng.next() * 4 as f64).floor() as u8;
@@ -139,7 +138,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
     }
     for (_p, i) in senders.iter_mut() {
         i.send(axum::extract::ws::Message::Text(
-            serde_json::to_string(&WsMessage::Start(state.seed as u64)).unwrap(),
+            serde_json::to_string(&WsMessage::Start(state.seed)).unwrap(),
         ))
         .await
         .unwrap();
@@ -164,7 +163,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                         match serde_json::from_str::<WsMessage>(&text) {
                             Ok(WsMessage::Move(mrrp)) => {
                                 println!("Received move from socket {}: {:?}", idx, mrrp);
-                                let mut player = state.players.get_mut(&mrrp.player_id);
+                                let player = state.players.get_mut(&mrrp.player_id);
                                 match player {
                                     Some(p) => {
                                         match mrrp.action {
@@ -178,7 +177,10 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                                             Move::CursorBlueLeft => p.b_coords.0 = (p.b_coords.0 as i8 - 1).max(0) as u8,
                                             Move::CursorBlueRight => p.b_coords.0 = (p.b_coords.0 + 1).min(3),
                                             Move::Submit => {
+                                                dbg!(p.grid);
+                                                dbg!(p.r_coords,p.b_coords);
                                                 if p.grid[(p.r_coords.0 * 4 + p.r_coords.1) as usize] && p.grid[(p.b_coords.0 * 4 + p.b_coords.1) as usize] && !(p.b_coords == p.r_coords) {
+                                                    println!("successfull submission");
                                                     p.current_score += 1;
                                                     let mut count = 0;
                                                     let r = p.r_coords.0 * 4 + p.r_coords.1;
@@ -217,7 +219,6 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                     }
                     None => {
                         println!("Socket {} closed for game {}", idx, id);
-                        // handle socket closed while keeping game running TODO
                         let _ = receivers.remove(idx);
                     }
                     _ => continue,
@@ -226,12 +227,13 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
             _ = interval.tick() => {
                 println!("New quota for game {}", id);
                 let mut culled_players = vec![];
+                let  player_count = state.players.len();
                 for (i, p) in state.players.iter_mut() {
                     dbg!(p.current_score);
-                    if (p.current_score as u32) <= state.quota {
+                    if (p.current_score as u32) < state.quota {
                         if let Err(e) = senders.get_mut(&i.clone()).unwrap()
                             .send(axum::extract::ws::Message::Text(
-                                serde_json::to_string(&WsMessage::Out)
+                                serde_json::to_string(&WsMessage::Out(player_count as u32))
                                     .expect("Failed to serialize Out message")
                             )).await
                         {
@@ -257,7 +259,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                 }
 
                 state.quota += 1;
-                for (i,sender) in &mut senders {
+                for (_i,sender) in &mut senders {
                     sender.send(axum::extract::ws::Message::Text(
                         serde_json::to_string(&WsMessage::Quota {
                             quota: state.quota,
@@ -286,8 +288,8 @@ pub enum WsMessage {
     Move(MMove),
     Quota { quota: u32, players_left: u32 },
     ID(Ulid),
-    Start(u64),
-    Out,
+    Start(u32),
+    Out(u32),
     Win,
     Ping,
 }

@@ -108,10 +108,66 @@ fn sigmoid(x: f64) -> f64 {
 mergesort is a sorting algorithm, which works by the divide and conquer principle, where it breaks down the array into smaller and smaller arrays, till it gets to arrays of length 2, which it then subsequently sorts from the ground up, returning a sorted array in O(nlog(n)) time complexity & O(n) space complexity
 
 ```rust
+fn merge_sort<T: Ord + Clone>(arr: &[T]) -> Vec<T> {
+    if arr.len() <= 1 {
+        return arr.to_vec();
+    }
+    
+    let mid = arr.len() / 2;
+    let left = merge_sort(&arr[..mid]);
+    let right = merge_sort(&arr[mid..]);
+    
+    merge(&left, &right)
+}
+
+fn merge<T: Ord + Clone>(left: &[T], right: &[T]) -> Vec<T> {
+    let mut result = Vec::with_capacity(left.len() + right.len());
+    let mut left_idx = 0;
+    let mut right_idx = 0;
+    
+    while left_idx < left.len() && right_idx < right.len() {
+        if left[left_idx] <= right[right_idx] {
+            result.push(left[left_idx].clone());
+            left_idx += 1;
+        } else {
+            result.push(right[right_idx].clone());
+            right_idx += 1;
+        }
+    }
+    
+    result.extend_from_slice(&left[left_idx..]);
+    result.extend_from_slice(&right[right_idx..]);
+    
+    result
+}
 
 ```
 
 ==== Std Dev + Variance
+
+
+==== Delayed Auto Shift
+Delayed auto shift (DAS for short) is a technique implemented in tetris, where you wait for a period of time before starting to move the pieces, while the key is being held down, bypassing the operating systems repeat rate. This is useful for optimizing movements in games similar to DoubleTapp, or tetris, people can customize their DAS and their ARR(auto repeat rate) to be optimal for their own reaction time, so if they need to move a piece they can move it to the corners very quickly, but only after X time has passed, instead of the OS default of ~1 second for delay and ~100ms per repeat, in my algorithm I used the provided javascript api's of setTimeout and setInterval, wrapped inside an asynchronous function to allow for multiple consecutive inputs, I separately handle keyDown and keyUp events, where on key down the interval is added to an array of intervals (thanks to javascripts type safety), in which the interval is cleared when an OS keyUP is detected, this comes with caveats as there are operating systems which send these events at different times, which can introduce some uncertainty. But due to the timings being customizeable, this isn't much of a problem.
+
+```js
+// Example for one direction, repeated for others
+case $state.keycodes.wU:
+    if (dasIntervals[0] == false) {
+        dasIntervals[0] = setTimeout(() => {
+            dasIntervals[0] = setInterval(() => {
+                wcursorY = Math.max(wcursorY - 1, 0);
+                if ($state.gameMode === 'multiplayer') {
+                    ws.send(JSON.stringify({
+                        type: 'Move',
+                        data: { player_id: `${temp_id}`, action: 'CursorBlueUp' }
+                    }));
+                }
+                moves.push(['CursorBlueUp', Date.now() - lastActionTime]);
+                lastActionTime = Date.now();
+            }, $state.das);
+        }, $state.dasDelay);
+    }
+```
 
 === Data Structures
 
@@ -198,3 +254,69 @@ an Optional type, is a simple data structure that allows for beautiful error han
   + each move is verified by the server
   + low latency communication between server and client
   + client can distinguish between types of messages recieved
+
+
+
+
+
+
+== Testing
+
+#table(
+  columns: (auto, auto, auto),
+  inset: 10pt,
+  align: (left, center, center),
+  stroke: 0.7pt,
+  [*Test Description*], [*Status*], [*Proof*],
+  
+  "Test user registration with valid credentials", [Pass], [ ],
+  "Test user registration with existing username", [Pass], [ ],
+  "Test user login with valid credentials", [Pass], [ ],
+  "Test user login with invalid credentials", [Pass], [ ],
+  "Test session persistence across page reloads", [Pass], [ ],
+  "Test session expiry after timeout", [Pass], [ ],
+  "Test grid initialization with correct size (4x4)", [Pass], [ ],
+  "Test grid initialization with correct size (5x5)", [ ], [ ],
+  "Test grid initialization with correct size (6x6)", [ ], [ ],
+  "Test initial cursor positions (blue at 0,0 and red at size-1,size-1)", [ ], [ ],
+  "Test initial grid has exactly 'size' active tiles", [ ], [ ],
+  "Test blue cursor movement in all directions with keyboard", [ ], [ ],
+  "Test red cursor movement in all directions with keyboard", [ ], [ ],
+  "Test cursor movement boundary limits (cannot move outside grid)", [ ], [ ],
+  "Test DAS (Delayed Auto Shift) functionality for cursor movement", [ ], [ ],
+  "Test valid submission when both cursors are on active tiles", [ ], [ ],
+  "Test invalid submission when cursors are on the same tile", [ ], [ ],
+  "Test invalid submission when one cursor is not on an active tile", [ ], [ ],
+  "Test score increment on valid submission", [ ], [ ],
+  "Test score reset on invalid submission", [ ], [ ],
+  "Test visual feedback (green) for correct submissions", [ ], [ ],
+  "Test visual feedback (red) for incorrect submissions", [ ], [ ],
+  "Test new active tiles appear after valid submission", [ ], [ ],
+  "Test deactivation of submitted tiles after valid submission", [ ], [ ],
+  "Test timer countdown functionality", [ ], [ ],
+  "Test game end when timer reaches zero", [ ], [ ],
+  "Test game statistics display after game end", [ ], [ ],
+  "Test leaderboard display with correct pagination", [ ], [ ],
+  "Test leaderboard filtering by grid size", [ ], [ ],
+  "Test leaderboard filtering by time limit", [ ], [ ],
+  "Test leaderboard filtering for personal bests", [ ], [ ],
+  "Test multiplayer game joining functionality", [ ], [ ],
+  "Test multiplayer game quota system", [ ], [ ],
+  "Test multiplayer game player elimination", [ ], [ ],
+  "Test multiplayer game final rankings", [ ], [ ],
+  "Test WebSocket connection establishment", [ ], [ ],
+  "Test WebSocket message handling for different action types", [ ], [ ],
+  "Test WebSocket reconnection on connection loss", [ ], [ ],
+  "Test server-side move verification with valid moves", [ ], [ ],
+  "Test server-side move verification with invalid moves", [ ], [ ],
+  "Test server-side timing verification for normal play", [ ], [ ],
+  "Test server-side timing verification for suspicious patterns", [ ], [ ],
+  "Test server-side path optimization detection", [ ], [ ],
+  "Test PRNG (Xoshiro256+) deterministic output with same seed", [ ], [ ],
+  "Test game state persistence in database", [ ], [ ],
+  "Test user statistics update after game completion", [ ], [ ],
+  "Test keybind customization persistence", [ ], [ ],
+  "Test settings reset to defaults", [ ], [ ],
+  "Test game performance with rapid inputs", [ ], [ ],
+  "Test game performance with simultaneous inputs", [ ], [ ]
+)
