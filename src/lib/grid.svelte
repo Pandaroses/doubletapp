@@ -58,6 +58,13 @@
 		acursorY = $state.size - 1;
 		moves = [];
 		clearInterval(interval);
+		
+		// Close WebSocket if in multiplayer mode
+		if ($state.gameMode === 'multiplayer' && ws) {
+			ws.close();
+			temp_id = '';
+		}
+		
 		initGrid();
 	};
 	const startGame = () => {
@@ -126,9 +133,17 @@
 						console.log('Received move:', message.data);
 						break;
 					case 'Out':
-						console.log('player out placed',message.data);
+						console.log('player out placed', message.data);
 						end = false;
+						scoreboard = message.data;
 						ws.close();
+						break;
+					case 'Win':
+						console.log("you won!!!!", message.data);
+						end = false;
+						scoreboard = 1;
+						ws.close();
+						break;
 					case 'ID':
 						console.log('Received ID:', message.data);
 						temp_id = message.data;
@@ -672,7 +687,13 @@
 			</div>
 			<div class="text-4xl py-2 flex items-center justify-between">
 				score: {score}
-				<div class="text-overlay1">#{scoreboard}</div>
+				<div class="text-overlay1">
+					{#if $state.gameMode === 'multiplayer' && scoreboard > 0}
+						Position: #{scoreboard}
+					{:else}
+						#{scoreboard}
+					{/if}
+				</div>
 			</div>
 			<div class="flex-col items-center text-3xl justify-between pb-2">
 				<div class="flex items-center my-1">

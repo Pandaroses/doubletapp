@@ -231,18 +231,21 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                 for (i, p) in state.players.iter_mut() {
                     dbg!(p.current_score);
                     if (p.current_score as u32) < state.quota {
+                        let position = (player_count - culled_players.len()) as u32;
+
                         if let Err(e) = senders.get_mut(&i.clone()).unwrap()
                             .send(axum::extract::ws::Message::Text(
-                                serde_json::to_string(&WsMessage::Out(player_count as u32))
+                                serde_json::to_string(&WsMessage::Out(position))
                                     .expect("Failed to serialize Out message")
                             )).await
                         {
                             println!("Failed to send message to player, removing {}: {}", i, e);
-                            culled_players.push(i.clone());
-                            senders.remove(&i);
+
                             continue;
                         }
+                        culled_players.push(i.clone());
                         state.inactive_players.insert(i.clone(), p.clone());
+                        senders.remove(&i);
                     }
                     p.current_score = 0;
                 }

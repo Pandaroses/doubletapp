@@ -31,6 +31,10 @@
 
 == Abstract
 
+== Problem Definition
+I plan to develop a game, which tests the dexterity of both hands, simultaneously. I believe its important that people can maintain their dexterity of both hands, and this game will help them do that. I also believe the game will be fun, and will be a good way to pass time. adding a competitive and multiplayer aspect to the game will also help with this. 
+
+I plan to develop this game using Rust and Svelte, as well as a websocket server, which will be used to communicate between the client and server.
 
 == Client
 
@@ -54,10 +58,262 @@ AT: an anticheat would be desirable, due to Svelte being unobfuscated a server s
 
 
 == Research
-https://rust-lang.github.io/async-book/
-//TBD
-// xoshiro, websockets, tailwindcss,async
 
+
+=== Similar Solutions
+There are a few similar products on the market that test dexterity in various ways. Understanding these existing solutions helps position DoubleTapp in the competitive landscape and justify its development.
+
+==== Tetris
+Tetris is one of the most recognized dexterity-based puzzle games worldwide. While it effectively tests hand-eye coordination and spatial reasoning, it differs from DoubleTapp in several key ways:
+
+- Tetris focuses primarily on single-hand dexterity, with players typically using one hand for directional controls and the other for occasional rotation/drop buttons
+- It has a significant learning curve with complex strategies around piece placement and line clearing, i.e T-spins, Wall Kicks
+- Players focus more on strategic planning of where to place pieces rather than pure dexterity training
+- The modern competitive versions of Tetris (like Tetris 99) do incorporate multiplayer aspects, but interaction between players is indirect through "garbage lines"
+
+Tetris has multiple useful features which I will be taking inspiration from, particularly Delayed Auto Shift (DAS)@DAS-Tetris, which allows for precise control of pieces, this allows for people to have more accurate control over their piece placement and allows for timing optimization
+==== Tapp
+Tapp, developed by Alexander Tahiri at Studio Squared, is the direct predecessor to DoubleTapp and shares the most similarities:
+
+- Uses a grid-based interface (4x4) with active and inactive tiles
+- Tests dexterity through rapid target acquisition
+- Focuses on score maximization without mistakes
+- Simple, accessible gameplay with minimal learning curve
+
+However, Tapp is limited to single-hand dexterity training, using only mouse input. It lacks the simultaneous dual-hand coordination that DoubleTapp aims to develop. Additionally, Tapp has no built-in multiplayer functionality or competitive leaderboard system.
+
+==== Other Dexterity Training Applications
+Various other applications exist for dexterity training, including:
+
+- Typing games that test two-handed coordination but in a highly structured, predictable pattern (monkeytype, nitrotype)
+- Rhythm games (like Dance Dance Revolution or osu!) that test reaction time and coordination but typically focus on timing rather than spatial navigation
+- Aim trainers (for FPS games) that focus exclusively on mouse precision, although sometimes incorporate simultaneous dexterity, i.e counterstrafing, bhopping, edgebugging
+
+=== Multiplayer
+for implementing multiplayer, there are multiple solutions that work, i.e unidirectional HTTP requests, custom UDP handling, and websockets
+
+#table(
+  columns: (1fr, 2fr, 2fr),
+  inset: 12pt,
+  align: (center, left, left),
+  stroke: 0.7pt,
+  fill: (_, row) => if row == 0 { luma(240) } else { none },
+  [*Method*], [*Pros*], [*Cons*],
+  
+  [HTTP @HTTP-Protocol] , 
+  [
+    - Simple implementation
+    - Reasonably performant
+    - Easily Debuggable
+    - widely supported
+  ], 
+  [
+    - Slow with many simultaneous users
+    - Requires entire connection sequence for each request
+    - relatively high latency
+    - not designed for bidirectional communication
+  ],
+  
+  [UDP @UDP-Protocol], 
+  [
+    - Very performant
+    - allows for low level optimisations
+    - minimal overhead
+  ], 
+  [
+    - susceptible to packet loss, and is not guaranteed to have data parity (important for doubletapp)
+    - complex to implement, and difficult to interconnect with existing libraries without significant performance declines
+    - often blocked by firewalls
+    - no ordering guarantees
+  ],
+  
+  [Websockets @WebSockets-Guide], 
+  [
+    - allows for fast and safe data transmission
+    - relatively complex to implement, as need to handle assignment of websockets to individual games
+    - compatible with existing web server libraries
+    - fully duplex, no need to reestablish connection sequence each request
+  ], 
+  [
+    - websockets don't recover when connections are terminated
+    - some networks block the websocket protocol, limiting accessibility
+    - high memory usage per connection compared to UDP/HTTP
+  ]
+)
+
+I have decided to use websockets, as they are a reasonable balance of complexity, performance, and ease of implementation, while still providing a high degree of reliability and safety. 
+=== PRNG's (Pseudorandom Number Generators)
+
+after considering many PRNG's (pseudorandomnumber generators), for example ARC4 , seedrandom, ChaCha20, and discounting them due to performance issues / hardware dependent randomization, I decided on using the Xoshiro/Xoroshiro family of algorithms, which are based on the Linear Congruential Generators, which are a (now-obsolete) family of PRNG's, which use a linear multiplication combined with modulus operations, to create quite large non-repeating sequences, although quite slow and needing very large state. xoshiro generators use a much smaller state (between 128-512) bits, while still maintaining a large periodicity,
+
+
+#table(
+  columns: (auto, auto, auto),
+  inset: 10pt,
+  align: (left, left, left),
+  stroke: 0.7pt,
+  [*PRNG Algorithm*], [*Pros*], [*Cons*],
+  
+  [ARC4 (Alleged RC4)],
+  [
+  - Simple implementation
+  - Fast for small applications
+  - Variable key size
+  ],
+  [
+  - Cryptographically broken
+  - Biased output in early stream
+  - Vulnerable to related-key attacks
+  ],
+  
+  [Seedrandom.js],
+  [
+  - Browser-friendly
+  - Multiple algorithm options
+  - Good for web applications
+  ],
+  [
+  - JavaScript performance limitations
+  - Depends on implementation quality
+  - Not cryptographically secure by default
+  ],
+  
+  [ChaCha20],
+  [
+  - Cryptographically secure
+  - Excellent statistical properties
+  - Fast in software (no large tables)
+  - Parallelizable
+  ],
+  [
+  - Complex implementation
+  - Overkill for non-security applications
+  - Higher computational cost
+  ],
+  
+  [Xorshift],
+  [
+  - Extremely fast
+  - Simple implementation
+  - Good statistical quality
+  ],
+  [
+  - Not cryptographically secure
+  - Simpler variants have known weaknesses
+  - Some states can lead to poor quality
+  ],
+  
+  [Linear Congruential Generator (LCG)],
+  [
+  - Simplest implementation
+  - Very fast
+  - Small state
+  ],
+  [
+  - Poor statistical quality
+  - Short period for 32-bit implementations
+  - Predictable patterns
+  ],
+  
+  [Mersenne Twister],
+  [
+  - Very long period
+  - Good statistical properties
+  - Industry standard in many fields
+  ],
+  [
+  - Large state (2.5KB)
+  - Not cryptographically secure
+  - Slow initialization
+  ],
+  
+  [Xoshiro256+/++],
+  [
+  - Excellent speed
+  - Great statistical properties
+  - Small state (256 bits)
+  - Fast initialization
+  ],
+  [
+  - Not cryptographically secure
+  - Newer algorithm (less scrutiny)
+  - Some variants have issues with specific bits
+  ],
+  
+  [PCG (Permuted Congruential Generator)],
+  [
+  - Excellent statistical properties
+  - Small state
+  - Good performance
+  - Multiple variants available
+  ],
+  [
+  - More complex than basic PRNGs
+  - Not cryptographically secure
+  - Relatively new
+  ]
+)
+
+#v(1cm) // Add vertical space between tables
+
+// Second table: PRNG Metrics
+#table(
+  columns: (auto, auto, auto, auto, auto),
+  inset: 10pt,
+  align: (left, center, center, center, center),
+  stroke: 0.7pt,
+  [*PRNG Algorithm*], [*Estimated Time*], [*Cycle Length*], [*State Size*], [*Performance*],
+  
+  [ARC4],
+  [Medium],
+  [~$10^{100}$],
+  [~256 bits],
+  [Moderate],
+  
+  [seedrandom.js],
+  [Medium],
+  [(multiple selectable algorithms)],
+  [Varies by algorithm],
+  [Moderate (JS limited)],
+  
+  [ChaCha20],
+  [High],
+  [$2^{256}$],
+  [384 bits],
+  [High for crypto],
+  
+  [Xorshift],
+  [Very Low],
+  [$2^{128} - 1$],
+  [128-256 bits],
+  [Very High],
+  
+  [Linear Congruential Generator (LCG)],
+  [Extremely Low],
+  [Up to $2^{32}$ (typical)],
+  [32-64 bits],
+  [Extremely High],
+  
+  [Mersenne Twister],
+  [Medium],
+  [$2^{19937}-1$ (MT19937)],
+  [2.5 KB (19937 bits)],
+  [Moderate],
+  
+  [Xoshiro256+/++],
+  [Very Low],
+  [$2^{256}-1$],
+  [256 bits],
+  [Very High],
+  
+  [PCG (Permuted Congruential Generator)],
+  [Low],
+  [$2^{128}$ or more],
+  [64-128 bits],
+  [High]
+)
+
+after testing, xoshiro256+ has provided the best results, in terms of speed and simplicity of implementation, while still providing a high degree of randomness, and a large cycle length, which is important for a game such as DoubleTapp, where we want to ensure that the game is fair and that the same seed will not be repeated for a long time.
 == Prototyping
 A rudimentary prototype has been made, which tested out multiple different input methods for simultaneous inputs, which has finalized in a "cursor"-based system, where you have two cursors controlled by Wasd-like movement, with each set of controls representing their respective cursor, additionally it has been decided that both cursors need to be on individual Tiles, to prevent copying movements on each hand. this prototype also implemented server-side move verification, making it more difficult to cheat. Finally, the UI design of the prototype will be used in later iterations of the project.
 //image of doubletapp
@@ -67,31 +323,24 @@ A rudimentary prototype has been made, which tested out multiple different input
 === Algorithms
 
 ==== Xoshiro256+
-after considering many PRNG's (pseudorandomnumber generators), for example ARC4, seedrandom, ChaCha20, and discounting them due to performance issues / hardware dependent randomization, I decided on using the Xoshiro/Xoroshiro family of algorithms, which are based on the Linear Congruential Generators, which are a (now-obsolete) family of PRNG's, which use a linear multiplication combined wit hmodulus operations, to create quite large non-repeating sequences, although quite slow and needing very large state. xoshiro generators use a much smaller state (between 128-512) bits, while still maintaining a large periodicity,
 
 ```rust
         // output is generated before the "next" cycle
         let result = self.seed[0].wrapping_add(self.seed[3]);
         // shifting prevents guessing from linearity
         let t = self.seed[1] << 17;
-
         // these 4 xor operations simulate a matrix transformation
         self.seed[2] ^= self.seed[0];
         self.seed[3] ^= self.seed[1];
         self.seed[1] ^= self.seed[2];
         self.seed[0] ^= self.seed[3];
-
         // last xor is just a xor
         self.seed[2] ^= t;
         // the rotation ensures that all bits in the seed eventually interact, allowing for much higher periodicity (cycles before you get an identical number, which in the case of xoshiro256+ is 2^256 - 1)
         self.seed[3] = Xoshiro256plus::rol64(self.seed[3], 45);
-
         // gets the first 53 bits of the result, as only the first 53 bits are guaranteed to be unpredictable for xoshiro256+, for the other variations i.e ++,*,** they are optimized for all the bits to be randomized, but as xoshiro256+ is optimized for floating points, which we require
         (result >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
-
-  
 ```
-
 ==== Sigmoid Function
 the sigmoid function is a function, that maps any real input onto a S shaped curve, which is bound between values, in my case i am bounding the output of the Xoshiro256+ float to be between 0..11, which allows me to easily use it to generate the "next" state of the game, allowing for a more natural distribution of numbers, as well as a more consistent distribution of numbers, which allows for a more consistent game experience.
 
@@ -190,6 +439,12 @@ an Optional type, is a simple data structure that allows for beautiful error han
 
 === Database Design
 
+#figure(
+  image("assets/ERM.png", width: 80%),
+  caption: [Entity Relationship Model - Database schema showing relationships between game entities]
+)
+
+The Entity Relationship Model illustrates the database structure for DoubleTapp, showing the relationships between users, games, statistics, and other critical data entities that support gameplay and analytics.
 
 === Mockups & etc..
 
@@ -320,3 +575,50 @@ an Optional type, is a simple data structure that allows for beautiful error han
   "Test game performance with rapid inputs", [ ], [ ],
   "Test game performance with simultaneous inputs", [ ], [ ]
 )
+
+
+#pagebreak()
+= Bibliography
+#bibliography(
+  "bibliography.yml",
+  title:none,
+  full:true,
+  style: "ieee"
+)
+
+=== Function & Flow Diagrams
+
+#figure(
+  image("assets/gamehandler-flowchart.png", width: 80%),
+  caption: [Game Handler Flowchart - Main processing logic for handling game state transitions and events]
+)
+
+This flowchart illustrates the core game handling process, showing how user inputs are processed, game state is updated, and rendering occurs in the main game loop.
+
+#figure(
+  image("assets/gamehandler-prototype-flowchart.png", width: 80%),
+  caption: [Game Handler Prototype Flowchart - Early design of the game processing pipeline]
+)
+
+The prototype flowchart shows the initial design approach for the game handler before refinements were implemented, demonstrating the evolution of the system architecture.
+
+#figure(
+  image("assets/singleplayer-game-flowchart.png", width: 80%),
+  caption: [Singleplayer Game Flowchart - Logic flow for the timer-based singleplayer mode]
+)
+
+This diagram details the timer-based singleplayer game mode logic, including state initialization, score tracking, and game termination conditions.
+
+#figure(
+  image("assets/multiplayer-game-flowchart.png", width: 80%),
+  caption: [Multiplayer Game Flowchart - Communication and state management for networked gameplay]
+)
+
+The multiplayer flowchart illustrates the client-server communication pattern, synchronization mechanisms, and player state management required for consistent networked gameplay.
+
+#figure(
+  image("assets/websockets.png", width: 80%),
+  caption: [WebSocket Architecture - Implementation of the bidirectional communication system]
+)
+
+This diagram shows the WebSocket implementation architecture, detailing how persistent connections are established, maintained, and utilized for real-time game updates between clients and server.
