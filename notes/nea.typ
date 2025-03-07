@@ -1,3 +1,4 @@
+#import "catppuccin/typst/src/lib.typ": catppuccin, flavors
 #set par(justify: true)
 #show link: underline
 #set page(
@@ -16,6 +17,8 @@
 #set math.mat(delim: "[");
 #set math.vec(delim: "[");
 
+#show: catppuccin.with(flavors.mocha, code-block: true, code-syntax: true)
+
 
 #page(numbering: none, [
   #v(2fr)
@@ -27,6 +30,7 @@
   ])
   #v(2fr)
 ])
+
 
 
 == Abstract
@@ -417,7 +421,79 @@ case $state.keycodes.wU:
         }, $state.dasDelay);
     }
 ```
-
+=== Database Design and Queries
+=== Database Design and Queries
+#figure(
+image("assets/ERM.png", width: 80%),
+caption: [Entity Relationship Model - Database schema showing relationships between game entities]
+)
+The Entity Relationship Model illustrates the database structure for DoubleTapp, showing the relationships between users, games, statistics, and other critical data entities that support gameplay and analytics.
+==== User Authentication Queries
+```sql
+SELECT id, password FROM "user" WHERE username = $1
+```
+==== User Registration Query
+```sql
+INSERT INTO "user" (id, username, password) VALUES ($1, $2, $3)
+```
+==== Session Management
+```sql
+INSERT INTO session (ssid, user_id, expiry_date)
+VALUES ($1, $2, NOW() + INTERVAL '7 DAYS')
+SELECT u.id, u.username, u.admin, u.cheater
+FROM "user" u
+INNER JOIN session s ON u.id = s.user_id
+WHERE s.ssid = $1 AND s.expiry_date > NOW()
+  ```
+==== Leaderboard Queries
+```sql
+-- Get global leaderboard
+SELECT "game".score, "user".username
+FROM "game"
+JOIN "user" ON "game".user_id = "user".id
+WHERE dimension = $1
+AND time_limit = $2
+ORDER BY score
+OFFSET ($3 - 1) 100
+FETCH NEXT 100 ROWS ONLY
+-- Get user's personal scores
+SELECT "game".score, "user".username
+FROM "game"
+JOIN "user" ON "game".user_id = "user".id
+WHERE dimension = $1
+AND time_limit = $2
+AND "user".id = $4
+ORDER BY score
+OFFSET ($3 - 1) 100
+FETCH NEXT 100 ROWS ONLY
+```
+==== Game Submission
+```sql
+INSERT INTO "game" (game_id, score, average_time, dimension, time_limit, user_id)
+VALUES ($1, $2, $3, $4, $5, $6)
+```
+==== Statistics Trigger
+```sql
+CREATE OR REPLACE FUNCTION update_statistics_on_game_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+UPDATE user_statistics
+SET
+games_played = games_played + 1,
+highest_score = GREATEST(highest_score, NEW.score)
+WHERE user_id = NEW.user_id;
+UPDATE statistics
+SET
+total_timings = total_timings + NEW.average_time,
+total_score = total_score + NEW.score,
+games_played = games_played + 1;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER game_insert_trigger
+AFTER INSERT ON game
+FOR EACH ROW EXECUTE FUNCTION update_statistics_on_game_insert();
+```
 === Data Structures
 
 ==== Circular Queue
@@ -429,22 +505,45 @@ A hash table (colloquially called a hashmap) is an array that is abstracted over
 ==== Option/Result Types
 an Optional type, is a simple data structure that allows for beautiful error handling, an Option type wraps the output data, allowing for the error to be handled before trying to manipulate data, i.e in a Some(data) or None, where None means that the data was nonexistent, or we can use a result type to handle errors down the stack, where we can pass the error with Err(e) and Ok(d), so if one part of the function layer breaks we can know exactly where it errored and softly handle the error if needed
 
-==== 
-=== Function Map
 
-
-
-=== Class Diagrams
-
-
-=== Database Design
-
+=== Function & Flow Diagrams
 #figure(
-  image("assets/ERM.png", width: 80%),
-  caption: [Entity Relationship Model - Database schema showing relationships between game entities]
+  image("assets/gamehandler-flowchart.png", width: 80%),
+  caption: [Game Handler Flowchart - Main processing logic for handling game state transitions and events]
 )
 
-The Entity Relationship Model illustrates the database structure for DoubleTapp, showing the relationships between users, games, statistics, and other critical data entities that support gameplay and analytics.
+This flowchart illustrates the core game handling process, showing how user inputs are processed, game state is updated, and rendering occurs in the main game loop.
+
+#figure(
+  image("assets/gamehandler-prototype-flowchart.png", width: 80%),
+  caption: [Game Handler Prototype Flowchart - Early design of the game processing pipeline]
+)
+
+The prototype flowchart shows the initial design approach for the game handler before refinements were implemented, demonstrating the evolution of the system architecture.
+
+#figure(
+  image("assets/singleplayer-game-flowchart.png", width: 80%),
+  caption: [Singleplayer Game Flowchart - Logic flow for the timer-based singleplayer mode]
+)
+
+This diagram details the timer-based singleplayer game mode logic, including state initialization, score tracking, and game termination conditions.
+
+#figure(
+  image("assets/multiplayer-game-flowchart.png", width: 80%),
+  caption: [Multiplayer Game Flowchart - Communication and state management for networked gameplay]
+)
+
+The multiplayer flowchart illustrates the client-server communication pattern, synchronization mechanisms, and player state management required for consistent networked gameplay.
+
+#figure(
+  image("assets/websockets.png", width: 80%),
+  caption: [WebSocket Architecture - Implementation of the bidirectional communication system]
+)
+
+This diagram shows the WebSocket implementation architecture, detailing how persistent connections are established, maintained, and utilized for real-time game updates between clients and server.
+
+
+
 
 === Mockups & etc..
 
@@ -586,39 +685,3 @@ The Entity Relationship Model illustrates the database structure for DoubleTapp,
   style: "ieee"
 )
 
-=== Function & Flow Diagrams
-
-#figure(
-  image("assets/gamehandler-flowchart.png", width: 80%),
-  caption: [Game Handler Flowchart - Main processing logic for handling game state transitions and events]
-)
-
-This flowchart illustrates the core game handling process, showing how user inputs are processed, game state is updated, and rendering occurs in the main game loop.
-
-#figure(
-  image("assets/gamehandler-prototype-flowchart.png", width: 80%),
-  caption: [Game Handler Prototype Flowchart - Early design of the game processing pipeline]
-)
-
-The prototype flowchart shows the initial design approach for the game handler before refinements were implemented, demonstrating the evolution of the system architecture.
-
-#figure(
-  image("assets/singleplayer-game-flowchart.png", width: 80%),
-  caption: [Singleplayer Game Flowchart - Logic flow for the timer-based singleplayer mode]
-)
-
-This diagram details the timer-based singleplayer game mode logic, including state initialization, score tracking, and game termination conditions.
-
-#figure(
-  image("assets/multiplayer-game-flowchart.png", width: 80%),
-  caption: [Multiplayer Game Flowchart - Communication and state management for networked gameplay]
-)
-
-The multiplayer flowchart illustrates the client-server communication pattern, synchronization mechanisms, and player state management required for consistent networked gameplay.
-
-#figure(
-  image("assets/websockets.png", width: 80%),
-  caption: [WebSocket Architecture - Implementation of the bidirectional communication system]
-)
-
-This diagram shows the WebSocket implementation architecture, detailing how persistent connections are established, maintained, and utilized for real-time game updates between clients and server.

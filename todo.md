@@ -1,51 +1,71 @@
-### analysis
-- [X] scoped analysis
-- [X] documented requirements
-- [X] interview yap
-- [X] well modelled program 
+### Analysis
+- [X] Scoped analysis
+- [X] Documented requirements
+- [X] Interview notes
+- [X] Well modelled program
+- [ ] Success criteria (missing clear, measurable criteria)
+- [ ] Stakeholder requirements (need more detailed breakdown)
 
-### documented design
-- [ ] function flowcharts
-  - [ ] create client-side function map (client_function_map.png)
-  - [ ] create server-side function map (server_function_map.png)
-  - [ ] create cross-component communication diagram (communication_flow.png)
-- [ ] class diagrams
-  - [ ] create client-side component diagram (client_components.png)
-  - [ ] create server-side class diagram (server_classes.png)
-- [ ] database design
-  - [ ] create ER diagram for database (database_er_diagram.png)
-  - [ ] document table schemas (database_schema.png)
-- [X] algorithms
-  - [X] Xoshiro256+ (PRNG) implementation
-  - [X] Sigmoid Function implementation
-  - [X] Delayed Auto Shift (DAS) implementation
-  - [X] MergeSort implementation
-  - [ ] Dijkstra's Algorithm implementation (dijkstra_algorithm.png)
-  - [ ] Std Dev + Variance implementation
-- [ ] ui "mockup"
-  - [ ] main game screen (ui_main_game.png)
-  - [ ] settings panel (ui_settings.png)
-  - [ ] leaderboard view (ui_leaderboard.png)
-  - [ ] login/signup screens (ui_authentication.png)
-  - [ ] game results screen (ui_results.png)
+### Documented Design
+- [X] Function flowcharts
+  - [X] Client-side function map
+  - [] Server-side function map
+  - [X] Cross-component communication diagram
+- [ ] Class diagrams
+  - [ ] Server-side class diagram
+- [X] Database design
+  - [X] ER diagram
+  - [X] Table schemas and queries
+- [X] Algorithms
+  - [X] Xoshiro256+ (PRNG)
+  - [X] Sigmoid Function
+  - [X] Delayed Auto Shift (DAS)
+  - [X] MergeSort
+  - [ ] Dijkstra's Algorithm (implementation details missing)
+  - [ ] Std Dev + Variance (implementation details missing)
+- [ ] UI Design
+  - [ ] Detailed wireframes/mockups
+  - [ ] User interaction flows
+  - [ ] Accessibility considerations
 
-### technical solution
-- [ ] code contents table
-- [ ] attached source code
-  - [ ] prettify source code
-  - [ ] add comprehensive comments
+### Technical Solution
+- [ ] System architecture overview
+- [ ] Code contents table
+- [ ] Development approach documentation
+- [ ] Attached source code
+  - [ ] Properly formatted
+  - [ ] Comprehensive comments
+- [ ] Implementation challenges and solutions
+- [ ] Security considerations
+  - [ ] Authentication implementation
+  - [ ] Anti-cheat measures
+  - [ ] Data validation
 
-### testing
-- [X] list of tests for all requirements
-- [ ] execute tests and document results
-  - [ ] authentication tests (test_auth.png)
-  - [ ] game mechanics tests (test_mechanics.png)
-  - [ ] multiplayer tests (test_multiplayer.png)
-  - [ ] performance tests (test_performance.png)
-  - [ ] security tests (test_security.png)
+### Testing
+- [X] List of tests for requirements
+- [ ] Testing strategy documentation
+- [ ] Test execution results
+  - [ ] Unit tests
+  - [ ] Integration tests
+  - [ ] Performance tests
+  - [ ] Security tests
+- [ ] Test data
+- [ ] Bug tracking and resolution
+- [ ] User acceptance testing
 
-### evaluation
-- [ ] evaluate against success criteria
-- [ ] discuss limitations and potential improvements
-- [ ] reflect on development process
-- [ ] user feedback analysis
+### Evaluation
+- [ ] Success criteria evaluation
+- [ ] Performance analysis
+  - [ ] Load testing results
+  - [ ] Scalability assessment
+- [ ] User feedback
+  - [ ] Usability testing results
+  - [ ] Feature satisfaction survey
+- [ ] Future improvements
+  - [ ] Identified limitations
+  - [ ] Proposed enhancements
+- [ ] Development process reflection
+  - [ ] Challenges faced
+  - [ ] Solutions implemented
+  - [ ] Learning outcomes
+
