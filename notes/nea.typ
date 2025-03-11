@@ -8,18 +8,20 @@
 ) 
 #set text(
   hyphenate: false,
-  font: "Jetbrains Mono"
+  font: "Jetbrains Mono",
+  size: 10pt
 )
 #set heading(numbering: "1.", offset: 0)
-#set text(12pt)
 #set enum(numbering: "1.1", full: true)
 #set list(marker: ([•], [‣],[--]))
 #set math.mat(delim: "[");
 #set math.vec(delim: "[");
 
+#show raw: it => align(center, it)
+
 #show: catppuccin.with(flavors.mocha, code-block: true, code-syntax: true)
 
-
+#set page(margin: 2cm, footer: [*Centre Number:* 22147  #h(1fr) #context counter(page).display("1") #h(1fr) *Candidate Number:* 9255])
 #page(numbering: none, [
   #v(2fr)
   #align(center, [
@@ -32,6 +34,8 @@
 ])
 
 
+#outline()
+
 
 == Abstract
 
@@ -42,24 +46,52 @@ I plan to develop this game using Rust and Svelte, as well as a websocket server
 
 == Client
 
-=== Client Synopsys
+=== Client Synopsys (conclusion)
 The Client is Alexander Tahiri, a software developer at Studio Squared and the developer of Tapp, a game based on a 4x4 grid, which consists of 12 inactive tiles, and 4 active tiles. Players use the mouse cursor to click on an active tile, which then deactivates that tile and actives a new, currently non-active tile.the objective of Tapp is to achieve as high a score as possible, without making any mistakes. The Client requires a derivative of this game, which tests simultaneous dexterity of both hands, additionally The Client wants to incorporate a competitive aspect to the game, which consists of a leaderboard section, allowing players to see their position whithin the rankings and a Tetris-99-esque game mechanic, where players compete to either achieve the highest score, or last the longest in a mass multiplayer format. The Client has specifically asked for the Catppuccin colour scheme to be used, The Client has sufficient computing power to host both the client,server and database, which will be provided free of charge.
 
 
 === Interview Notes
-*all interview notes are paraphrased* \
-"for doubletapp, what features are most important to you?" \
-AT: my main requirement is that the new game tests both hands simultaneously, and has replayability. features such as users and leaderboards, along with a competitive aspect would be awesome \
-"how many users do you expect to scale to?" \
-AT: I am estimating up to 50 concurrent users, and aim for small latencies \
-"any specific UI/GUI choices, and what platform should doubletapp support" \
-AT: doubletapp should be a website, like the original tapp, and it should use the catppuccin colour scheme. \
-"any specific technologies you would like implemented?" \
-AT: I am a fan of Svelte, and would like to use rust as the backend due to its fast speeds and growing technology base, Tapp doesn't have a database but SQL would be acceptable. \
-"doubletapp might have a cheating proble, would you like an anticheat?" \
-AT: an anticheat would be desirable, due to Svelte being unobfuscated a server side anticheat might be best \
+(all notes are paraphrased)
+#v(8pt)
+
+#grid(
+  columns: (auto, 1fr),
+  gutter: 8pt,
+  
+  [*Q:*], [What features are most important to you for DoubleTapp?],
+  [*A:*], [My main requirement is that the new game tests both hands simultaneously, and has replayability. Features such as users and leaderboards, along with a competitive aspect would be awesome.],
+  
+  [*Q:*], [How many users do you expect to scale to?],
+  [*A:*], [I am estimating up to 50 concurrent users, and aim for small latencies.],
+  
+  [*Q:*], [Any specific UI/GUI choices, and what platform should DoubleTapp support?],
+  [*A:*], [DoubleTapp should be a website, like the original Tapp, and it should use the Catppuccin color scheme.],
+  
+  [*Q:*], [Any specific technologies you would like implemented?],
+  [*A:*], [I am a fan of Svelte, and would like to use Rust as the backend due to its fast speeds and growing technology base. Tapp doesn't have a database but SQL would be acceptable.],
+  
+  [*Q:*], [DoubleTapp might have a cheating problem, would you like an anticheat?],
+  [*A:*], [An anticheat would be desirable. Due to Svelte being unobfuscated, a server-side anticheat might be best.],
+  
+  [*Q:*], [What are your thoughts on monetization for DoubleTapp?],
+  [*A:*], [I'd prefer to keep it free to play. The focus should be on building a community rather than generating revenue at this stage.],
+  
+  [*Q:*], [How important is cross-device compatibility?],
+  [*A:*], [The primary focus should be desktop browsers, but having it work reasonably well on tablets would be a nice bonus. I don't expect mobile phone support due to the dual-input nature.],
+  
+  [*Q:*], [Any accessibility considerations you'd like to see implemented?],
+  [*A:*], [Customizable keybindings would be essential since this is a dexterity game. Also, ensuring the color scheme has sufficient contrast for visibility would be good.],
+)
 
 
+
+== Success Criteria
+- game is completely functional
+- server can handle 50 concurrent users
+- average user rating is 4/5 or higher
+- aesthetically pleasing UI 
+- useful UX
+- easy to understand and customize settings
 
 == Research
 
@@ -69,7 +101,14 @@ There are a few similar products on the market that test dexterity in various wa
 
 ==== Tetris
 Tetris is one of the most recognized dexterity-based puzzle games worldwide. While it effectively tests hand-eye coordination and spatial reasoning, it differs from DoubleTapp in several key ways:
-
+#figure(
+  box(
+    fill: white,
+    width: 80%,
+    image("assets/tetris.png", width: 100%)
+  ),
+  caption: [Tetris UI]
+)
 - Tetris focuses primarily on single-hand dexterity, with players typically using one hand for directional controls and the other for occasional rotation/drop buttons
 - It has a significant learning curve with complex strategies around piece placement and line clearing, i.e T-spins, Wall Kicks
 - Players focus more on strategic planning of where to place pieces rather than pure dexterity training
@@ -78,6 +117,15 @@ Tetris is one of the most recognized dexterity-based puzzle games worldwide. Whi
 Tetris has multiple useful features which I will be taking inspiration from, particularly Delayed Auto Shift (DAS)@DAS-Tetris, which allows for precise control of pieces, this allows for people to have more accurate control over their piece placement and allows for timing optimization
 ==== Tapp
 Tapp, developed by Alexander Tahiri at Studio Squared, is the direct predecessor to DoubleTapp and shares the most similarities:
+
+#figure(
+  box(
+    fill: white,
+    width: 80%,
+    image("assets/tapp.png", width: 100%)
+  ),
+  caption: [Tapp UI]
+)
 
 - Uses a grid-based interface (4x4) with active and inactive tiles
 - Tests dexterity through rapid target acquisition
@@ -101,7 +149,7 @@ for implementing multiplayer, there are multiple solutions that work, i.e unidir
   inset: 12pt,
   align: (center, left, left),
   stroke: 0.7pt,
-  fill: (_, row) => if row == 0 { luma(240) } else { none },
+ fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
   [*Method*], [*Pros*], [*Cons*],
   
   [HTTP @HTTP-Protocol] , 
@@ -156,6 +204,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   inset: 10pt,
   align: (left, left, left),
   stroke: 0.7pt,
+   fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
   [*PRNG Algorithm*], [*Pros*], [*Cons*],
   
   [ARC4 (Alleged RC4)],
@@ -266,6 +315,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   inset: 10pt,
   align: (left, center, center, center, center),
   stroke: 0.7pt,
+   fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
   [*PRNG Algorithm*], [*Estimated Time*], [*Cycle Length*], [*State Size*], [*Performance*],
   
   [ARC4],
@@ -282,53 +332,289 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   
   [ChaCha20],
   [High],
-  [$2^{256}$],
+  [$2^256$],
   [384 bits],
   [High for crypto],
   
   [Xorshift],
   [Very Low],
-  [$2^{128} - 1$],
+  [$2^128 - 1$],
   [128-256 bits],
   [Very High],
   
   [Linear Congruential Generator (LCG)],
   [Extremely Low],
-  [Up to $2^{32}$ (typical)],
+  [Up to $2^32$],
   [32-64 bits],
   [Extremely High],
   
   [Mersenne Twister],
   [Medium],
-  [$2^{19937}-1$ (MT19937)],
+  [$2^19937-1$],
   [2.5 KB (19937 bits)],
   [Moderate],
   
   [Xoshiro256+/++],
   [Very Low],
-  [$2^{256}-1$],
+  [$2^256-1$],
   [256 bits],
   [Very High],
   
   [PCG (Permuted Congruential Generator)],
   [Low],
-  [$2^{128}$ or more],
+  [$2^128$ or more],
   [64-128 bits],
   [High]
 )
 
 after testing, xoshiro256+ has provided the best results, in terms of speed and simplicity of implementation, while still providing a high degree of randomness, and a large cycle length, which is important for a game such as DoubleTapp, where we want to ensure that the game is fair and that the same seed will not be repeated for a long time.
+
+
+=== Pathfinding Algorithms
+
+
+=== Statistics(anti-cheat)
+for the anticheat,I will be comparing the consistency of player movement timings, and the optimality of their paths, to approximately determine if they are using any forms of cheating, be it a bot, or a human using external software.
+
+==== Player timings
+for player timings, I will be using the standard deviation of the player's move timings, and comparing it to a sampled standard deviation based on my own move timings, a high standard deviation indicates that the player is more human, as different grid positions require different amounts of thought to move optimally
+
+
+==== Path optimality
+for calculating optimal paths, there are a few different algorithms that can be used, 
+
+#table(
+  columns: (auto, auto, auto),
+  inset: 10pt,
+  align: (left, left, left),
+  stroke: 0.7pt,
+  fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
+  [*Algorithm*], [*Time Complexity*], [*Space Complexity*],
+  [A-Star], [O($b^d$)], [O($b^d$)],
+  [Djikstra's], [O($V + E$)], [O($V$)],
+  [Manhattan Distance], [O(1)], [O(1)],
+)
+
 == Prototyping
 A rudimentary prototype has been made, which tested out multiple different input methods for simultaneous inputs, which has finalized in a "cursor"-based system, where you have two cursors controlled by Wasd-like movement, with each set of controls representing their respective cursor, additionally it has been decided that both cursors need to be on individual Tiles, to prevent copying movements on each hand. this prototype also implemented server-side move verification, making it more difficult to cheat. Finally, the UI design of the prototype will be used in later iterations of the project.
-//image of doubletapp
+the prototype has no game verification, but contains the core gameplay mechanics, and the UI design.
+
+#figure(
+  box(
+    fill: white,
+    width: 80%,
+    image("assets/doubletapp-prototypeUI.png", width: 100%)
+  ),
+  caption: [Initial Doubletapp WireFrame UI]
+)
+this was the initial UI design sketch,which shows the general layout of the game
+
+#figure(
+  box(
+    fill: white,
+    width: 80%,
+    image("assets/doubletapp-realprototypeUI.png", width: 100%)
+  ),
+  caption: [Initial Doubletapp WireFrame UI]
+)
+
+#figure(
+  box(
+    fill: white,
+    width: 80%,
+    image("assets/gamehandler-prototype-flowchart.png", width: 100%)
+  ),
+  caption: [Game Handler Prototype Flowchart - Early design of the game processing pipeline]
+)
+
+
+== Critical Path
+
+#figure(
+  box(
+    width: 100%,
+    inset: 10pt,
+    fill: rgb(24, 24, 37),
+    radius: 4pt,
+    [
+      #grid(
+        columns: (auto, 1fr),
+        gutter: 15pt,
+        align: (center + top, left + top),
+        
+        [#text(fill: rgb(245, 224, 220), weight: "bold", "Phase 1")], 
+        [
+          #grid(
+            columns: (1fr, 1fr, 1fr),
+            gutter: 10pt,
+            box(fill: rgb(30, 102, 245, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Simple Singleplayer Mode]
+              #linebreak()
+              Implement core gameplay mechanics with prototype UI/UX
+            ]),
+            box(fill: rgb(30, 102, 245, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Server-side Game Verification]
+              #linebreak()
+              Verify game validity on the server side
+            ]),
+            box(fill: rgb(30, 102, 245, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[User Authentication]
+              #linebreak()
+              Implement secure user authentication and session management
+            ])
+          )
+        ],
+        
+        [#text(fill: rgb(245, 224, 220), weight: "bold", "Phase 2")], 
+        [
+          #grid(
+            columns: (1fr, 1fr, 1fr),
+            gutter: 10pt,
+            box(fill: rgb(180, 190, 254, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Multiplayer]
+              #linebreak()
+              Implement real-time gameplay with websockets, with move verification
+            ]),
+            box(fill: rgb(180, 190, 254, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Leaderboard]
+              #linebreak()
+              Implement a leaderboard with global and personal scores
+            ]),
+            box(fill: rgb(180, 190, 254, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Anticheat]
+              #linebreak()
+              Develop server-side detection for suspicious patterns and timings
+            ])
+          )
+        ],
+        
+        [#text(fill: rgb(245, 224, 220), weight: "bold", "Phase 3")], 
+        [
+          #grid(
+            columns: (1fr, 1fr, 1fr),
+            gutter: 10pt,
+            box(fill: rgb(203, 166, 247, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Settings]
+              #linebreak()
+              Add customizable controls and preferences (DAS,ARR)
+            ]),
+            box(fill: rgb(203, 166, 247, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Performance Optimizations]
+              #linebreak()
+              general performance improvements
+            ]),
+            box(fill: rgb(203, 166, 247, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
+              #text(weight: "bold")[Bug Fixes]
+              #linebreak()
+              test and resolve bugsi 
+            ])
+          )
+        ]
+      )
+    ]
+  ),
+  caption: [Intended Critical Path]
+)
+
+
 
 == Documented Design
+
+=== Libraries Used
+==== Frontend Libraries
+#table(
+  columns: (auto, auto, 1fr, auto),
+  inset: 8pt,
+  align: (left, left, left, left),
+  stroke: 0.7pt,
+  fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
+  [*Name*], [*Version*], [*Reason*], [*Link*],
+  
+  [Svelte], [4.2.7], [Reactive UI framework with minimal boilerplate, used for the frontend to provide a performant, easily maintainable UI/UX], [#link("https://svelte.dev/")[svelte.dev]],
+  
+  [SvelteKit], [2.0.0+], [Full-stack framework built on Svelte, allowing for simplification of operations between the frontend and the backend], [#link("https://kit.svelte.dev/")[kit.svelte.dev]],
+  
+  [Tailwind CSS], [3.4.4], [css library, which allows you to define your css classes embedded in the html, allowing for a more readable and quickly iterable codebase], [#link("https://tailwindcss.com/")[tailwindcss.com]],
+  
+  [Tailwind Catppuccin], [0.1.6], [Client-requested color scheme], [#link("https://github.com/catppuccin/tailwindcss")[GitHub]],
+  
+  [Svelte Material Icons], [3.0.5], [Icon library for Svelte, MIT licensed], [#link("https://www.npmjs.com/package/svelte-material-icons")[npm]],
+  
+  [UUID], [11.0.4], [frontend library for generating UUID's, used for game management], [#link("https://www.npmjs.com/package/uuid")[npm]],
+  
+  [Xoshiro WASM], [Local], [Custom WASM implementation of Xoshiro256+], [in code],
+  
+  [TypeScript], [5.0.0+], [Typed JavaScript for better development], [#link("https://www.typescriptlang.org/")[typescriptlang.org]],
+  
+  [Vite], [5.0.3], [Modern frontend build tool, used in frontend to allow for fast development and optimized production builds], [#link("https://vitejs.dev/")[vitejs.dev]],
+  
+  [Vite Plugin WASM], [3.4.1], [Vite plugin for WebAssembly integration], [#link("https://www.npmjs.com/package/vite-plugin-wasm")[npm]]
+)
+
+==== Backend Libraries
+#table(
+  columns: (auto, auto, 1fr, auto),
+  inset: 8pt,
+  align: (left, left, left, left),
+  stroke: 0.7pt,
+  fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
+  [*Name*], [*Version*], [*Reason*], [*Link*],
+  
+  [Axum], [0.7.5], [Modern Rust web framework with WebSocket support, one of the fastest web frameworks currently available, asynchronous and type-safe], [#link("https://github.com/tokio-rs/axum")[GitHub]],
+  
+  [Axum-Extra], [0.9.4], [Extension crate for Axum with additional features like cookie handling and typed headers], [#link("https://github.com/tokio-rs/axum-extra")[GitHub]],
+  
+  [Tokio], [1.39.2], [Asynchronous runtime for Rust, required by axum and used for thread handling in websockets], [#link("https://tokio.rs/")[tokio.rs]],
+  
+  [SQLx], [0.8.0], [Async SQL toolkit with compile-time checked queries, used for database operations, inherently supports pooling and multithreading.], [#link("https://github.com/launchbadge/sqlx")[GitHub]],
+  
+  [Serde], [1.0.205], [Serialization framework for structured data, allows for parsing JSON and other data formats into Rust objects, speeding up development time and reducing the amount of code needed to be written], [#link("https://serde.rs/")[serde.rs]],
+  
+  [Serde_json], [1.0.128], [JSON implementation for Serde, used for parsing and generating JSON data in WebSocket communication], [#link("https://github.com/serde-rs/json")[GitHub]],
+  
+  [Bcrypt], [0.17.0], [Password hashing library, used before storing passwords in the database, salted and performant, although slightly outdated], [#link("https://crates.io/crates/bcrypt")[crates.io]],
+  
+  [Tower-HTTP], [0.5.2], [HTTP middleware stack, baseline from axum, used for low level websocket handling], [#link("https://github.com/tower-rs/tower-http")[GitHub]],
+  
+  [UUID], [1.7.0], [Library for generating UUIDs, used for game management], [#link("https://crates.io/crates/uuid")[crates.io]],
+  
+  [ULID], [1.1.3], [Sortable identifier generation, used for game management], [#link("https://crates.io/crates/ulid")[crates.io]],
+  
+  [Validator], [0.20.0], [Data validation library, used for validating user input], [#link("https://crates.io/crates/validator")[crates.io]],
+  
+  [Chrono], [0.4.37], [Date and time library with timezone support, used for handling timestamps and durations to verify games], [#link("https://crates.io/crates/chrono")[crates.io]],
+  
+  [SCC], [2.1.11], [Concurrent collections for server applications, performant asynchronous hashmaps], [#link("https://crates.io/crates/scc")[crates.io]],
+  
+  [Silly-RNG], [0.1.0], [Custom RNG implementation, used for the game, based on xoshiro-wasm], [Local package],
+  
+  [Cookie], [0.18.1], [HTTP cookie parsing and cookie jar management, used for session handling], [#link("https://crates.io/crates/cookie")[crates.io]],
+  
+  [Dotenvy], [0.15.7], [Loads environment variables from .env files, used for configuration management], [#link("https://crates.io/crates/dotenvy")[crates.io]],
+  
+  [Futures], [0.3.31], [Async programming primitives, used for handling asynchronous websocket operations], [#link("https://crates.io/crates/futures")[crates.io]],
+  
+  [Rand], [0.8.5], [Random number generation utilities, used for game seeding], [#link("https://crates.io/crates/rand")[crates.io]],
+  
+  [Thiserror], [2.0.11], [Error handling library that simplifies custom error types, used for robust error management], [#link("https://crates.io/crates/thiserror")[crates.io]],
+  
+  [Tracing-subscriber], [0.3.18], [Utilities for implementing and composing `tracing` subscribers, used for logging and diagnostics], [#link("https://crates.io/crates/tracing-subscriber")[crates.io]]
+)
+
+
+
+
+
 
 === Algorithms
 
 ==== Xoshiro256+
+xoshiro256+ is my chosen RNG, as it is performant and has a relatively low state size, allowing for many concurrent games to be played on a single machine, it is also very simple to implement, and has a relatively high cycle length, allowing for a more consistent game experience, it is also very fast, and has a low memory footprint, making it a perfect fit for the game.
+xoshiro256+ has a time complexity of O(1), and a space complexity of O(1), as it only requires a single pass through the seed array, and a single pass through the result array, which is constant time, and constant space, as the size of the seed and result arrays are constant.
 
-```rust
+
+
+#align(center, ```rust
         // output is generated before the "next" cycle
         let result = self.seed[0].wrapping_add(self.seed[3]);
         // shifting prevents guessing from linearity
@@ -344,23 +630,31 @@ A rudimentary prototype has been made, which tested out multiple different input
         self.seed[3] = Xoshiro256plus::rol64(self.seed[3], 45);
         // gets the first 53 bits of the result, as only the first 53 bits are guaranteed to be unpredictable for xoshiro256+, for the other variations i.e ++,*,** they are optimized for all the bits to be randomized, but as xoshiro256+ is optimized for floating points, which we require
         (result >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
-```
+```)
 ==== Sigmoid Function
 the sigmoid function is a function, that maps any real input onto a S shaped curve, which is bound between values, in my case i am bounding the output of the Xoshiro256+ float to be between 0..11, which allows me to easily use it to generate the "next" state of the game, allowing for a more natural distribution of numbers, as well as a more consistent distribution of numbers, which allows for a more consistent game experience.
 
-```rust
+#align(center, ```rust
 // simple function, but incredibly useful
 fn sigmoid(x: f64) -> f64 {
     1.0 / (1.0 + (-x).exp())
 }
 
-```
-==== Djikstras Algorithm
+```)
+==== Manhattan Distance
+the manhattan distance is a distance metric, which is the sum of the absolute differences of their Cartesian coordinates, in my case i am using it to calculate the distance between the cursors, which allows for a more accurate calculation of the distance between the cursors, which allows for a more accurate game experience. I considered other algorithms, i.e djikstras, A-Star, but they are not needed for calculating the distance between the cursors, as the manhattan distance is a more efficient algorithm for this purpose.
+
+the time complexity of the manhattan distance is O(1), as it only requires a single pass through the coordinates, and a single pass through the result, which is constant time, and constant space, as the size of the coordinates and result are constant.
+#align(center, ```rust
+fn manhattan_distance(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
+    (x1 - x2).abs() + (y1 - y2).abs()
+}
+```)
 
 ==== MergeSort
 mergesort is a sorting algorithm, which works by the divide and conquer principle, where it breaks down the array into smaller and smaller arrays, till it gets to arrays of length 2, which it then subsequently sorts from the ground up, returning a sorted array in O(nlog(n)) time complexity & O(n) space complexity
 
-```rust
+#align(center, ```rust
 fn merge_sort<T: Ord + Clone>(arr: &[T]) -> Vec<T> {
     if arr.len() <= 1 {
         return arr.to_vec();
@@ -394,15 +688,35 @@ fn merge<T: Ord + Clone>(left: &[T], right: &[T]) -> Vec<T> {
     result
 }
 
-```
+```)
 
-==== Std Dev + Variance
+==== Standard deviation
+
+the algorithm for standard deviation is as follows:
+
+$
+sigma = sqrt((sum(x) - mu)^2 / N)
+$
+
+where $N$ is the number of elements in the array, $x_i$ is the $i$th element in the array, and $\mu$ is the mean of the array.
+
+which can be implemented quite neatly in rust, using iterators, and their respective methods.
+
+#align(center, ```rust
+fn std_dev(arr: &[T]) -> T {
+    let sum = arr.iter().sum::<T>();
+    let mean = sum / arr.len() as T;
+    let variance = arr.iter().map(|x| (x - mean).powi(2)).sum::<T>() / arr.len() as T;
+    return variance.sqrt()
+}
+```)
+
 
 
 ==== Delayed Auto Shift
 Delayed auto shift (DAS for short) is a technique implemented in tetris, where you wait for a period of time before starting to move the pieces, while the key is being held down, bypassing the operating systems repeat rate. This is useful for optimizing movements in games similar to DoubleTapp, or tetris, people can customize their DAS and their ARR(auto repeat rate) to be optimal for their own reaction time, so if they need to move a piece they can move it to the corners very quickly, but only after X time has passed, instead of the OS default of ~1 second for delay and ~100ms per repeat, in my algorithm I used the provided javascript api's of setTimeout and setInterval, wrapped inside an asynchronous function to allow for multiple consecutive inputs, I separately handle keyDown and keyUp events, where on key down the interval is added to an array of intervals (thanks to javascripts type safety), in which the interval is cleared when an OS keyUP is detected, this comes with caveats as there are operating systems which send these events at different times, which can introduce some uncertainty. But due to the timings being customizeable, this isn't much of a problem.
 
-```js
+#align(center, ```js
 // Example for one direction, repeated for others
 case $state.keycodes.wU:
     if (dasIntervals[0] == false) {
@@ -420,33 +734,36 @@ case $state.keycodes.wU:
             }, $state.das);
         }, $state.dasDelay);
     }
-```
-=== Database Design and Queries
+```)
 === Database Design and Queries
 #figure(
-image("assets/ERM.png", width: 80%),
-caption: [Entity Relationship Model - Database schema showing relationships between game entities]
+  box(
+    fill: white,
+    width: 80%,
+    place(center, image("assets/ERM.png", width: 90%))
+  ),
+  caption: [Entity Relationship Model - Database schema showing relationships between game entities]
 )
-The Entity Relationship Model illustrates the database structure for DoubleTapp, showing the relationships between users, games, statistics, and other critical data entities that support gameplay and analytics.
+ERM
 ==== User Authentication Queries
-```sql
+#align(center, ```sql
 SELECT id, password FROM "user" WHERE username = $1
-```
+```)
 ==== User Registration Query
-```sql
+#align(center, ```sql
 INSERT INTO "user" (id, username, password) VALUES ($1, $2, $3)
-```
+```)
 ==== Session Management
-```sql
+#align(center, ```sql
 INSERT INTO session (ssid, user_id, expiry_date)
 VALUES ($1, $2, NOW() + INTERVAL '7 DAYS')
 SELECT u.id, u.username, u.admin, u.cheater
 FROM "user" u
 INNER JOIN session s ON u.id = s.user_id
 WHERE s.ssid = $1 AND s.expiry_date > NOW()
-  ```
+  ```)
 ==== Leaderboard Queries
-```sql
+#align(center, ```sql
 -- Get global leaderboard
 SELECT "game".score, "user".username
 FROM "game"
@@ -466,14 +783,14 @@ AND "user".id = $4
 ORDER BY score
 OFFSET ($3 - 1) 100
 FETCH NEXT 100 ROWS ONLY
-```
+```)
 ==== Game Submission
-```sql
+#align(center, ```sql
 INSERT INTO "game" (game_id, score, average_time, dimension, time_limit, user_id)
 VALUES ($1, $2, $3, $4, $5, $6)
-```
+```)
 ==== Statistics Trigger
-```sql
+#align(center, ```sql
 CREATE OR REPLACE FUNCTION update_statistics_on_game_insert()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -493,7 +810,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER game_insert_trigger
 AFTER INSERT ON game
 FOR EACH ROW EXECUTE FUNCTION update_statistics_on_game_insert();
-```
+```)
 === Data Structures
 
 ==== Circular Queue
@@ -506,46 +823,106 @@ A hash table (colloquially called a hashmap) is an array that is abstracted over
 an Optional type, is a simple data structure that allows for beautiful error handling, an Option type wraps the output data, allowing for the error to be handled before trying to manipulate data, i.e in a Some(data) or None, where None means that the data was nonexistent, or we can use a result type to handle errors down the stack, where we can pass the error with Err(e) and Ok(d), so if one part of the function layer breaks we can know exactly where it errored and softly handle the error if needed
 
 
-=== Function & Flow Diagrams
+=== Diagrams
+
+=== Frontend
 #figure(
-  image("assets/gamehandler-flowchart.png", width: 80%),
-  caption: [Game Handler Flowchart - Main processing logic for handling game state transitions and events]
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    image("assets/flow-Client.drawio.png", width: 100%, fit:"contain"),
+  )),
+  caption: [Client Component and Flow diagram]
+)
+#figure(
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    image("assets/flow-Grid.drawio.png", width: 100%, fit:"contain"),
+  )),
+  caption: [Grid Component]
 )
 
-This flowchart illustrates the core game handling process, showing how user inputs are processed, game state is updated, and rendering occurs in the main game loop.
-
 #figure(
-  image("assets/gamehandler-prototype-flowchart.png", width: 80%),
-  caption: [Game Handler Prototype Flowchart - Early design of the game processing pipeline]
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    image("assets/gamehandler-flowchart.png", width: 100%, fit:"contain"),
+  )),
+  caption: [Game Handler Flowchart ]
 )
 
-The prototype flowchart shows the initial design approach for the game handler before refinements were implemented, demonstrating the evolution of the system architecture.
-
 #figure(
-  image("assets/singleplayer-game-flowchart.png", width: 80%),
-  caption: [Singleplayer Game Flowchart - Logic flow for the timer-based singleplayer mode]
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    image("assets/singleplayer-game-flowchart.png", width: 100%, fit:"contain"),
+  )),
+  caption: [Singleplayer Game Flowchart]
 )
 
-This diagram details the timer-based singleplayer game mode logic, including state initialization, score tracking, and game termination conditions.
 
+
+
+
+=== Backend
 #figure(
-  image("assets/multiplayer-game-flowchart.png", width: 80%),
-  caption: [Multiplayer Game Flowchart - Communication and state management for networked gameplay]
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    place(center, image("assets/multiplayer-game-flowchart.png", width: 100%, fit:"contain")),
+  )),
+  caption: [Multiplayer Game Flowchart]
 )
 
-The multiplayer flowchart illustrates the client-server communication pattern, synchronization mechanisms, and player state management required for consistent networked gameplay.
 
 #figure(
-  image("assets/websockets.png", width: 80%),
-  caption: [WebSocket Architecture - Implementation of the bidirectional communication system]
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    place(center, image("assets/websockets.png", width: 100%, fit:"contain")),
+  )),
+  caption: [WebSocket message diagram]
 )
 
-This diagram shows the WebSocket implementation architecture, detailing how persistent connections are established, maintained, and utilized for real-time game updates between clients and server.
+
+#figure(
+  align(center, box(
+    fill: rgb(24, 24, 37),  
+    height: 80%,
+    width: 80%,
+    place(center, image("assets/flow-Backend_multiplayer.drawio.png", width: 100%, fit:"contain")),
+  )),
+  caption: [Backend Multiplayer Flowchart]
+)
+
+#figure(
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    place(center, image("assets/flow-Backend.drawio.png", width: 100%, fit:"contain")),
+  )),
+  caption: [Backend Flowchart]
+)
+
+#figure(
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    height: 80%,
+    width: 80%,
+    place(center, image("assets/flow-Classes.drawio.png", width: 100%, fit:"contain")),
+  )),
+  caption: [Class Diagram]
+)
 
 
-
-
-=== Mockups & etc..
 
 == Objectives
 
@@ -684,4 +1061,3 @@ This diagram shows the WebSocket implementation architecture, detailing how pers
   full:true,
   style: "ieee"
 )
-
