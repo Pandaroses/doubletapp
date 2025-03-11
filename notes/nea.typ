@@ -1,4 +1,5 @@
 #import "catppuccin/typst/src/lib.typ": catppuccin, flavors
+
 #set par(justify: true)
 #show link: underline
 #set page(
@@ -17,7 +18,6 @@
 #set math.mat(delim: "[");
 #set math.vec(delim: "[");
 
-#show raw: it => align(center, it)
 
 #show: catppuccin.with(flavors.mocha, code-block: true, code-syntax: true)
 
@@ -34,10 +34,26 @@
 ])
 
 
+#let codeblock(body) = {
+	block(
+		width: 100%, 
+		fill: rgb(24, 24, 37),
+		radius: 4pt,
+		inset: 10pt,
+		breakable: true,
+		clip: true,
+		body
+	)
+}
+
+
 #outline()
 
 
 == Abstract
+This project develops a multiplayer grid-based dexterity training game called DoubleTapp, designed to simultaneously test and improve the dexterity of both hands. Building on the existing single-cursor game Tapp, this implementation introduces dual-cursor gameplay requiring coordinated control using different keys for each hand. The system features both singleplayer and multiplayer modes with competitive elements, leaderboards, and server-side anti-cheat mechanisms.
+
+The technical implementation uses Rust for the backend with the Axum framework for websocket connections and PostgreSQL for data persistence. The frontend is built with SvelteKit and Tailwind CSS, featuring customizable controls including Delayed Auto Shift (DAS) functionality. A custom implementation of the Xoshiro256+ PRNG algorithm ensures fairness across game instances.
 
 == Problem Definition
 I plan to develop a game, which tests the dexterity of both hands, simultaneously. I believe its important that people can maintain their dexterity of both hands, and this game will help them do that. I also believe the game will be fun, and will be a good way to pass time. adding a competitive and multiplayer aspect to the game will also help with this. 
@@ -98,6 +114,7 @@ The Client is Alexander Tahiri, a software developer at Studio Squared and the d
 
 === Similar Solutions
 There are a few similar products on the market that test dexterity in various ways. Understanding these existing solutions helps position DoubleTapp in the competitive landscape and justify its development.
+
 
 ==== Tetris
 Tetris is one of the most recognized dexterity-based puzzle games worldwide. While it effectively tests hand-eye coordination and spatial reasoning, it differs from DoubleTapp in several key ways:
@@ -370,9 +387,6 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
 after testing, xoshiro256+ has provided the best results, in terms of speed and simplicity of implementation, while still providing a high degree of randomness, and a large cycle length, which is important for a game such as DoubleTapp, where we want to ensure that the game is fair and that the same seed will not be repeated for a long time.
 
 
-=== Pathfinding Algorithms
-
-
 === Statistics(anti-cheat)
 for the anticheat,I will be comparing the consistency of player movement timings, and the optimality of their paths, to approximately determine if they are using any forms of cheating, be it a bot, or a human using external software.
 
@@ -381,7 +395,8 @@ for player timings, I will be using the standard deviation of the player's move 
 
 
 ==== Path optimality
-for calculating optimal paths, there are a few different algorithms that can be used, 
+for calculating optimal paths, there are a few different algorithms that can be used, each having different time and space complexities, it is important that the algorithm calculates the optimal path, not a close approximation, as this will be used to detect potential cheaters.
+performance is inherently critical for this part, as it will be run on every "submission" of a move, and will need to be done concurrently.
 
 #table(
   columns: (auto, auto, auto),
@@ -394,6 +409,9 @@ for calculating optimal paths, there are a few different algorithms that can be 
   [Djikstra's], [O($V + E$)], [O($V$)],
   [Manhattan Distance], [O(1)], [O(1)],
 )
+
+overall, manhattan distance is the best option for this project, as at max the grid would be 6x6, in which using A-star would be overkill, and manhattan distance is the fastest, while djikstra's is the slowest, and would be too slow for the game.
+
 
 == Prototyping
 A rudimentary prototype has been made, which tested out multiple different input methods for simultaneous inputs, which has finalized in a "cursor"-based system, where you have two cursors controlled by Wasd-like movement, with each set of controls representing their respective cursor, additionally it has been decided that both cursors need to be on individual Tiles, to prevent copying movements on each hand. this prototype also implemented server-side move verification, making it more difficult to cheat. Finally, the UI design of the prototype will be used in later iterations of the project.
@@ -516,6 +534,67 @@ this was the initial UI design sketch,which shows the general layout of the game
   caption: [Intended Critical Path]
 )
 
+== Objectives
+
+=== User Interface
++ user can interact with the grid
+  + user can move both cursors using keyboard on the grid
+  + user can "submit" moves using a keybind
+  + user can reset game (in single player) via a keybind
++ user can change gamemode (singleplayer,multiplayer) on the main page
+  + user can change grid size (4x4,5x5,6x6) in singleplayer
+  + in singleplayer, user can change time limit (30,45,60)
++ user can access settings
+  + user can modify keybinds for each action in the game
+  + user can change DAS 
+  + user can change ARR 
+  + user can log out of account
+  + user can reset all keybinds to a sane default
++ user can play the game
+  + on game start, user sees cursors are positioned on opposing sides of the board
+  + on game start, user sees the starting active tiles
+  + user can view current game score
+  + in singleplayer, user sees time remaining
+  + in multiplayer, user can see time remaining for current quota, players remaining and current score
+  + user is notified of their position in the multiplayer game
+  + user can "submit" their move
+    + user can interactively see if the move was valid via a colour interaction which flashes green or red depending on if the move was valid, a valid move is when the two cursors are on two active grid tiles within the grid boundary and they are distinct active tiles
+    + on successfull submit, user sees two new tiles become active, which were previously inactive and are not on current cursor location
+  + cursors are rendered via two different colours, with the two cursors being visually distinct but symmetrically consistent 
++ user can see statistics post singleplayer game end
+  + user views their score
+  + user views if their score was validated by the server
+  + user views their leaderboard position
+  + user can copy their game statistics to the clipboard for sharing
+  + if user is logged in and not marked as a cheater, user can view their game in the statistics page
+  + user has the option to start a new game from the results menu
++ user can view leaderboard
+  + user can view leaderboards, in a paginated format 
++ user can play the multiplayer gamemode
+  + user can see the other players movements on other grids in the game
+  + user can see their remaining score quota for each 5 second interval period
+  + after a user has been eliminated by not reaching the quota,the user can view their position in the game
++ user can log in to the application
+  + user can login or signup depending on their requirements
+  + user is shown error codes depending on if account already exists or their login details are incorrect
+  
+=== Server Side
++ User CRUD
+  + simple user authentication
+    + simple verification of authenticity, i.e password hashing & username uniqueness check
++ Database Schema
+  + contains user table
+  + contains game table, which stores all real authenticated games (not including moves)
+  + contains linked user statistics table
++ Game Verification
+  + server verifies all moves are valid
+  + server verifies that move positioning is within human bounds, i.e ratio of "optimal moves" and timing distribution
+  + server verifies that game was submitted within the time limit (with a grace period)
++ Multiplayer implementation
+  + server can communicate actions bidirectionally with client
+  + each move is verified by the server
+  + low latency communication between server and client
+  + client can distinguish between types of messages recieved
 
 
 == Documented Design
@@ -614,7 +693,7 @@ xoshiro256+ has a time complexity of O(1), and a space complexity of O(1), as it
 
 
 
-#align(center, ```rust
+#codeblock( ```rust	
         // output is generated before the "next" cycle
         let result = self.seed[0].wrapping_add(self.seed[3]);
         // shifting prevents guessing from linearity
@@ -634,7 +713,7 @@ xoshiro256+ has a time complexity of O(1), and a space complexity of O(1), as it
 ==== Sigmoid Function
 the sigmoid function is a function, that maps any real input onto a S shaped curve, which is bound between values, in my case i am bounding the output of the Xoshiro256+ float to be between 0..11, which allows me to easily use it to generate the "next" state of the game, allowing for a more natural distribution of numbers, as well as a more consistent distribution of numbers, which allows for a more consistent game experience.
 
-#align(center, ```rust
+#codeblock( ```rust
 // simple function, but incredibly useful
 fn sigmoid(x: f64) -> f64 {
     1.0 / (1.0 + (-x).exp())
@@ -645,7 +724,7 @@ fn sigmoid(x: f64) -> f64 {
 the manhattan distance is a distance metric, which is the sum of the absolute differences of their Cartesian coordinates, in my case i am using it to calculate the distance between the cursors, which allows for a more accurate calculation of the distance between the cursors, which allows for a more accurate game experience. I considered other algorithms, i.e djikstras, A-Star, but they are not needed for calculating the distance between the cursors, as the manhattan distance is a more efficient algorithm for this purpose.
 
 the time complexity of the manhattan distance is O(1), as it only requires a single pass through the coordinates, and a single pass through the result, which is constant time, and constant space, as the size of the coordinates and result are constant.
-#align(center, ```rust
+#codeblock( ```rust
 fn manhattan_distance(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
     (x1 - x2).abs() + (y1 - y2).abs()
 }
@@ -654,7 +733,7 @@ fn manhattan_distance(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
 ==== MergeSort
 mergesort is a sorting algorithm, which works by the divide and conquer principle, where it breaks down the array into smaller and smaller arrays, till it gets to arrays of length 2, which it then subsequently sorts from the ground up, returning a sorted array in O(nlog(n)) time complexity & O(n) space complexity
 
-#align(center, ```rust
+#codeblock( ```rust
 fn merge_sort<T: Ord + Clone>(arr: &[T]) -> Vec<T> {
     if arr.len() <= 1 {
         return arr.to_vec();
@@ -702,7 +781,7 @@ where $N$ is the number of elements in the array, $x_i$ is the $i$th element in 
 
 which can be implemented quite neatly in rust, using iterators, and their respective methods.
 
-#align(center, ```rust
+#codeblock( ```rust
 fn std_dev(arr: &[T]) -> T {
     let sum = arr.iter().sum::<T>();
     let mean = sum / arr.len() as T;
@@ -716,7 +795,7 @@ fn std_dev(arr: &[T]) -> T {
 ==== Delayed Auto Shift
 Delayed auto shift (DAS for short) is a technique implemented in tetris, where you wait for a period of time before starting to move the pieces, while the key is being held down, bypassing the operating systems repeat rate. This is useful for optimizing movements in games similar to DoubleTapp, or tetris, people can customize their DAS and their ARR(auto repeat rate) to be optimal for their own reaction time, so if they need to move a piece they can move it to the corners very quickly, but only after X time has passed, instead of the OS default of ~1 second for delay and ~100ms per repeat, in my algorithm I used the provided javascript api's of setTimeout and setInterval, wrapped inside an asynchronous function to allow for multiple consecutive inputs, I separately handle keyDown and keyUp events, where on key down the interval is added to an array of intervals (thanks to javascripts type safety), in which the interval is cleared when an OS keyUP is detected, this comes with caveats as there are operating systems which send these events at different times, which can introduce some uncertainty. But due to the timings being customizeable, this isn't much of a problem.
 
-#align(center, ```js
+#codeblock( ```js
 // Example for one direction, repeated for others
 case $state.keycodes.wU:
     if (dasIntervals[0] == false) {
@@ -746,15 +825,17 @@ case $state.keycodes.wU:
 )
 ERM
 ==== User Authentication Queries
-#align(center, ```sql
+#codeblock( ```sql
 SELECT id, password FROM "user" WHERE username = $1
 ```)
+this query is quite simple, it just selects the id and password from the user table, where the username is the same as the one provided, as the password is hashed before being stored, this method is secure.
+additionally it is run on the server side, preventing any XSS attacks, or SQL injections.
 ==== User Registration Query
-#align(center, ```sql
+#codeblock( ```sql
 INSERT INTO "user" (id, username, password) VALUES ($1, $2, $3)
 ```)
 ==== Session Management
-#align(center, ```sql
+#codeblock( ```sql
 INSERT INTO session (ssid, user_id, expiry_date)
 VALUES ($1, $2, NOW() + INTERVAL '7 DAYS')
 SELECT u.id, u.username, u.admin, u.cheater
@@ -763,7 +844,7 @@ INNER JOIN session s ON u.id = s.user_id
 WHERE s.ssid = $1 AND s.expiry_date > NOW()
   ```)
 ==== Leaderboard Queries
-#align(center, ```sql
+#codeblock( ```sql
 -- Get global leaderboard
 SELECT "game".score, "user".username
 FROM "game"
@@ -785,12 +866,12 @@ OFFSET ($3 - 1) 100
 FETCH NEXT 100 ROWS ONLY
 ```)
 ==== Game Submission
-#align(center, ```sql
+#codeblock( ```sql
 INSERT INTO "game" (game_id, score, average_time, dimension, time_limit, user_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 ```)
 ==== Statistics Trigger
-#align(center, ```sql
+#codeblock( ```sql
 CREATE OR REPLACE FUNCTION update_statistics_on_game_insert()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -924,70 +1005,124 @@ an Optional type, is a simple data structure that allows for beautiful error han
 
 
 
-== Objectives
+== Technical Solution
 
-=== User Interface
-+ user can interact with the grid
-  + user can move both cursors using keyboard on the grid
-  + user can "submit" moves using a keybind
-  + user can reset game (in single player) via a keybind
-+ user can change gamemode (singleplayer,multiplayer) on the main page
-  + user can change grid size (4x4,5x5,6x6) in singleplayer
-  + in singleplayer, user can change time limit (30,45,60)
-+ user can access settings
-  + user can modify keybinds for each action in the game
-  + user can change DAS 
-  + user can change ARR 
-  + user can log out of account
-  + user can reset all keybinds to a sane default
-+ user can play the game
-  + on game start, user sees cursors are positioned on opposing sides of the board
-  + on game start, user sees the starting active tiles
-  + user can view current game score
-  + in singleplayer, user sees time remaining
-  + in multiplayer, user can see time remaining for current quota, players remaining and current score
-  + user is notified of their position in the multiplayer game
-  + user can "submit" their move
-    + user can interactively see if the move was valid via a colour interaction which flashes green or red depending on if the move was valid, a valid move is when the two cursors are on two active grid tiles within the grid boundary and they are distinct active tiles
-    + on successfull submit, user sees two new tiles become active, which were previously inactive and are not on current cursor location
-  + cursors are rendered via two different colours, with the two cursors being visually distinct but symmetrically consistent 
-+ user can see statistics post singleplayer game end
-  + user views their score
-  + user views if their score was validated by the server
-  + user views their leaderboard position
-  + user can copy their game statistics to the clipboard for sharing
-  + if user is logged in and not marked as a cheater, user can view their game in the statistics page
-  + user has the option to start a new game from the results menu
-+ user can view leaderboard
-  + user can view leaderboards, in a paginated format 
-+ user can play the multiplayer gamemode
-  + user can see the other players movements on other grids in the game
-  + user can see their remaining score quota for each 5 second interval period
-  + after a user has been eliminated by not reaching the quota,the user can view their position in the game
-+ user can log in to the application
-  + user can login or signup depending on their requirements
-  + user is shown error codes depending on if account already exists or their login details are incorrect
+=== Code Contents
+
+#let code_ref(ref, label) = [#link(label)[#ref]]
+
+#table(
+  columns: (auto, 1fr, auto),
+  inset: 8pt,
+  align: (left, left, left),
+  stroke: 0.7pt,
+  fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
+  [*Component*], [*Description*], [*Path/Location*],
   
-=== Server Side
-+ User CRUD
-  + simple user authentication
-    + simple verification of authenticity, i.e password hashing & username uniqueness check
-+ Database Schema
-  + contains user table
-  + contains game table, which stores all real authenticated games (not including moves)
-  + contains linked user statistics table
-+ Game Verification
-  + server verifies all moves are valid
-  + server verifies that move positioning is within human bounds, i.e ratio of "optimal moves" and timing distribution
-  + server verifies that game was submitted within the time limit (with a grace period)
-+ Multiplayer implementation
-  + server can communicate actions bidirectionally with client
-  + each move is verified by the server
-  + low latency communication between server and client
-  + client can distinguish between types of messages recieved
+  [#code_ref("Grid", <grid-component>)], [Core game grid display and interaction component, handles cursor movement, tile activation, and game state], [/src/lib/Grid.svelte],
+  [#code_ref("Game Handler", <game-handler>)], [Manages game state, scoring logic, and game loop timing], [/backend/src/game.rs],
+  [#code_ref("Settings", <settings>)], [User preferences management for DAS, ARR, keybindings, and game parameters], [/frontend/src/routes/settings.svelte],
+  [#code_ref("Authentication", <auth>)], [User registration, login, and session management], [src/routes/signup/+page.svelte],
+  [#code_ref("Leaderboards", <leaderboards>)], [Score display system with filtering, pagination, and sorting using MergeSort], [/src/routes/leaderboard/+page.svelte],
+  [#code_ref("WebSocket Client", <ws-client>)], [Client-side WebSocket connection handling for multiplayer mode], [/src/lib/grid.svelte],
+  [#code_ref("Multiplayer", <multiplayer>)], [Multiplayer game orchestration, player matching, and state synchronization], [src/lib/grid.svelte],
+  [#code_ref("DAS Implementation", <das-impl>)], [Delayed Auto Shift functionality for improved input responsiveness], [src/lib/grid.svelte],
+  
+)
+
+
+=== Skill table
+#table(
+  columns: (auto, auto, auto, auto),
+  inset: 10pt,
+  align: (left, left, left, left),
+  stroke: 0.7pt,
+  fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
+  [*Group*], [*Skill*], [*Description*], [*Link*],
+  
+  [A], [Complex client-server model], [Full-featured multiplayer game system with real-time WebSocket communication], [#code_ref("Multiplayer", <multiplayer>)],
+  
+   
+)
 
 
 
+=== Completeness of Solution
+// Document how your implemented solution meets the objectives defined in your analysis
+// Reference your success criteria and explain how each has been achieved
+// Include screenshots of the working application
+
+=== Complex Algorithm Implementation
+// Highlight key parts of your code that demonstrate sophisticated programming techniques
+// Include annotated code snippets that show:
+//   - Complex algorithms (your PRNG implementation, anti-cheat, etc.)
+//   - Data structures (your circular queue, hashmap implementations)
+//   - Advanced programming techniques (concurrent processing, websockets)
+
+=== Code Quality
+my coding style follows rust's programming principles, i.e error handling through result and option types, and a focus on readability and maintainability, i.e i use descriptive variable names, and i try to comment my code to explain why behind the code, i also try to use meaningful variable names, and i try to keep functions small and focused, i.e single responsibility.
+// Explain your coding style and approach to maintainability
+// Document your error handling approach
+// Discuss any performance optimizations
+
+
+
+
+
+==== Grid Component <grid-component>
+// Implementation details of the grid component
+
+
+==== Game Handler <game-handler>
+// Implementation details of the game handler component
+
+==== Settings <settings>
+// Implementation details of the settings component
+
+==== Authentication <auth>
+// Implementation details of the authentication component
+
+==== Leaderboards <leaderboards>
+// Implementation details of the leaderboards component
+
+==== WebSocket Client <ws-client>
+// Implementation details of the WebSocket client component
+
+==== Multiplayer <multiplayer>
+// Implementation details of the multiplayer component
+
+==== DAS Implementation <das-impl>
+// Implementation details of the DAS implementation
+
+==== WebSocket Server <ws-server>
+// Implementation details of the WebSocket server component
+
+==== Game State <game-state>
+// Implementation details of the game state component
+
+==== Authentication API <auth-api>
+// Implementation details of the authentication API component
+
+==== Database Operations <db-ops>
+// Implementation details of the database operations component
+
+==== Anti-Cheat <anti-cheat>
+// Implementation details of the anti-cheat component
+
+==== Session Management <session>
+// Implementation details of the session management component
+
+==== Xoshiro256+ <xoshiro>
+// Implementation details of the Xoshiro256+ component
+
+==== Circular Queue <circular-queue>
+// Implementation details of the circular queue component
+
+==== Path Finding <path-finding>
+// Implementation details of the path finding component
+
+==== Statistics <statistics>
+// Implementation details of the statistics component
 
 
 
@@ -1053,6 +1188,25 @@ an Optional type, is a simple data structure that allows for beautiful error han
 )
 
 
+== Evaluation
+
+=== Overall Effectiveness
+// Evaluate how effectively your solution addresses the original problem statement
+
+=== Evaluation Against Objectives
+// Systematically evaluate your solution against each objective defined in the analysis
+
+=== User Feedback
+// Include feedback from your client and/or test users
+// This should be specific and detailed, not hypothetical
+
+=== Response to Feedback
+// Discuss how you've acted on feedback or how you would improve the system based on feedback
+
+=== Future Improvements
+// Discuss potential future enhancements with specific technical details
+
+
 #pagebreak()
 = Bibliography
 #bibliography(
@@ -1061,3 +1215,4 @@ an Optional type, is a simple data structure that allows for beautiful error han
   full:true,
   style: "ieee"
 )
+
