@@ -1,5 +1,5 @@
 #import "catppuccin/typst/src/lib.typ": catppuccin, flavors
-
+#import "@preview/zebraw:0.4.7": *
 #set par(justify: true)
 #show link: underline
 #set page(
@@ -1012,24 +1012,26 @@ an Optional type, is a simple data structure that allows for beautiful error han
 #let code_ref(ref, label) = [#link(label)[#ref]]
 
 #table(
-  columns: (auto, 1fr, auto),
-  inset: 8pt,
-  align: (left, left, left),
+  columns: (auto, auto, auto), 
+  inset: 12pt, 
+  align: (left, left, left), 
   stroke: 0.7pt,
   fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
   [*Component*], [*Description*], [*Path/Location*],
   
   [#code_ref("Grid", <grid-component>)], [Core game grid display and interaction component, handles cursor movement, tile activation, and game state], [/src/lib/Grid.svelte],
-  [#code_ref("Game Handler", <game-handler>)], [Manages game state, scoring logic, and game loop timing], [/backend/src/game.rs],
-  [#code_ref("Settings", <settings>)], [User preferences management for DAS, ARR, keybindings, and game parameters], [/frontend/src/routes/settings.svelte],
-  [#code_ref("Authentication", <auth>)], [User registration, login, and session management], [src/routes/signup/+page.svelte],
-  [#code_ref("Leaderboards", <leaderboards>)], [Score display system with filtering, pagination, and sorting using MergeSort], [/src/routes/leaderboard/+page.svelte],
-  [#code_ref("WebSocket Client", <ws-client>)], [Client-side WebSocket connection handling for multiplayer mode], [/src/lib/grid.svelte],
-  [#code_ref("Multiplayer", <multiplayer>)], [Multiplayer game orchestration, player matching, and state synchronization], [src/lib/grid.svelte],
-  [#code_ref("DAS Implementation", <das-impl>)], [Delayed Auto Shift functionality for improved input responsiveness], [src/lib/grid.svelte],
-  
-)
+ [#code_ref("Authentication", <authentication>)], [User registration, login, and session management], [src/routes/signup/+page.svelte, backend/src/misc.rs],
+ [#code_ref("Leaderboard", <leaderboard>)], [Leaderboard component, displays the leaderboard], [src/routes/leaderboard/+page.svelte],
+ [#code_ref("Settings", <settings>)], [Settings component, displays the settings], [src/routes/settings/+page.svelte],
+ [#code_ref("Singleplayer Game Management", <singleplayer-game-management>)], [Singleplayer game management component, handles the singleplayer game], [backend/src/main.rs],
+ [#code_ref("Multiplayer Game Management", <multiplayer-game-management>)], [Multiplayer game management component, handles the multiplayer game], [backend/src/game.rs],
+ [#code_ref("Database Models", <database-models>)], [Database models, defines the database schema], [backend/src/models.rs],
+ [#code_ref("Server Routing", <server-routing>)], [Server routing, defines the server routes], [backend/src/main.rs],
+ [#code_ref("Backend Error Handling", <backend-error-handling>)], [Backend error handling, handles errors in the backend], [backend/src/error.rs],
+ [#code_ref("WASM", <wasm>)], [WASM implementation, used for the PRNG], [xoshiro-wasm/src/lib.rs, pkg/$*$],
+ [#code_ref("Queue", <queue>)], [Queue implementation, used to manage game states], [backend/src/misc.rs],
 
+)
 
 === Skill table
 #table(
@@ -1038,92 +1040,2504 @@ an Optional type, is a simple data structure that allows for beautiful error han
   align: (left, left, left, left),
   stroke: 0.7pt,
   fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
-  [*Group*], [*Skill*], [*Description*], [*Link*],
-  
-  [A], [Complex client-server model], [Full-featured multiplayer game system with real-time WebSocket communication], [#code_ref("Multiplayer", <multiplayer>)],
-  
+  [*Group*], [*Skill*], [*Description*], [*Link/(s)*],
+  [A], [Complex Data Models], [Interlinked tables in database, along with complex queries], [#code_ref("Database Models", <database-models>), #code_ref("Authentication", <authentication>), #code_ref("Leaderboard", <leaderboard>)],
+  [A], [Hash Tables], [Hashmaps used to map ULID's to games and user websockets], [#code_ref("Multiplayer Game Management", <multiplayer-game-management>), #code_ref("Singleplayer Game Management", <singleplayer-game-management>)],
+  [A], [Queue], [Circular queue used to manage game states], [#code_ref("Queue", <queue>)],
+  [A], [Hashing], [Hash function used to hash passwords], [#code_ref("Authentication", <authentication>)],
+  [A], [Complex Mathematical Model], [Implementation of a PRNG], [#code_ref("WASM", <wasm>)],
+  [A], [Complex Mathematical Model], [MergeSort implementation for leaderboard], [#code_ref("Leaderboard", <leaderboard>)],
+  [A], [Complex Control Model], [Websocket Future Pattern Matching, (scheduling/pattern matching)], [#code_ref("Multiplayer Game Management", <multiplayer-game-management>)],
+  [A], [Complex OOP model], [game handler class, grid class, user class, etc.], [#code_ref("Game Handler", <singleplayer-game-management>), #code_ref("Grid", <grid-component>), #code_ref("Multiplayer Game Management", <multiplayer-game-management>), #code_ref("Database Models", <database-models>)],
+  [A], [Complex client-server model], [complex HTTP request handling, including deserializing and parsing JSON objects], [#code_ref("Server Routing", <server-routing>), #code_ref("Backend Error Handling", <backend-error-handling>), #code_ref("Authentication", <authentication>), #code_ref("Singleplayer Game Management", <singleplayer-game-management>)],
+  [A], [Complex client-server model], [Websocket handling, including sending and receiving messages, and transfer of websockets between threads], [#code_ref("Multiplayer Game Management", <multiplayer-game-management>)],
+  [A], [Complex client-server model], [Authentication Middleware], [#code_ref("Authentication", <authentication>)],
+  [B], [Simple Mathematical Model], [Game Timing and Score Calculation], [#code_ref("Game Handler", <singleplayer-game-management>)],
+
    
 )
 
 
 
 === Completeness of Solution
-// Document how your implemented solution meets the objectives defined in your analysis
-// Reference your success criteria and explain how each has been achieved
-// Include screenshots of the working application
 
-=== Complex Algorithm Implementation
-// Highlight key parts of your code that demonstrate sophisticated programming techniques
-// Include annotated code snippets that show:
-//   - Complex algorithms (your PRNG implementation, anti-cheat, etc.)
-//   - Data structures (your circular queue, hashmap implementations)
-//   - Advanced programming techniques (concurrent processing, websockets)
 
 === Code Quality
 my coding style follows rust's programming principles, i.e error handling through result and option types, and a focus on readability and maintainability, i.e i use descriptive variable names, and i try to comment my code to explain why behind the code, i also try to use meaningful variable names, and i try to keep functions small and focused, i.e single responsibility.
-// Explain your coding style and approach to maintainability
-// Document your error handling approach
-// Discuss any performance optimizations
+#linebreak()
+
+for error handling i use result and option types, i try to handle errors in the frontend and backend, and i try to use meaningful error messages, and i try to keep the code clean and readable, allowing for easier debugging and maintenance, i use the thiserror crate to define custom a custom error type, `AppError`, which is used to handle all errors in the backend, i also use the axum crate to handle errors in the backend, additionally AppError implements `IntoResponse`, which allows for handling of errors with constructing HTTP and websocket responses.
+
+#linebreak()
+one particular example of performance optimizations is in the #code_ref("Multiplayer Game Management", <multiplayer-game-management>) section, I use the `tokio::select` macro to handle the websocket messages and game states, this allows for the websocket messages and game states to be handled concurrently, and the `tokio::sync::mpsc` crate to send the websocket to the game handler thread, this allows for the websocket to be sent to the game handler thread without blocking the main thread, the `tokio::select` macro brings great improvements to performance, as it is non-blocking and only runs when there is an available event. 
+
+additionally I have used rust, which is a systems programming language with performance on-par with c++ and alternatives, and used libraries known for high performance. particularly `axum`, which is currently the #8 fastest web framework, per the [techempower framework](https://www.techempower.com/benchmarks/#hw=ph&test=composite&section=data-r23)
+
+#figure(
+  align(center, box(
+    fill: rgb(24, 24, 37),
+    width: 80%,
+    image("assets/axum-performance.png", width: 100%, fit:"contain"),
+  )),
+  caption: [TechEmpower Framework Benchmark]
+)
 
 
-
+=== Source Code
 
 
 ==== Grid Component <grid-component>
-// Implementation details of the grid component
+
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+<script lang="ts">
+	import Clock from 'svelte-material-icons/Timer.svelte';
+	import Trophy from 'svelte-material-icons/Trophy.svelte';
+	import Dice from 'svelte-material-icons/Dice5.svelte';
+	import Meow from 'svelte-material-icons/ViewGrid.svelte';
+	import Party from 'svelte-material-icons/PartyPopper.svelte';
+	import { browser } from '$app/environment';
+	import { getContext, onMount } from 'svelte';
+	import { json } from '@sveltejs/kit';
+	import { v4 as uuidv4 } from 'uuid';
+	import { Xoshiro256plus } from 'xoshiro';
+
+	async function initWasm() {
+		rng = new Xoshiro256plus(BigInt(69));
+	}
+
+	let rng: Xoshiro256plus;
+	if (browser) {
+		initWasm().catch(console.error);
+	}
+	export let showModal;
+	let state: any = getContext('state');
+	let scoreboard: any = 0;
+	let end = true;
+	let interval: any;
+	let dasIntervals = Array(8).fill(0);
+	let gameStarted = false;
+	let gameId = 0;
+	let time = $state.timeLimit;
+	let score = 0;
+	let quota = 0;
+	let playersLeft = 0;
+	let moves: any = [];
+	let grid = Array(Math.pow($state.size, 2)).fill(false);
+	let cGrid = Array(Math.pow($state.size, 2)).fill('neutral');
+	let wcursorX = 0;
+	let wcursorY = 0;
+	let acursorX = $state.size - 1;
+	let acursorY = $state.size - 1;
+	let lastActionTime = 0;
+	let temp_id: String = '';
+	let ws: WebSocket;
+	const initGrid = () => {
+		gameStarted = false;
+		wcursorX = 0;
+		wcursorY = 0;
+		acursorX = $state.size - 1;
+		acursorY = $state.size - 1;
+
+		grid = Array(Math.pow($state.size, 2)).fill(false);
+	};
+	const endGame = () => {
+		score = 0;
+		time = $state.timeLimit;
+		wcursorX = 0;
+		wcursorY = 0;
+		acursorX = $state.size - 1;
+		acursorY = $state.size - 1;
+		moves = [];
+		clearInterval(interval);
+		
+		// Close WebSocket if in multiplayer mode
+		if ($state.gameMode === 'multiplayer' && ws) {
+			ws.close();
+			temp_id = '';
+		}
+		
+		initGrid();
+	};
+	const startGame = () => {
+		switch ($state.gameMode) {
+			case 'timer':
+				gameStarted = true;
+				startTimer();
+				break;
+			case 'multiplayer':
+				startMultiplayerGame();
+			// case 'pulse':
+			// case 'endless':
+		}
+	};
+	const startMultiplayerGame = () => {
+		if (ws) {
+			ws.close();
+		}
+		ws = new WebSocket('/ws/game');
+		ws.onopen = (e) => {
+			console.log('WebSocket opened');
+		};
+		ws.onmessage = (e) => {
+			const data = e.data;
+
+			try {
+				const message = JSON.parse(data);
+				switch (message.type) {
+					case 'Start':
+						console.log('Game starting with seed:', message.data);
+						gameStarted = true;
+						rng = new Xoshiro256plus(BigInt(message.data));
+						time = 5;
+						wcursorX = 0;
+						wcursorY = 0;
+						acursorX = $state.size - 1;
+						acursorY = $state.size - 1;
+						interval = setInterval(() => {
+							time -= 1;
+							if (time <= 0) {
+								clearInterval(interval);
+							}
+						}, 1000);
+						fillGrid($state.size);
+						break;
+					case 'Quota':
+						console.log(
+							'Quota update:',
+							message.data.quota,
+							'players left:',
+							message.data.players_left
+						);
+						quota = message.data.quota;
+						playersLeft = message.data.players_left;
+						time = 5;
+						score = 0;
+						clearInterval(interval);
+						interval = setInterval(() => {
+							time -= 1;
+							if (time <= 0) {
+								clearInterval(interval);
+							}
+						}, 1000);
+						break;
+					case 'Move':
+						console.log('Received move:', message.data);
+						break;
+					case 'Out':
+						console.log('player out placed', message.data);
+						end = false;
+						scoreboard = message.data;
+						ws.close();
+						break;
+					case 'Win':
+						console.log("you won!!!!", message.data);
+						end = false;
+						scoreboard = 1;
+						ws.close();
+						break;
+					case 'ID':
+						console.log('Received ID:', message.data);
+						temp_id = message.data;
+						break;
+					case 'Ping':
+						console.log('Received ping');
+						break;
+					default:
+						console.log('Unknown message type:', message);
+				}
+			} catch (err) {
+				console.error('Failed to parse message:', err);
+			}
+		};
+		ws.addEventListener('close', (e) => {
+			ws.close();
+			temp_id = '';
+		});
+	};
+	const startTimer = async () => {
+		let data = { dimension: $state.size, time_limit: $state.timeLimit };
+		await fetch('/api/get-seed', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data)
+		})
+			.then((res) => {
+				return res.json();
+			})
+			.then((data) => {
+				rng = new Xoshiro256plus(BigInt(data.seed));
+				gameId = data.id;
+			});
+
+		wcursorX = 0;
+		wcursorY = 0;
+		acursorX = $state.size - 1;
+		acursorY = $state.size - 1;
+
+		fillGrid($state.size);
+		time = $state.timeLimit;
+		interval = setInterval(async () => {
+			time -= 1;
+			if (time == 0) {
+				end = false;
+				await fetch('/api/submit-game', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ id: gameId, moves: moves, score: score })
+				})
+					.then((res) => {
+						return res.json();
+					})
+					.then((data) => {
+						scoreboard = data;
+					})
+					.catch((err) => console.error('wahrt'));
+				moves = [];
+				clearInterval(interval);
+			}
+		}, 1000);
+	};
+	const submit = (time: any) => {
+		if (!gameStarted && $state.gameMode === 'timer') {
+			lastActionTime = Date.now();
+			startGame();
+			return;
+		}
+		if ($state.gameMode === 'timer') {
+			moves.push(['Submit', time]);
+		} else if ($state.gameMode === 'multiplayer') {
+			ws.send(
+				JSON.stringify({ type: 'Move', data: { player_id: `${temp_id}`, action: 'Submit' } })
+			);
+		}
+		if (end) {
+			let wIndex = wcursorX * $state.size + wcursorY;
+			let aIndex = acursorX * $state.size + acursorY;
+			let wStatus = grid[wIndex];
+			let aStatus = grid[aIndex];
+			if (wStatus && aStatus && (wcursorX !== acursorX || wcursorY !== acursorY)) {
+				cGrid[wIndex] = 'correct';
+				cGrid[aIndex] = 'correct';
+				let count = 0;
+				while (count < 2) {
+					let x = Math.floor(rng.next() * $state.size);
+					let y = Math.floor(rng.next() * $state.size);
+					if (
+						!grid[x * $state.size + y] &&
+						(wIndex !== x * $state.size + y || aIndex !== x * $state.size + y)
+					) {
+						grid[x * $state.size + y] = true;
+						count += 1;
+					}
+				}
+				grid[wIndex] = false;
+				grid[aIndex] = false;
+				score += 1;
+			} else {
+				if (wStatus && aStatus) {
+					cGrid[wIndex] = 'incorrect';
+				} else if (wStatus) {
+					cGrid[aIndex] = 'incorrect';
+					cGrid[wIndex] = 'correct';
+				} else if (aStatus) {
+					cGrid[wIndex] = 'incorrect';
+					cGrid[aIndex] = 'correct';
+				} else {
+					cGrid[wIndex] = 'incorrect';
+					cGrid[aIndex] = 'incorrect';
+				}
+				score = 0;
+			}
+			setTimeout(() => {
+				cGrid[wIndex] = 'neutral';
+				cGrid[aIndex] = 'neutral';
+			}, 150);
+		}
+	};
+	const onKeyUp = (e: any) => {
+		let i = 0;
+		switch (e.key) {
+			case $state.keycodes.wU:
+				i = 0;
+				break;
+			case $state.keycodes.wD:
+				i = 1;
+				break;
+			case $state.keycodes.wL:
+				i = 2;
+				break;
+			case $state.keycodes.wR:
+				i = 3;
+				break;
+			case $state.keycodes.aU:
+				i = 4;
+				break;
+			case $state.keycodes.aD:
+				i = 5;
+				break;
+			case $state.keycodes.aL:
+				i = 6;
+				break;
+			case $state.keycodes.aR:
+				i = 7;
+				break;
+		}
+		clearInterval(dasIntervals[i]);
+		dasIntervals[i] = false;
+	};
+	const onKeyDown = (e: any) => {
+		if (!gameStarted && $state.gameMode === 'multiplayer') {
+			return;
+		}
+		const timeDiff = Date.now() - lastActionTime;
+		switch (e.key) {
+			case $state.keycodes.wU:
+				if (dasIntervals[0] == false) {
+					dasIntervals[0] = setTimeout(() => {
+						dasIntervals[0] = setInterval(() => {
+							wcursorY = Math.max(wcursorY - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueUp' }
+									})
+								);
+							}
+							moves.push(['CursorBlueUp', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				wcursorY = Math.max(wcursorY - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueUp' }
+						})
+					);
+				}
+				moves.push(['CursorBlueUp', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.wD:
+				if (dasIntervals[1] == false) {
+					dasIntervals[1] = setTimeout(() => {
+						dasIntervals[1] = setInterval(() => {
+							wcursorY = Math.min(wcursorY + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueDown' }
+									})
+								);
+							}
+							moves.push(['CursorBlueDown', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				wcursorY = Math.min(wcursorY + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueDown' }
+						})
+					);
+				}
+				moves.push(['CursorBlueDown', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.wL:
+				if (dasIntervals[2] == false) {
+					dasIntervals[2] = setTimeout(() => {
+						dasIntervals[2] = setInterval(() => {
+							wcursorX = Math.max(wcursorX - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueLeft' }
+									})
+								);
+							}
+							moves.push(['CursorBlueLeft', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				wcursorX = Math.max(wcursorX - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueLeft' }
+						})
+					);
+				}
+				moves.push(['CursorBlueLeft', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.wR:
+				if (dasIntervals[3] == false) {
+					dasIntervals[3] = setTimeout(() => {
+						dasIntervals[3] = setInterval(() => {
+							wcursorX = Math.min(wcursorX + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorBlueRight' }
+									})
+								);
+							}
+							moves.push(['CursorBlueRight', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				wcursorX = Math.min(wcursorX + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorBlueRight' }
+						})
+					);
+				}
+				moves.push(['CursorBlueRight', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.aU:
+				if (dasIntervals[4] == false) {
+					dasIntervals[4] = setTimeout(() => {
+						dasIntervals[4] = setInterval(() => {
+							acursorY = Math.max(acursorY - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedUp' }
+									})
+								);
+							}
+							moves.push(['CursorRedUp', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				acursorY = Math.max(acursorY - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedUp' }
+						})
+					);
+				}
+				moves.push(['CursorRedUp', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.aD:
+				if (dasIntervals[5] == false) {
+					dasIntervals[5] = setTimeout(() => {
+						dasIntervals[5] = setInterval(() => {
+							acursorY = Math.min(acursorY + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedDown' }
+									})
+								);
+							}
+							moves.push(['CursorRedDown', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				acursorY = Math.min(acursorY + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedDown' }
+						})
+					);
+				}
+				moves.push(['CursorRedDown', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.aL:
+				if (dasIntervals[6] == false) {
+					dasIntervals[6] = setTimeout(() => {
+						dasIntervals[6] = setInterval(() => {
+							acursorX = Math.max(acursorX - 1, 0);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedLeft' }
+									})
+								);
+							}
+							moves.push(['CursorRedLeft', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				acursorX = Math.max(acursorX - 1, 0);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedLeft' }
+						})
+					);
+				}
+				moves.push(['CursorRedLeft', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.aR:
+				if (dasIntervals[7] == false) {
+					dasIntervals[7] = setTimeout(() => {
+						dasIntervals[7] = setInterval(() => {
+							acursorX = Math.min(acursorX + 1, $state.size - 1);
+							if ($state.gameMode === 'multiplayer') {
+								ws.send(
+									JSON.stringify({
+										type: 'Move',
+										data: { player_id: `${temp_id}`, action: 'CursorRedRight' }
+									})
+								);
+							}
+							moves.push(['CursorRedRight', Date.now() - lastActionTime]);
+							lastActionTime = Date.now();
+						}, $state.das);
+					}, $state.dasDelay);
+				}
+				acursorX = Math.min(acursorX + 1, $state.size - 1);
+				if ($state.gameMode === 'multiplayer') {
+					ws.send(
+						JSON.stringify({
+							type: 'Move',
+							data: { player_id: `${temp_id}`, action: 'CursorRedRight' }
+						})
+					);
+				}
+				moves.push(['CursorRedRight', timeDiff]);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.submit:
+				submit(timeDiff);
+				lastActionTime = Date.now();
+				break;
+			case $state.keycodes.reset:
+				end == false ? (end = true) : '';
+				endGame();
+				break;
+		}
+	};
+	const fillGrid = (count: number) => {
+		let placed = 0;
+		while (placed < count) {
+			let x = Math.floor(rng.next() * $state.size);
+			let y = Math.floor(rng.next() * $state.size);
+			if (grid[x * $state.size + y] == false) {
+				grid[x * $state.size + y] = true;
+				placed += 1;
+			}
+		}
+	};
+	initGrid();
+</script>
+
+<div class="">
+	{#if end}
+		<div class="flex flex-row text-3xl text-text justify-between py-2">
+			<div class="flex flex-row items-center">
+				<Clock />
+				<div class="px-2 {time < 3 ? (time < 2 ? 'text-red' : 'text-peach') : 'text-green'}">
+					{time}
+				</div>
+			</div>
+			<div class="flex flex-row items-center">
+				<Trophy />
+				<div class="px-2">
+					{$state.gameMode === 'multiplayer' ? `${score}/${quota} (${playersLeft})` : score}
+				</div>
+			</div>
+		</div>
+		<div class="flex flex-col items-center">
+			<div class="relative w-fit h-fit">
+				{#if $state.gameMode === 'multiplayer' && (!temp_id || !gameStarted)}
+					<div
+						class="absolute top-0 left-0 right-0 bottom-[4.5rem] flex items-center justify-center z-10 bg-base/80"
+					>
+						{#if !temp_id}
+							<button
+								class="px-4 py-2 rounded-lg transition-colors duration-300 bg-lavender text-mantle hover:bg-rosewater"
+								on:click={startMultiplayerGame}
+							>
+								Join Game
+							</button>
+						{:else}
+							<div class="text-text text-3xl flex flex-col items-center gap-4">
+								<div class="flex items-center gap-2">Waiting for players...</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
+				<!-- svelte-ignore a11y-autofocus -->
+					<div class="w-fit h-fit flex flex-col" autofocus>
+						{#each Array($state.size) as _, col}
+							<div class="w-fit h-fit flex flex-row">
+								{#each Array($state.size) as _, row}
+									<div
+										id={grid[row * $state.size + col]}
+										class="{cGrid[row * $state.size + col] === 'correct'
+											? 'bg-green'
+											: cGrid[row * $state.size + col] === 'incorrect'
+												? 'bg-red'
+												: grid[row * $state.size + col]
+													? 'bg-crust'
+													: 'bg-text'}
+						
+							  w-32 h-32 border-crust border flex items-center justify-center transition-colors duration-100"
+									>
+										<div
+											class="h-8 w-8 {row == wcursorX && col == wcursorY
+												? 'border-t-blue border-l-blue border-t-8 border-l-8'
+												: ''}  {row == acursorX && col == acursorY
+												? 'border-b-red border-r-red border-b-8 border-r-8'
+												: ''}"
+										/>
+									</div>
+								{/each}
+							</div>
+						{/each}
+						<div class="text-text flex flex-row text-2xl py-4 justify-between">
+							<div class="flex flex-row">
+								<select
+									id="gamemodes"
+									name="modes"
+									class="bg-surface0 px-2"
+									bind:value={$state.gameMode}
+								>
+									<label for="gamemodes" class="pr-4"> GAMEMODE: </label>
+									<option value="timer"> TIME </option>
+									<option value="multiplayer"> MULTIPLAYER </option>
+									<option value="endless"> ZEN </option>
+								</select>
+							</div>
+							<select
+								id="size"
+								name="sizes"
+								class="bg-surface0 px-2"
+								bind:value={$state.size}
+								on:change={() => {
+									endGame();
+								}}
+							>
+								<option value={4}> 4x4 </option>
+								<option value={5}> 5x5 </option>
+								<option value={6}> 6x6 </option>
+							</select>
+							<select
+								id="time"
+								name="times"
+								class="bg-surface0 px-2 {$state.gameMode == 'timer'
+									? 'bg-surface0'
+									: 'bg-surface0/0 text-crust/0'}"
+								bind:value={$state.timeLimit}
+								on:change={() => {
+									time = $state.timeLimit;
+									endGame();
+								}}
+							>
+								<option value={30}> 30s </option>
+								<option value={45}> 45s </option>
+								<option value={60}> 60s </option>
+							</select>
+							<button class="bg-surface0 px-2" on:click={endGame}> RESET </button>
+						</div>
+					</div>
+			</div>
+		</div>
+	{:else}
+		<div class="text-text flex align-right flex-col w-96">
+			<div class="text-5xl py-2 font-bold flex items-center border-b-4 border-b-subtext0">
+				<Party class="mr-4" />game ended
+			</div>
+			<div class="text-4xl py-2 flex items-center justify-between">
+				score: {score}
+				<div class="text-overlay1">
+					{#if $state.gameMode === 'multiplayer' && scoreboard > 0}
+						Position: #{scoreboard}
+					{:else}
+						#{scoreboard}
+					{/if}
+				</div>
+			</div>
+			<div class="flex-col items-center text-3xl justify-between pb-2">
+				<div class="flex items-center my-1">
+					<Dice /> gamemode:
+					<div class="ml-1 text-overlay1">{$state.gameMode}</div>
+				</div>
+				<div class="flex items-center my-1">
+					<Meow /> size:
+					<div class="ml-1 text-overlay1">{$state.size}x{$state.size}</div>
+				</div>
+				<div class="flex items-center my-1">
+					{#if $state.gameMode == 'timer'}
+						<Clock /> time:
+						<div class="ml-1 text-overlay1">{$state.timeLimit}s</div>
+					{/if}
+				</div>
+			</div>
+			<button
+				class="text-2xl h-12 my-2 bg-blue/80 hover:bg-blue border-rosewater transition-colors duration-150 font-bold"
+				on:click={() => {
+					end = true;
+					endGame();
+				}}
+			>
+				submit score?
+			</button>
+			<button
+				class="text-2xl h-12 my-2 bg-mauve/80 hover:bg-mauve border-rosewater transition-colors duration-150 font-bold"
+				on:click={() => {
+					end = true;
+					endGame();
+				}}
+			>
+				play again?
+			</button>
+		</div>
+	{/if}
+</div>
+
+<svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
 
 
-==== Game Handler <game-handler>
-// Implementation details of the game handler component
 
-==== Settings <settings>
-// Implementation details of the settings component
 
-==== Authentication <auth>
-// Implementation details of the authentication component
 
-==== Leaderboards <leaderboards>
-// Implementation details of the leaderboards component
+```
+)
+==== Authentication <authentication>
+===== Frontend
+#zebraw(background-color: rgb(24, 24, 37),  ```svlt 
+<script lang="ts">
+    import { goto, invalidateAll } from "$app/navigation";
+    let isSignup = true;
+    let error = "";
+  
+    async function handleSubmit(e: SubmitEvent) {
+      e.preventDefault();
+      let data = new URLSearchParams(new FormData(e.target as HTMLFormElement));
+      let path = isSignup ? "/api/user/signup" : "/api/user/login";
+      const res = await fetch(path, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: data,
+      });
+      if (res?.ok) {
+        await invalidateAll();
+        goto("/");
+      } else {
+        switch (res?.status) {
+          case 409:
+            error = "Username or email already exists";
+            break;
+          case 401:
+            error = "Invalid credentials";
+            break;
+          case 404:
+            error = "not found";
+            break;
+          default:
+            error = "An unknown error occurred";
+            break;
+        }
+      }
+    }
+  </script>
+  
+  <div class="min-h-screen w-screen flex items-center justify-center bg-base">
+    <div class="w-full max-w-md mx-4 bg-mantle rounded-xl shadow-xl p-8">
+      {#if isSignup}
+        <div class="flex flex-col gap-8">
+          <div class="text-center">
+            <h1 class="text-3xl font-medium text-lavender mb-2">Create Account</h1>
+          </div>
+          <form on:submit={handleSubmit} class="flex flex-col gap-6">
+            <div class="flex flex-col gap-4">
+              <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                class="w-full px-4 py-3 rounded-lg bg-base text-text border border-surface0 focus:border-lavender transition-colors"
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                class="w-full px-4 py-3 rounded-lg bg-base text-text border border-surface0 focus:border-lavender transition-colors"
+              />
+            </div>
+            {#if error}
+              <div class="bg-red/10 border border-red/20 text-red px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            {/if}
+            <button
+              type="submit"
+              class="w-full px-4 py-3 rounded-lg font-medium bg-lavender text-mantle hover:bg-rosewater transition-colors"
+            >
+              Sign Up
+            </button>
+          </form>
+          <button
+            on:click={() => (isSignup = false)}
+            class="text-subtext0 hover:text-text transition-colors pt-2"
+          >
+            Already have an account? Login here
+          </button>
+        </div>
+      {:else}
+        <div class="flex flex-col gap-8">
+          <div class="text-center">
+            <h1 class="text-3xl font-medium text-lavender mb-2">Welcome Back!</h1>
+          </div>
+          <form on:submit={handleSubmit} class="flex flex-col gap-6">
+            <div class="flex flex-col gap-4">
+              <input
+                type="username"
+                name="username"
+                placeholder="Username"
+                class="w-full px-4 py-3 rounded-lg bg-base text-text border border-surface0 focus:border-lavender transition-colors"
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                class="w-full px-4 py-3 rounded-lg bg-base text-text border border-surface0 focus:border-lavender transition-colors"
+              />
+            </div>
+            {#if error}
+              <div class="bg-red/10 border border-red/20 text-red px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            {/if}
+            <button
+              type="submit"
+              class="w-full px-4 py-3 rounded-lg font-medium bg-lavender text-mantle hover:bg-rosewater transition-colors"
+            >
+              Login
+            </button>
+          </form>
+          <button
+            on:click={() => (isSignup = true)}
+            class="text-subtext0 hover:text-text transition-colors pt-2"
+          >
+            Don't have an account? Sign up here
+          </button>
+        </div>
+      {/if}
+    </div>
+  </div>
+```)
+===== Backend
+#zebraw(background-color: rgb(24, 24, 37),  ```rust pub struct SignForm {
+    pub(crate) username: String,
+    #[validate(length(min = 8))]
+    pub(crate) password: String,
+}
 
-==== WebSocket Client <ws-client>
-// Implementation details of the WebSocket client component
+#[axum::debug_handler]
+pub async fn signup(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Form(details): Form<SignForm>,
+) -> Result<CookieJar, AppError> {
+    let mut conn = state.db.acquire().await?;
+    let jar = CookieJar::from_headers(&headers);
+    let exists: Option<(i64,)> = sqlx::query_as("SELECT 1 FROM \"user\" WHERE username = $1")
+        .bind(&details.username)
+        .fetch_optional(&mut *conn)
+        .await?;
 
-==== Multiplayer <multiplayer>
-// Implementation details of the multiplayer component
+    if exists.is_some() {
+        return Err(AppError::Status(StatusCode::CONFLICT));
+    }
 
-==== DAS Implementation <das-impl>
-// Implementation details of the DAS implementation
+    let hashed = bcrypt::hash(details.password, bcrypt::DEFAULT_COST)?;
+    let user_id = uuid::Uuid::new_v4();
 
-==== WebSocket Server <ws-server>
-// Implementation details of the WebSocket server component
+    sqlx::query!(
+        "INSERT INTO \"user\" (id, username, password) VALUES ($1, $2, $3)",
+        user_id,
+        details.username,
+        hashed
+    )
+    .execute(&mut *conn)
+    .await?;
 
-==== Game State <game-state>
-// Implementation details of the game state component
+    let session_id = uuid::Uuid::new_v4();
+    sqlx::query!(
+        "INSERT INTO session (ssid, user_id, expiry_date) VALUES ($1, $2, NOW() + INTERVAL '7 DAYS')",
+        session_id,
+        user_id
+    )
+    .execute(&mut *conn)
+    .await?;
 
-==== Authentication API <auth-api>
-// Implementation details of the authentication API component
+    Ok(jar.add(
+        Cookie::build(("session", session_id.to_string()))
+            .path("/")
+            .build(),
+    ))
+}
 
-==== Database Operations <db-ops>
-// Implementation details of the database operations component
+pub async fn login(
+    State(state): State<Arc<AppState>>,
+    jar: CookieJar,
+    Form(details): Form<SignForm>,
+) -> Result<CookieJar, AppError> {
+    let mut conn = state.db.acquire().await?;
 
-==== Anti-Cheat <anti-cheat>
-// Implementation details of the anti-cheat component
+    let user: Option<(uuid::Uuid, String)> =
+        sqlx::query_as("SELECT id, password FROM \"user\" WHERE username = $1")
+            .bind(&details.username)
+            .fetch_optional(&mut *conn)
+            .await?;
 
-==== Session Management <session>
-// Implementation details of the session management component
+    let (user_id, hashed) = user.ok_or(AppError::Status(StatusCode::UNAUTHORIZED))?;
 
-==== Xoshiro256+ <xoshiro>
-// Implementation details of the Xoshiro256+ component
+    if !bcrypt::verify(details.password, &hashed)? {
+        return Err(AppError::Status(StatusCode::UNAUTHORIZED));
+    }
 
-==== Circular Queue <circular-queue>
-// Implementation details of the circular queue component
+    let session_id = uuid::Uuid::new_v4();
+    sqlx::query!(
+        "INSERT INTO session (ssid, user_id, expiry_date) VALUES ($1, $2, NOW() + INTERVAL '7 DAYS')",
+        session_id,
+        user_id
+    )
+    .execute(&mut *conn)
+    .await?;
 
-==== Path Finding <path-finding>
-// Implementation details of the path finding component
+    Ok(jar.add(
+        Cookie::build(("session", session_id.to_string()))
+            .path("/")
+            .build(),
+    ))
+}
 
-==== Statistics <statistics>
-// Implementation details of the statistics component
+#[axum::debug_middleware]
+pub async fn authorization(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    mut request: Request,
+    next: Next,
+) -> Result<Response, AppError> {
+    let jar = CookieJar::from_headers(&headers);
+    let user = if let Some(cookie) = jar.get("session") {
+        if let Ok(session_id) = uuid::Uuid::parse_str(cookie.value()) {
+            let mut conn = state.db.acquire().await?;
+            sqlx::query_as!(
+                crate::models::UserExt,
+                r#"
+                SELECT u.id, u.username, u.admin, u.cheater
+                FROM "user" u
+                INNER JOIN session s ON u.id = s.user_id
+                WHERE s.ssid = $1 AND s.expiry_date > NOW()
+                "#,
+                session_id
+            )
+            .fetch_optional(&mut *conn)
+            .await?
+        } else {
+            None
+        }
+    } else {
+        None
+    };
 
+    request.extensions_mut().insert(user);
+    let response = next.run(request).await;
+    Ok(response)
+}```)
+
+==== Queue <queue>
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+#[derive(Debug)]
+pub struct Queue<T> {
+    items: [Option<T>; 64],
+    pub size: usize,
+    front: usize,
+}
+
+impl<T> Queue<T> {
+    pub fn new() -> Self {
+        Self {
+            items: std::array::from_fn(|_| None),
+            size: 0,
+            front: 0,
+        }
+    }
+
+    pub fn enqueue(&mut self, item: T) -> bool {
+        if self.size == self.items.len() {
+            return false;
+        }
+        let rear = (self.front + self.size) % self.items.len();
+        self.items[rear] = Some(item);
+        self.size += 1;
+        true
+    }
+
+    pub fn dequeue(&mut self) -> Option<T> {
+        if self.size == 0 {
+            return None;
+        }
+        let item = self.items[self.front].take();
+        self.front = (self.front + 1) % self.items.len();
+        self.size -= 1;
+        item
+    }
+}
+
+impl<T> Default for Queue<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
+
+
+```)  
+
+==== Leaderboard <leaderboard>
+#zebraw(background-color: rgb(24, 24, 37),  ```svlt
+<script lang="ts">
+	import { onMount } from 'svelte';
+
+	let dimension = 4;
+	let timeLimit = 30;
+	let leaderboard: Array<[string, number]> = [];
+	let currentPage = 1;
+	let userOwned = false;
+	onMount(() => {
+		fetchScores();
+	});
+
+	async function fetchScores() {
+		const res = await fetch(`/api/get_scores`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ page: currentPage, dimension, time_limit: timeLimit, user_scores: userOwned }),
+		});
+		const data = await res.json();
+		leaderboard = mergesort(data);
+	}
+
+	function mergesort(arr: Array<[string, number]>): Array<[string, number]> {
+		if (arr.length < 2) return arr;
+		const mid = Math.floor(arr.length / 2);
+		const left = mergesort(arr.slice(0, mid));
+		const right = mergesort(arr.slice(mid));
+		return merge(left, right);
+	}
+
+	function merge(left: Array<[string, number]>, right: Array<[string, number]>): Array<[string, number]> {
+		let result = [];
+		while (left.length && right.length) {
+			if (left[0][1] > right[0][1]) {
+				result.push(left.shift());
+			} else {
+				result.push(right.shift());
+			}
+		}
+		return [...result, ...left, ...right];
+	}
+	//TODO make the dimension and timelimit a select
+</script>
+
+<div class="min-h-screen bg-mantle text-text p-8">
+	<div class="text-3xl font-bold mb-6">Leaderboards</div>
+	<div class="flex gap-4 items-center mb-6">
+		<div class="font-semibold">Dimension:</div>
+		<select id="size" name="dimension" class="bg-surface0 px-2" bind:value={dimension}>
+			<option value={4}> 4x4 </option>
+			<option value={5}> 5x5 </option>
+			<option value={6}> 6x6 </option>
+		</select>
+		<div class="font-semibold">Time Limit:</div>
+		<select id="size" name="dimension" class="bg-surface0 px-2" bind:value={timeLimit}>
+			<option value={30}> 30s </option>
+			<option value={45}> 45s </option>
+			<option value={60}> 60s </option>
+		</select>
+		<div class="font-semibold">Personal Bests:</div>
+		<input type="checkbox" bind:checked={userOwned} class="bg-surface0 px-2">
+		<button on:click={fetchScores} class="px-4 py-1 rounded bg-green text-text font-semibold hover:bg-sky">Refresh</button>
+	</div>
+	<table class="min-w-full border-collapse">
+		<thead class="bg-[#1e2030]">
+			<tr>
+				<th class="px-4 py-2 border border-text">Username</th>
+				<th class="px-4 py-2 border border-text">Score</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each leaderboard as [user, score]}
+				<tr class="hover:bg-text">
+					<td class="px-4 py-2 border border-text">{user}</td>
+					<td class="px-4 py-2 border border-text">{score}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+	<div>
+		<button on:click={() => {currentPage -= 1; fetchScores()}} disabled={currentPage === 1} > back </button>
+		{currentPage}
+		<button on:click={() => {currentPage += 1; fetchScores()}}  > next </button>
+	</div>
+</div>
+```)  
+
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+pub struct Score {
+    username: String,
+    score: Option<i16>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct GetScore {
+    page: u32,
+    dimension: u8,
+    time_limit: u8,
+    user_scores: bool,
+}
+
+#[axum::debug_handler]
+pub async fn get_scores(
+    State(state): State<Arc<AppState>>,
+    Extension(user): Extension<Option<UserExt>>,
+    Json(data): Json<GetScore>,
+) -> Result<Json<Vec<(String, usize)>>, AppError> {
+    let query_string = if data.user_scores && user.is_some() {
+        r#"
+        SELECT "game".score, "user".username
+        FROM "game"
+        JOIN "user" ON "game".user_id = "user".id
+        WHERE dimension = $1
+        AND time_limit = $2
+        AND "user".id = $4
+        ORDER BY score
+        OFFSET ($3 - 1) * 100 
+        FETCH NEXT 100 ROWS ONLY
+        "#
+    } else {
+        r#"
+        SELECT "game".score, "user".username
+        FROM "game"
+        JOIN "user" ON "game".user_id = "user".id
+        WHERE dimension = $1
+        AND time_limit = $2
+        ORDER BY score
+        OFFSET ($3 - 1) * 100 
+        FETCH NEXT 100 ROWS ONLY
+        "#
+    };
+    let user_id = match user.is_some() {
+        true => user.unwrap().id,
+        false => uuid::Uuid::new_v4(),
+    };
+    let res: Vec<(String, usize)> = sqlx::query_as::<_, Score>(query_string)
+        .bind(data.dimension as i32)
+        .bind(data.time_limit as i32)
+        .bind(data.page as i32)
+        .bind(user_id)
+        .fetch_all(&mut *state.db.acquire().await?)
+        .await?
+        .iter()
+        .map(|x| (x.username.clone(), x.score.unwrap() as usize))
+        .collect();
+    Ok(Json(res))
+} ```)
+
+==== Server Routing <server-routing>
+
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+[tokio::main]
+async fn main() {
+    // basic initialization
+    dotenvy::dotenv().ok();
+
+    let database_url = std::env::var("DATABASE_URL").expect("DB_URL must be set");
+
+    let pool = PgPool::connect(&database_url).await.unwrap();
+
+    tracing_subscriber::fmt::init();
+
+    let state = Arc::new(AppState {
+        games: Mutex::new(HashMap::new()),
+        game_manager: GameManager {
+            user_games: Arc::new(Mutex::new(Queue::<(
+                ulid::Ulid,
+                tokio::sync::mpsc::Sender<WebSocket>,
+            )>::new())),
+            cheater_games: Arc::new(Mutex::new(Queue::<(
+                ulid::Ulid,
+                tokio::sync::mpsc::Sender<WebSocket>,
+            )>::new())),
+            anon_games: Arc::new(Mutex::new(Queue::<(
+                ulid::Ulid,
+                tokio::sync::mpsc::Sender<WebSocket>,
+            )>::new())),
+        },
+        db: pool,
+    });
+    let app = Router::new()
+        .route("/get-seed", post(create_seed))
+        .route("/submit-game", post(submit_game))
+        .route("/game", any(ws_upgrader))
+        .route("/get_scores", post(misc::get_scores))
+        .route("/user/signup", post(misc::signup))
+        .route("/user/login", post(misc::login))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            misc::authorization,
+        ))
+        .with_state(state)
+        .layer(CorsLayer::permissive())
+        .layer(TraceLayer::new_for_http());
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```)
+
+==== Singleplayer Game Management <singleplayer-game-management>
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+/// enum representing all possible moves done by the client
+#[repr(u8)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Move {
+    CursorRedUp,
+    CursorRedDown,
+    CursorRedLeft,
+    CursorRedRight,
+    CursorBlueUp,
+    CursorBlueDown,
+    CursorBlueLeft,
+    CursorBlueRight,
+    Submit,
+}
+#[derive(Serialize, Deserialize)]
+pub struct GameForm {
+    dimension: u8,
+    time_limit: u8,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct GameState {
+    seed: u32,
+    dimension: u8,
+    time_limit: Duration,
+    start_time: Instant,
+}
+
+#[derive(Serialize)]
+pub struct Seed {
+    id: String,
+    seed: u32,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GameEnd {
+    id: String,
+    score: u32,
+    //u32 is time difference in ms
+    moves: Vec<(Move, u32)>,
+
+}
+
+/// creates a new seed using the implemented splitmix and xoshiro256+ algorithms from sillyrng
+#[axum::debug_handler]
+pub async fn create_seed(
+    State(state): State<Arc<AppState>>,
+    Json(form): Json<GameForm>,
+) -> (StatusCode, Json<Seed>) {
+    let game_id = ulid::Ulid::new();
+    let seed = rand::random::<u32>();
+    let game_state = GameState {
+        seed,
+        dimension: form.dimension,
+        time_limit: Duration::from_secs(form.time_limit.into()),
+        start_time: Instant::now(),
+    };
+
+    println!(
+        "Creating game {} with dimension {} and time limit {}s",
+        game_id, form.dimension, form.time_limit
+    );
+
+    state.games.lock().await.insert(game_id, game_state);
+
+    let res = Json(Seed {
+        id: game_id.to_string(),
+        seed,
+    });
+
+    (StatusCode::OK, res)
+}
+
+#[axum::debug_handler]
+pub async fn submit_game(
+    State(state): State<Arc<AppState>>,
+    Extension(user): Extension<Option<UserExt>>,
+    Json(game): Json<GameEnd>,
+) -> Result<(StatusCode, Json<u32>), AppError> {
+    println!(
+        "Received submission for game {} with {} moves",
+        game.id,
+        game.moves.len()
+    );
+    
+    let id = ulid::Ulid::from_string(&game.id).unwrap();
+    let lock = state.games.lock().await;
+    let mut conn = state.db.acquire().await?;
+    let details = lock.get(&id).unwrap();
+    
+   
+    let elapsed = Instant::now().duration_since(details.start_time);
+    if elapsed > details.time_limit + Duration::from_secs(3) {
+        println!("Game {} exceeded time limit ({}s + 3s)", game.id, details.time_limit.as_secs());
+        return Ok((StatusCode::NOT_ACCEPTABLE, Json(0)));
+    }
+
+    let time = verify_timings(game.moves.iter().map(|(_, m)| *m).collect(), state.clone()).await;
+
+    if !time.0 {
+        println!("Rejected game {} due to suspicious timings", game.id);
+        return Ok((StatusCode::NOT_ACCEPTABLE, Json(0)));
+    }
+    let score = match verify_moves(
+        game.moves.iter().map(|(m, _)| *m).collect(),
+        details.dimension,
+        details.seed,
+    )
+    .await
+    {
+        Ok(s) => s,
+        Err(e) => {
+            println!("{:?}", e);
+            // TODO anomalous game pushing
+            return Ok((StatusCode::NOT_ACCEPTABLE, Json(0)));
+        }
+    };
+    if score == game.score {
+        if let Some(u) = user {
+            println!(
+                "Game {} submitted with score {}, user exists : {}",
+                game.id,
+                score,
+                u.clone().username
+            );
+            sqlx::query!("INSERT INTO \"game\" (game_id,score,average_time,dimension,time_limit,user_id) VALUES ($1,$2,$3,$4,$5,$6)",uuid::Uuid::new_v4(),score as i32,time.1, details.dimension as i32,30,u.id).execute(&mut *conn).await?;
+        }
+        Ok((StatusCode::OK, Json(score)))
+    } else {
+        Ok((StatusCode::NOT_ACCEPTABLE, Json(0)))
+    }
+}
+
+pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
+    //this is assuming we start at 0,0 and size,size (should be a client side force, now enforced)
+    let mut rng = sillyrng::Xoshiro256plus::new(Some(seed as u64));
+    let mut grid: Vec<bool> = vec![false; (size * size) as usize];
+    let mut blue_coords: (u8, u8) = (0, 0);
+    let mut red_coords: (u8, u8) = (size - 1, size - 1);
+    let mut score = 0;
+    let mut distance = 0;
+    let mut anomalous_distances = 0;
+    let mut optimal_distance = 0;
+    let mut count = 0;
+    while count < size {
+        let x: u8 = (rng.next() * size as f64).floor() as u8;
+        let y: u8 = (rng.next() * size as f64).floor() as u8;
+        if grid[(x * size + y) as usize] == false {
+            grid[(x * size + y) as usize] = true;
+            count += 1;
+        }
+    }
+    for i in moves.iter() {
+        match i {
+            Move::CursorRedUp => {
+                red_coords.1 = (red_coords.1 as i8 - 1).max(0) as u8;
+                distance += 1;
+            }
+            Move::CursorRedDown => {
+                red_coords.1 = (red_coords.1 + 1).min(size - 1);
+                distance += 1;
+            }
+            Move::CursorRedLeft => {
+                red_coords.0 = (red_coords.0 as i8 - 1).max(0) as u8;
+                distance += 1;
+            }
+            Move::CursorRedRight => {
+                red_coords.0 = (red_coords.0 + 1).min(size - 1);
+                distance += 1;
+            }
+            Move::CursorBlueUp => {
+                blue_coords.1 = (blue_coords.1 as i8 - 1).max(0) as u8;
+                distance += 1;
+            }
+            Move::CursorBlueDown => {
+                blue_coords.1 = (blue_coords.1 + 1).min(size - 1);
+                distance += 1;
+            }
+            Move::CursorBlueLeft => {
+                blue_coords.0 = (blue_coords.0 as i8 - 1).max(0) as u8;
+                distance += 1;
+            }
+            Move::CursorBlueRight => {
+                blue_coords.0 = (blue_coords.0 + 1).min(size - 1);
+                distance += 1;
+            }
+            Move::Submit => {
+                if distance <= optimal_distance {
+                    anomalous_distances += 1;
+                }
+                distance = 0;
+
+                if grid[(red_coords.0 * size + red_coords.1) as usize]
+                    && grid[(blue_coords.0 * size + blue_coords.1) as usize]
+                    && !(blue_coords == red_coords)
+                {
+                    score += 1;
+                    let mut count = 0;
+                    let r = red_coords.0 * size + red_coords.1;
+                    let b = blue_coords.0 * size + blue_coords.1;
+                    while count < 2 {
+                        let x: u8 = (rng.next() * size as f64).floor() as u8;
+                        let y: u8 = (rng.next() * size as f64).floor() as u8;
+                        if !grid[(x * size + y) as usize]
+                            && (x * size + y != r || x * size + y != b)
+                        {
+                            grid[(x * size + y) as usize] = true;
+                            count += 1;
+                        }
+                    }
+                    grid[r as usize] = false;
+                    grid[b as usize] = false;
+                    optimal_distance =
+                        get_optimal_paths(grid.clone(), red_coords, blue_coords, size)
+                            .await
+                            .iter()
+                            .min()
+                            .unwrap_or(&0)
+                            .to_owned();
+                } else {
+                    score = 0
+                }
+            }
+        }
+    }
+    println!(
+        "Game completed with score {} (anomaly ratio: {:.2})",
+        score,
+        anomalous_distances as f64 / score as f64
+    );
+    Ok(score)
+}
+
+
+pub async fn get_optimal_paths(grid: Vec<bool>, r: (u8, u8), b: (u8, u8), size: u8) -> Vec<u32> {
+    let mut paths = Vec::new();
+    for i in 0..grid.len() {
+        for j in 0..grid.len() {
+            if grid[i] && grid[j] && i != j {
+                let r_cell = ((i / size as usize) as u8, (i % size as usize) as u8);
+                let b_cell = ((j / size as usize) as u8, (j % size as usize) as u8);
+                let r_dist = (r.0.abs_diff(r_cell.0) + r.1.abs_diff(r_cell.1)) as u32;
+                let b_dist = (b.0.abs_diff(b_cell.0) + b.1.abs_diff(b_cell.1)) as u32;
+                paths.push(r_dist + b_dist);
+            }
+        }
+    }
+    paths
+}
+
+```)
+
+
+
+==== Backend Error Handling <backend-error-handling>
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+use axum::http::{Response, StatusCode};
+use axum::response::IntoResponse;
+use bcrypt::BcryptError;
+use thiserror::Error;
+#[derive(Error, Debug)]
+pub enum AppError {
+    #[error("statuscode")]
+    Status(StatusCode),
+    #[error("bcrypt error")]
+    Hash(#[from] BcryptError),
+    #[error("Ulid Encode Error")]
+    UEncode(#[from] ulid::EncodeError),
+    #[error("Ulid Decode Error")]
+    UDecode(#[from] ulid::DecodeError),
+    #[error("failed to deserialize")]
+    Json(#[from] serde_json::Error),
+    #[error("pool failed to execute")]
+    Pool(#[from] sqlx::Error),
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> axum::response::Response {
+        let (body, code) = match self {
+            AppError::Status(e) => ("", e),
+            _ => ("Unknown", StatusCode::INTERNAL_SERVER_ERROR),
+        };
+        Response::builder().status(code).body(body.into()).unwrap()
+    }
+}
+
+
+
+```)
+
+
+==== Database Models <database-models>
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct User {
+    pub id: uuid::Uuid,
+    pub password: String,
+    pub username: String,
+    pub admin: Option<bool>,
+    pub cheater: Option<bool>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+pub struct UserExt {
+    pub id: uuid::Uuid,
+    pub username: String,
+    pub admin: Option<bool>,
+    pub cheater: Option<bool>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct UserStatistics {
+    pub stat_id: uuid::Uuid,
+    pub highest_score: Option<i16>,
+    pub victories: Option<i16>,
+    pub games_played: Option<i16>,
+    pub elo: Option<i16>,
+    pub user_id: uuid::Uuid,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Game {
+    pub game_id: uuid::Uuid,
+    pub score: Option<i16>,
+    pub average_time: Option<f32>,
+    pub dimension: Option<i16>,
+    pub time_limit: Option<i16>,
+    pub user_id: uuid::Uuid,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Statistics {
+    pub stat_id: uuid::Uuid,
+    pub total_timings: Option<f32>,
+    pub total_score: Option<i64>,
+    pub games_played: Option<i64>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct AnomalousGames {
+    pub agame_id: uuid::Uuid,
+    pub moves: serde_json::Value,
+    pub user_id: uuid::Uuid,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Session {
+    pub ssid: uuid::Uuid,
+    pub expiry_date: chrono::NaiveDate,
+    pub user_id: uuid::Uuid,
+}
+
+
+
+```)
+
+==== Multiplayer game management <multiplayer-game-management>
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+pub async fn ws_upgrader(
+    ws: WebSocketUpgrade,
+    State(state): State<Arc<AppState>>,
+    Extension(user): Extension<Option<UserExt>>,
+) -> Response {
+    // required due to state not implementing copy
+    let cloned_state = state.clone();
+    ws.on_upgrade(move |socket| ws_handler(socket, cloned_state, user))
+}
+
+pub async fn ws_handler(ws: WebSocket, state: Arc<AppState>, user: Option<UserExt>) {
+    state.game_manager.clone().assign_game(ws, user).await
+}
+
+use axum::extract::ws::{Message, WebSocket};
+use futures::stream::SplitSink;
+use futures::{SinkExt, StreamExt, TryFutureExt};
+use sillyrng::{Gen, Xoshiro256plus};
+use std::{collections::HashMap, sync::Arc};
+use tokio::select;
+use tokio::sync::{mpsc, Mutex};
+use tokio::time::{interval, Duration};
+use ulid::Ulid;
+
+use crate::misc::Queue;
+use crate::models::UserExt;
+use crate::Move;
+
+#[derive(Clone)]
+pub struct GameManager {
+    pub user_games: Arc<Mutex<Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>,
+    pub anon_games: Arc<Mutex<Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>,
+    pub cheater_games: Arc<Mutex<Queue<(ulid::Ulid, mpsc::Sender<WebSocket>)>>>,
+}
+
+pub struct Game {
+    players: HashMap<Ulid, Player>,
+    inactive_players: HashMap<Ulid, Player>,
+    seed: u32,
+    quota: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct Player {
+    grid: [bool; 16],
+    b_coords: (u8, u8),
+    r_coords: (u8, u8),
+    current_score: u8,
+    rng: sillyrng::Xoshiro256plus,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct MMove {
+    player_id: Ulid,
+    action: Move,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", content = "data")]
+pub enum WsMessage {
+    Move(MMove),
+    Quota { quota: u32, players_left: u32 },
+    ID(Ulid),
+    Start(u32),
+    Out(u32),
+    Win,
+    Ping,
+}
+
+impl GameManager {
+    pub async fn assign_game(&self, ws: WebSocket, user: Option<UserExt>) {
+        println!("Attempting to assign player to a game");
+        let games = match user {
+            Some(u) => {
+                //innocent until proven guilty, very demure, very fashionable
+                if u.cheater.unwrap_or(false) {
+                    self.cheater_games.clone()
+                } else {
+                    self.user_games.clone()
+                }
+            }
+            None => self.anon_games.clone(),
+        };
+        let mut attempts = games.lock().await.size;
+        let mut ws = ws;
+        while attempts > 0 {
+            let mut lock = games.lock().await;
+            if let Some(game) = lock.dequeue() {
+                match game.1.send(ws).await {
+                    Ok(()) => {
+                        lock.enqueue(game.clone());
+                        return;
+                    }
+                    Err(mpsc::error::SendError(rws)) => {
+                        ws = rws;
+                        attempts -= 1;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        let (tx, rx) = mpsc::channel(40);
+        let game_id = Ulid::new();
+        tokio::spawn(game_handler(game_id.clone(), rx));
+
+        match tx.send(ws).await {
+            Ok(_) => {
+                println!("Created new game with ID: {}", game_id);
+                games.lock().await.enqueue((game_id, tx));
+            }
+            Err(e) => {
+                println!("failed to send to game error: {}", e);
+            }
+        };
+    }
+}
+
+
+async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
+    println!("Game {} initialized, waiting for players", id);
+    let mut state = Game {
+        players: HashMap::new(),
+        inactive_players: HashMap::new(),
+        seed: rand::random::<u32>(),
+        quota: 0,
+    };
+    let mut senders: HashMap<Ulid, SplitSink<WebSocket, Message>> = HashMap::new();
+    let mut receivers = vec![];
+    while state.players.len() <= 5 {
+        match rx.recv().await {
+            Some(mut p) => {
+                let meow_id = Ulid::new();
+                println!("Player {} joined game {}", meow_id, id);
+                p.send(axum::extract::ws::Message::Text(
+                    serde_json::to_string(&WsMessage::ID(meow_id)).unwrap(),
+                ))
+                .await
+                .unwrap();
+                state.players.insert(
+                    meow_id.clone(),
+                    Player {
+                        grid: [false; 16],
+                        b_coords: (0, 0),
+                        r_coords: (3, 3),
+                        current_score: (0),
+                        rng: Xoshiro256plus::new(Some(3)),
+                    },
+                );
+                let (sender, receiver) = p.split();
+                senders.insert(meow_id, sender);
+                receivers.push(receiver);
+            }
+            None => {}
+        }
+    }
+
+    println!("Game {} starting with {} players", id, state.players.len());
+    for i in state.players.iter_mut() {
+        i.1.rng = Xoshiro256plus::new(Some(state.seed.clone() as u64));
+        let mut count = 0;
+        while count < 4 {
+            let x: u8 = (i.1.rng.next() * 4 as f64).floor() as u8;
+            let y: u8 = (i.1.rng.next() * 4 as f64).floor() as u8;
+            if i.1.grid[(x * 4 + y) as usize] == false {
+                i.1.grid[(x * 4 + y) as usize] = true;
+                count += 1;
+            }
+        }
+    }
+    for (_p, i) in senders.iter_mut() {
+        i.send(axum::extract::ws::Message::Text(
+            serde_json::to_string(&WsMessage::Start(state.seed)).unwrap(),
+        ))
+        .await
+        .unwrap();
+    }
+
+    println!("Game {} is now running", id);
+    let mut interval = interval(Duration::from_secs(5));
+
+    loop {
+        let websocket_futures = futures::future::select_all(
+            receivers
+                .iter_mut()
+                .enumerate()
+                .map(|(i, ws)| Box::pin(async move { (i, ws.next().await) })),
+        );
+
+        select! {
+            (result, _, _) = websocket_futures => {
+                let (idx, msg_result) = result;
+                match msg_result {
+                    Some(Ok(axum::extract::ws::Message::Text(text))) => {
+                        match serde_json::from_str::<WsMessage>(&text) {
+                            Ok(WsMessage::Move(mrrp)) => {
+                                println!("Received move from socket {}: {:?}", idx, mrrp);
+                                let player = state.players.get_mut(&mrrp.player_id);
+                                match player {
+                                    Some(p) => {
+                                        match mrrp.action {
+                                            Move::CursorRedUp => p.r_coords.1 = (p.r_coords.1 as i8 - 1).max(0) as u8,
+                                            // 3 should be constant, but multilpayer is only 4x4
+                                            Move::CursorRedDown => p.r_coords.1 = (p.r_coords.1 + 1).min(3),
+                                            Move::CursorRedLeft => p.r_coords.0 = (p.r_coords.0 as i8 - 1).max(0) as u8,
+                                            Move::CursorRedRight => p.r_coords.0 = (p.r_coords.0 + 1).min(3),
+                                            Move::CursorBlueUp => p.b_coords.1 = (p.b_coords.1 as i8 - 1).max(0) as u8,
+                                            Move::CursorBlueDown => p.b_coords.1 = (p.b_coords.1 + 1).min(3),
+                                            Move::CursorBlueLeft => p.b_coords.0 = (p.b_coords.0 as i8 - 1).max(0) as u8,
+                                            Move::CursorBlueRight => p.b_coords.0 = (p.b_coords.0 + 1).min(3),
+                                            Move::Submit => {
+                                                dbg!(p.grid);
+                                                dbg!(p.r_coords,p.b_coords);
+                                                if p.grid[(p.r_coords.0 * 4 + p.r_coords.1) as usize] && p.grid[(p.b_coords.0 * 4 + p.b_coords.1) as usize] && !(p.b_coords == p.r_coords) {
+                                                    println!("successfull submission");
+                                                    p.current_score += 1;
+                                                    let mut count = 0;
+                                                    let r = p.r_coords.0 * 4 + p.r_coords.1;
+                                                    let b = p.b_coords.0 * 4 + p.b_coords.1;
+                                                    while count < 2 {
+                                                        let x: u8 = (p.rng.next() * 4 as f64).floor() as u8;
+                                                        let y: u8 = (p.rng.next() * 4 as f64).floor() as u8;
+                                                        if !p.grid[(x * 4 + y) as usize]
+                                                            && (x * 4 + y != r || x * 4 + y != b)
+                                                        {
+                                                            p.grid[(x * 4 + y) as usize] = true;
+                                                            count += 1;
+                                                        }
+                                                    }
+                                                    p.grid[r as usize] = false;
+                                                    p.grid[b as usize] = false;
+                                                } else {
+                                                p.current_score = 0;
+                                            }
+                                        },
+                                    }
+                                    }
+                                    None => {
+                                        println!("Recieved message from invalid player");
+                                    }
+                                }
+
+                            }
+                            Ok(_) => {
+                                println!("Received non-move message from socket {}", idx);
+                            }
+                            Err(e) => {
+                                println!("Error parsing message from socket {}: {}", idx, e);
+                            }
+                        }
+                    }
+                    None => {
+                        println!("Socket {} closed for game {}", idx, id);
+                        let _ = receivers.remove(idx);
+                    }
+                    _ => continue,
+                }
+            }
+            _ = interval.tick() => {
+                println!("New quota for game {}", id);
+                let mut culled_players = vec![];
+                let  player_count = state.players.len();
+                for (i, p) in state.players.iter_mut() {
+                    dbg!(p.current_score);
+                    if (p.current_score as u32) < state.quota {
+                        let position = (player_count - culled_players.len()) as u32;
+
+                        if let Err(e) = senders.get_mut(&i.clone()).unwrap()
+                            .send(axum::extract::ws::Message::Text(
+                                serde_json::to_string(&WsMessage::Out(position))
+                                    .expect("Failed to serialize Out message")
+                            )).await
+                        {
+                            println!("Failed to send message to player, removing {}: {}", i, e);
+
+                            continue;
+                        }
+                        culled_players.push(i.clone());
+                        state.inactive_players.insert(i.clone(), p.clone());
+                        senders.remove(&i);
+                    }
+                    p.current_score = 0;
+                }
+                for i in culled_players {
+                    state.players.remove(&i);
+                }
+                if state.players.len() <= 1 {
+                    println!("Game {} ended - {} player(s) remaining", id, state.players.len());
+                    for (i,_) in state.players.iter() {
+                        // add to database when that gets done
+                        senders.get_mut(&i.clone()).unwrap().send(axum::extract::ws::Message::Text(serde_json::to_string(&WsMessage::Win).unwrap())).await.unwrap();
+                    }
+                    break;
+                }
+
+                state.quota += 1;
+                for (_i,sender) in &mut senders {
+                    sender.send(axum::extract::ws::Message::Text(
+                        serde_json::to_string(&WsMessage::Quota {
+                            quota: state.quota,
+                            players_left: state.players.len() as u32,
+                        })
+                        .unwrap(),
+                    ))
+                    .await
+                    .unwrap();
+                }
+            }
+        }
+    }
+    println!("Game {} has ended", id);
+}
+
+
+
+
+```)
+
+==== WASM <wasm>
+#zebraw(background-color: rgb(24, 24, 37),  ```rust
+pub trait Gen {
+    type NumberType;
+    fn new(seed: Option<u64>) -> Self;
+    fn next(&mut self) -> Self::NumberType;
+    fn sigmoid(x: f64) -> f64 {
+        1.0 / (1.0 + (-x).exp())
+    }
+}
+
+pub struct SplitMix {
+    seed: u64,
+}
+
+impl Gen for SplitMix {
+    type NumberType = u64;
+    fn new(seed: Option<u64>) -> Self {
+        SplitMix {
+            seed: seed.unwrap(),
+        }
+    }
+    /// based on https://xoshiro.di.unimi.it/splitmix64.c and rand_xoshiro
+    fn next(&mut self) -> u64 {
+        self.seed = self.seed.wrapping_add(0x9e3779b97f4a7c15);
+        let mut z: u64 = self.seed;
+        z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+        z ^ (z >> 31)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Xoshiro256plus {
+    seed: [u64; 4],
+}
+
+impl Gen for Xoshiro256plus {
+    type NumberType = f64;
+
+    fn new(seed: Option<u64>) -> Self {
+        let mut rng = SplitMix::new(seed);
+        Xoshiro256plus {
+            seed: [rng.next(), rng.next(), rng.next(), rng.next()],
+        }
+    }
+    fn next(&mut self) -> Self::NumberType {
+        let result = self.seed[0].wrapping_add(self.seed[3]);
+        let t = self.seed[1] << 17;
+
+        self.seed[2] ^= self.seed[0];
+        self.seed[3] ^= self.seed[1];
+        self.seed[1] ^= self.seed[2];
+        self.seed[0] ^= self.seed[3];
+
+        self.seed[2] ^= t;
+        self.seed[3] = Xoshiro256plus::rol64(self.seed[3], 45);
+
+        (result >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
+    }
+}
+
+impl Xoshiro256plus {
+    pub fn rol64(x: u64, k: i32) -> u64 {
+        (x << k) | (x >> (64 - k))
+    }
+    pub fn get_seed(&self) -> String {
+        format!("{:?}", self.seed)
+    }
+}
+
+
+
+```)
+
+#zebraw(background-color: rgb(24, 24, 37),  ```js 
+import * as wasm from "./xoshiro_wasm_bg.wasm";
+export * from "./xoshiro_wasm_bg.js";
+import { __wbg_set_wasm } from "./xoshiro_wasm_bg.js";
+__wbg_set_wasm(wasm);
+wasm.__wbindgen_start();
+
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const sigmoid: (a: number) => number;
+export const __wbg_splitmix_free: (a: number, b: number) => void;
+export const splitmix_new: (a: number, b: bigint) => number;
+export const splitmix_next: (a: number) => bigint;
+export const __wbg_xoshiro256plus_free: (a: number, b: number) => void;
+export const xoshiro256plus_new: (a: number, b: bigint) => number;
+export const xoshiro256plus_next: (a: number) => number;
+export const xoshiro256plus_get_seed: (a: number) => [number, number];
+export const __wbindgen_export_0: WebAssembly.Table;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const __wbindgen_start: () => void;
+
+/* tslint:disable */
+/* eslint-disable */
+export function sigmoid(x: number): number;
+export class SplitMix {
+  free(): void;
+  constructor(seed?: bigint);
+  next(): bigint;
+}
+export class Xoshiro256plus {
+  free(): void;
+  constructor(seed?: bigint);
+  next(): number;
+  get_seed(): string;
+}
+
+```)
+
+==== Settings Component <settings>
+
+#zebraw(background-color: rgb(24, 24, 37),  ```svlt  
+<script lang="ts">
+	import { getContext } from 'svelte';
+	let meow = 0;
+	export let showModal: boolean;
+	export let closeModal: any;
+	let dialog: any;
+	let idx: any;
+	let state: any = getContext('state');
+	let keycodes: any;
+
+	$: keycodes = $state.keycodes;
+	const reset = () => {
+		$state = JSON.parse(
+			JSON.stringify({
+				gameMode: 'timer',
+				timeLimit: 30,
+				keycodes: {
+					wU: 'w',
+					wD: 's',
+					wL: 'a',
+					wR: 'd',
+					aU: 'ArrowUp',
+					aD: 'ArrowDown',
+					aL: 'ArrowLeft',
+					aR: 'ArrowRight',
+					submit: ' ',
+					reset: 'r'
+				},
+				size: 4,
+				das: 133,
+				dasDelay: 150
+			})
+		);
+		meow += 1;
+	};
+	const getChar = (i: any) => {
+		let char: any;
+		switch (i) {
+			case '0':
+				char = keycodes.wU;
+				break;
+			case '1':
+				char = keycodes.aU;
+				break;
+			case '00':
+				char = keycodes.wL;
+				break;
+			case '01':
+				char = keycodes.wD;
+				break;
+			case '02':
+				char = keycodes.wR;
+				break;
+			case '10':
+				char = keycodes.aL;
+				break;
+			case '11':
+				char = keycodes.aD;
+				break;
+			case '12':
+				char = keycodes.aR;
+				break;
+			case '20':
+				char = keycodes.submit;
+				break;
+			case '21':
+				char = keycodes.reset;
+				break;
+		}
+		switch (char) {
+			case 'ArrowUp':
+				char = '↑';
+				break;
+			case 'ArrowDown':
+				char = '↓';
+				break;
+			case 'ArrowLeft':
+				char = '←';
+				break;
+			case 'ArrowRight':
+				char = '→';
+				break;
+		}
+		return char;
+	};
+
+	const keyClick = (i: any) => {
+		idx = i;
+		setTimeout(() => {
+			window.addEventListener('keydown', setChar, { once: true });
+		}, 0);
+	};
+	const setChar = (e: any) => {
+		switch (idx) {
+			case '0':
+				$state.keycodes.wU = e.key;
+				break;
+			case '1':
+				$state.keycodes.aU = e.key;
+				break;
+			case '00':
+				$state.keycodes.wL = e.key;
+				break;
+			case '01':
+				$state.keycodes.wD = e.key;
+				break;
+			case '02':
+				$state.keycodes.wR = e.key;
+				break;
+			case '10':
+				$state.keycodes.aL = e.key;
+				break;
+			case '11':
+				$state.keycodes.aD = e.key;
+				break;
+			case '12':
+				$state.keycodes.aR = e.key;
+				break;
+			case '20':
+				$state.keycodes.submit = e.key;
+				break;
+			case '21':
+				$state.keycodes.reset = e.key;
+				break;
+		}
+		let doc: any = document.getElementById(idx);
+		let char = e.key;
+		switch (char) {
+			case 'ArrowUp':
+				char = '↑';
+				break;
+			case 'ArrowDown':
+				char = '↓';
+				break;
+			case 'ArrowLeft':
+				char = '←';
+				break;
+			case 'ArrowRight':
+				char = '→';
+				break;
+		}
+		doc.textContent = char;
+		idx = 69420;
+	};
+
+	$: if (dialog && showModal) dialog.showModal();
+</script>
+
+<dialog
+	bind:this={dialog}
+	on:close={closeModal}
+	class="h-screen w-screen bg-crust/0 flex items-center justify-center {showModal ? '' : 'hidden'}"
+>
+	{#key meow}
+		<div class="flex flex-col bg-surface0 w-fit h-fit rounded-md">
+			<div class="text-text text-3xl m-4 mb-0">settings</div>
+			<div class="text-xl text-text mb-0 m-4">movement:</div>
+			<div class="flex flex-row m-4">
+				{#each Array(2) as _, x}
+					<div class="flex flex-col items-center mx-4">
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
+						<div
+							id={x.toString()}
+							class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
+							x.toString()
+								? 'bg-green'
+								: 'bg-text'}"
+							on:click={() => keyClick(x.toString())}
+						>
+							{getChar(x.toString())}
+						</div>
+						<div class="flex flex-row">
+							{#each Array(3) as _, y}
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								<!-- svelte-ignore a11y-no-static-element-interactions -->
+								<div
+									id={x.toString() + y.toString()}
+									class=" rounded-md w-16 h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 m-1 select-none cursor-pointer {idx ==
+									x.toString() + y.toString()
+										? 'bg-green'
+										: 'bg-text'}"
+									on:click={() => keyClick(x.toString() + y.toString())}
+								>
+									{getChar(x.toString() + y.toString())}
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/each}
+			</div>
+			<div class="text-xl text-text mb-0 m-4">place:</div>
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				id={'20'}
+				class=" rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx ==
+				'20'
+					? 'bg-green'
+					: 'bg-text'}"
+				on:click={() => keyClick('20')}
+			>
+				{getChar('20')}
+			</div>
+			<div class="text-xl text-text mb-0 m-4">reset:</div>
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				id={'21'}
+				class="rounded-md max-w-full h-16 hover:scale-105 transition flex items-center justify-center text-crust text-xl bold focus:bg-surface0 mx-8 my-4 select-none cursor-pointer {idx ==
+				'21'
+					? 'bg-green'
+					: 'bg-text'}"
+				on:click={() => keyClick('21')}
+			>
+				{getChar('21')}
+			</div>
+			<div class="text-xl text-text mb-0 m-4">auto repeat rate:</div>
+			<div class="flex flex-row text-text text-xl mx-8">
+				<div class="w-8">
+					{$state.das}
+				</div>
+				<input class="mx-4 w-64" type="range" min="0" max="1000" step="1" bind:value={$state.das} />
+			</div>
+			<div class="text-xl text-text mb-0 m-4">delayed auto shift:</div>
+			<div class=" flex flex-row text-text text-xl mx-8">
+				<div class="w-8">
+					{$state.dasDelay}
+				</div>
+				<input
+					class="mx-4 w-64"
+					type="range"
+					min="0"
+					max="1000"
+					step="1"
+					bind:value={$state.dasDelay}
+				/>
+			</div>
+			<div class="flex flex-row self-center m-4">
+				<button class="text-crust bg-red rounded-md w-16 h-8 mx-2 hover:scale-105" on:click={reset}
+					>reset</button
+				>
+				<button
+					class="text-crust bg-blue rounded-md w-16 h-8 mx-2 hover:scale-105"
+					on:click={() => dialog.close()}>exit</button
+				>
+			</div>
+		</div>
+	{/key}
+</dialog>
+
+```)
+
+
+==== Layout and Styling <layout>
+
+#zebraw(background-color: rgb(24, 24, 37),  ```svlt  
+<script lang="ts">
+	import '../app.css';
+	import studio from '$lib/assets/studio.png';
+	import Modal from '$lib/settings.svelte';
+	import Trophy from 'svelte-material-icons/Trophy.svelte';
+	import AccountCircle from 'svelte-material-icons/AccountCircle.svelte';
+	import Settings from 'svelte-material-icons/Cog.svelte';
+	import { onMount, setContext } from 'svelte';
+	import { browser } from '$app/environment';
+	import { writable } from 'svelte/store';
+	import Information from 'svelte-material-icons/Information.svelte';
+	import { redirect } from '@sveltejs/kit';
+	import { goto } from '$app/navigation';
+	const FLAVOUR = 'mocha';
+	let showModal = false;
+	let showWelcome = false;
+	let selectedElement: { focus: () => void; };
+	//TODO custom bg
+	type gameState = {
+		gameMode: string;
+		timeLimit: number;
+		keycodes: object;
+		size: number;
+	};
+	const defaults = JSON.stringify({
+		gameMode: 'timer',
+		timeLimit: 30,
+		keycodes: {
+			wU: 'w',
+			wD: 's',
+			wL: 'a',
+			wR: 'd',
+			aU: 'ArrowUp',
+			aD: 'ArrowDown',
+			aL: 'ArrowLeft',
+			aR: 'ArrowRight',
+			submit: ' ',
+			reset: 'r'
+		},
+		size: 4,
+		das: 133,
+		dasDelay: 150
+	});
+	const getState = (): gameState => {
+		if (browser) {
+			return JSON.parse(localStorage.getItem('state') || defaults);
+		} else {
+			return JSON.parse(defaults);
+		}
+	};
+	const state = writable<gameState>(getState());
+
+	if (browser) {
+		state.subscribe(($state) => {
+			localStorage.setItem('state', JSON.stringify($state));
+		});
+	}
+
+	setContext('state', state);
+
+	onMount(() => {
+		if (browser) {
+			const hasSeenWelcome = document.cookie.includes('seenWelcome=true');
+			if (!hasSeenWelcome) {
+				showWelcome = true;
+			}
+		}
+	});
+
+	const closeWelcome = (permanent: boolean) =>{
+		showWelcome = false;
+		if (permanent) {
+			document.cookie = 'seenWelcome=true; max-age=31536000; path=/';
+		}
+	}
+
+	const openModal = (e: any) => {
+		selectedElement = e.currentTarget;
+		showModal = true;
+	}
+
+	const closeModal = () => {
+		showModal = false;
+		if (selectedElement) {
+			selectedElement.focus();
+		}
+	}
+
+	
+</script>
+
+
+<main class={FLAVOUR}>
+	<div class="flex flex-col justify-between h-full max-h-screen min-w-screen font-mono">
+		<div class="flex flex-row bg-base justify-between h-fit w-full items-center">
+			<a class="flex flex-row text-4xl text-rosewater p-2" href="/">
+				<x class="text-blue">Double</x> <x class="text-mauve font-bold">TAPP</x>
+			</a>
+			<div class="flex flex-row">
+				<button on:click={() => showWelcome = true}>
+					<Information color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+				<button on:click={openModal}>
+					<Settings color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+				<button on:click={() => goto('/leaderboards')}>
+					<Trophy color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+				<button on:click={() => goto('/signup')}>
+					<AccountCircle color="#cdd6f4" class="h-12 w-12 p-2" />
+				</button>
+			</div>
+		</div>
+		<div class="bg-base h-screen">
+			<slot></slot>
+		</div>
+		<div class="flex flex-row bg-base justify-between h-24 w-full items-center">
+			<div class="flex flex-row items-center opacity-50">
+				<a href="https://studiosquared.co.uk">
+					<img class=" m-4 h-10" src={studio} alt="[S]^2" />
+				</a>
+			</div>
+		</div>
+	</div>
+
+	{#if showWelcome}
+		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+			<div class="bg-base p-6 rounded-lg max-w-md">
+				<h2 class="text-2xl text-rosewater mb-4">Welcome to DoubleTAPP</h2>
+				<p class="text-text mb-4">
+					In DoubleTAPP, your aim is to move both your cursors onto different active tiles to score points. (WASD and arrow keys as default controls)
+				</p>
+				<p class="text-text mb-4">
+					You get a point for each correct move, and lose all your points if you place your cursors incorrectly, good luck!
+				</p>
+				<p class="text-text mb-4">
+					you can customize your controls and other settings in the settings menu. 
+				</p>
+				<button 
+					class="bg-blue text-base px-4 py-2 rounded"
+					on:click={() => closeWelcome(true)}
+				>
+					Got it!
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<Modal bind:showModal />
+</main>
+
+
+```)
 
 
 == Testing

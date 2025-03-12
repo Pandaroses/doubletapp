@@ -182,11 +182,19 @@ pub async fn submit_game(
         game.id,
         game.moves.len()
     );
-    // todo check time
+    
     let id = ulid::Ulid::from_string(&game.id).unwrap();
     let lock = state.games.lock().await;
     let mut conn = state.db.acquire().await?;
     let details = lock.get(&id).unwrap();
+    
+   
+    let elapsed = Instant::now().duration_since(details.start_time);
+    if elapsed > details.time_limit + Duration::from_secs(3) {
+        println!("Game {} exceeded time limit ({}s + 3s)", game.id, details.time_limit.as_secs());
+        return Ok((StatusCode::NOT_ACCEPTABLE, Json(0)));
+    }
+
     let time = verify_timings(game.moves.iter().map(|(_, m)| *m).collect(), state.clone()).await;
 
     if !time.0 {
