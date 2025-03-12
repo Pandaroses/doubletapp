@@ -685,6 +685,21 @@ this was the initial UI design sketch,which shows the general layout of the game
 
 === Iterative Design
 
+i have been using git to manage the project, including reverting to commits when i made mistakes, and using branches to experiment with different features, and then merging them into the main branch.
+
+#image(
+  "assets/git-1.png", width: 100%, fit:"contain"
+)
+
+additionally git has statistics, which allows me to see the changes i have made to the code, and the impact of the changes, which allows me to make more informed decisions about the code.
+
+#image(
+  "assets/git-2.png", width: 100%, fit:"contain"
+)
+
+
+
+
 
 
 
@@ -818,6 +833,7 @@ case $state.keycodes.wU:
 #figure(
   box(
     fill: white,
+    height: 80%,
     width: 80%,
     place(center, image("assets/ERM.png", width: 90%))
   ),
