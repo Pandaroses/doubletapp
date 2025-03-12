@@ -384,7 +384,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   [High]
 )
 
-after testing, xoshiro256+ has provided the best results, in terms of speed and simplicity of implementation, while still providing a high degree of randomness, and a large cycle length, which is important for a game such as DoubleTapp, where we want to ensure that the game is fair and that the same seed will not be repeated for a long time.
+after testing, xoshiro256+ has provided the best results, in terms of speed and simplicity of implementation, while still providing a high degree of randomness, and a large cycle length, which is important for a game such as DoubleTapp, where we want to ensure that the game is fair and that the same seed will not be repeated for a long time. additionally the math behind Xoshiro is layered in complexity, and really interesting, which has led me to want to implement it
 
 
 === Statistics(anti-cheat)
@@ -683,6 +683,12 @@ this was the initial UI design sketch,which shows the general layout of the game
 
 
 
+=== Iterative Design
+
+
+
+
+
 
 
 === Algorithms
@@ -713,16 +719,15 @@ xoshiro256+ has a time complexity of O(1), and a space complexity of O(1), as it
 ==== Sigmoid Function
 the sigmoid function is a function, that maps any real input onto a S shaped curve, which is bound between values, in my case i am bounding the output of the Xoshiro256+ float to be between 0..11, which allows me to easily use it to generate the "next" state of the game, allowing for a more natural distribution of numbers, as well as a more consistent distribution of numbers, which allows for a more consistent game experience.
 
-#codeblock( ```rust
+#codeblock( ```pseudocode
 // simple function, but incredibly useful
-fn sigmoid(x: f64) -> f64 {
-    1.0 / (1.0 + (-x).exp())
-}
+function sigmoid(x):
+    return 1.0 / (1.0 + exp(-x))
 
-```)
+    ```)
+
 ==== Manhattan Distance
-the manhattan distance is a distance metric, which is the sum of the absolute differences of their Cartesian coordinates, in my case i am using it to calculate the distance between the cursors, which allows for a more accurate calculation of the distance between the cursors, which allows for a more accurate game experience. I considered other algorithms, i.e djikstras, A-Star, but they are not needed for calculating the distance between the cursors, as the manhattan distance is a more efficient algorithm for this purpose.
-
+the manhattan distance is a distance metric, which is the sum of the absolute differences of their Cartesian coordinates, in my case i am using it to calculate the distance between the cursors, which allows for a more accurate calculation of the distance between the cursors, which allows for a more accurate game experience.
 the time complexity of the manhattan distance is O(1), as it only requires a single pass through the coordinates, and a single pass through the result, which is constant time, and constant space, as the size of the coordinates and result are constant.
 #codeblock( ```rust
 fn manhattan_distance(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
@@ -732,40 +737,34 @@ fn manhattan_distance(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
 
 ==== MergeSort
 mergesort is a sorting algorithm, which works by the divide and conquer principle, where it breaks down the array into smaller and smaller arrays, till it gets to arrays of length 2, which it then subsequently sorts from the ground up, returning a sorted array in O(nlog(n)) time complexity & O(n) space complexity
+#codeblock( ```pseudocode
+function merge_sort(array):
+    if length of array <= 1:
+        return array
 
-#codeblock( ```rust
-fn merge_sort<T: Ord + Clone>(arr: &[T]) -> Vec<T> {
-    if arr.len() <= 1 {
-        return arr.to_vec();
-    }
-    
-    let mid = arr.len() / 2;
-    let left = merge_sort(&arr[..mid]);
-    let right = merge_sort(&arr[mid..]);
-    
-    merge(&left, &right)
-}
+    mid = length of array / 2
+    left = merge_sort(subarray from start to mid)
+    right = merge_sort(subarray from mid to end)
 
-fn merge<T: Ord + Clone>(left: &[T], right: &[T]) -> Vec<T> {
-    let mut result = Vec::with_capacity(left.len() + right.len());
-    let mut left_idx = 0;
-    let mut right_idx = 0;
-    
-    while left_idx < left.len() && right_idx < right.len() {
-        if left[left_idx] <= right[right_idx] {
-            result.push(left[left_idx].clone());
-            left_idx += 1;
-        } else {
-            result.push(right[right_idx].clone());
-            right_idx += 1;
-        }
-    }
-    
-    result.extend_from_slice(&left[left_idx..]);
-    result.extend_from_slice(&right[right_idx..]);
-    
-    result
-}
+    return merge(left, right)
+
+function merge(left, right):
+    result = empty list
+    left_index = 0
+    right_index = 0
+
+    while left_index < length of left and right_index < length of right:
+        if left[left_index] <= right[right_index]:
+            append left[left_index] to result
+            left_index = left_index + 1
+        else:
+            append right[right_index] to result
+            right_index = right_index + 1
+
+    append remaining elements from left starting at left_index to result
+    append remaining elements from right starting at right_index to result
+
+    return result
 
 ```)
 
@@ -814,6 +813,7 @@ case $state.keycodes.wU:
         }, $state.dasDelay);
     }
 ```)
+
 === Database Design and Queries
 #figure(
   box(
@@ -834,15 +834,22 @@ additionally it is run on the server side, preventing any XSS attacks, or SQL in
 #codeblock( ```sql
 INSERT INTO "user" (id, username, password) VALUES ($1, $2, $3)
 ```)
+another simple query, it just inserts the id, username and password into the user table, again, the password is hashed before being stored, this method is secure.
 ==== Session Management
 #codeblock( ```sql
 INSERT INTO session (ssid, user_id, expiry_date)
 VALUES ($1, $2, NOW() + INTERVAL '7 DAYS')
+
+```) 
+another simple query, although it adds expiry date to the session, preventing ugly rust code
+#codeblock( ```sql
 SELECT u.id, u.username, u.admin, u.cheater
 FROM "user" u
 INNER JOIN session s ON u.id = s.user_id
 WHERE s.ssid = $1 AND s.expiry_date > NOW()
   ```)
+this query is quite pretty, it looks for all sessions that fit the ssid, and then checks if the expiry date is greater than the current date, if it is, then the user is authenticated, and the user id, username, and admin status is returned.
+
 ==== Leaderboard Queries
 #codeblock( ```sql
 -- Get global leaderboard
@@ -865,11 +872,15 @@ ORDER BY score
 OFFSET ($3 - 1) 100
 FETCH NEXT 100 ROWS ONLY
 ```)
+
+these queries use postgresSQL's pagination function, which allows the leaderboards to be paginated, instead of loading all the data into memory, which would be very slow and inefficient.
+additionally the queries are very readable, I selected 100 rows as it is a good balance and takes up about a page of space.
 ==== Game Submission
 #codeblock( ```sql
 INSERT INTO "game" (game_id, score, average_time, dimension, time_limit, user_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 ```)
+self explanatory.
 ==== Statistics Trigger
 #codeblock( ```sql
 CREATE OR REPLACE FUNCTION update_statistics_on_game_insert()
@@ -892,13 +903,15 @@ CREATE TRIGGER game_insert_trigger
 AFTER INSERT ON game
 FOR EACH ROW EXECUTE FUNCTION update_statistics_on_game_insert();
 ```)
+this trigger is used to update both user statistics, and global statistics, when a game is submitted, it is inserted into the game table, and then the trigger is called to update the statistics.
+a game is only submitted when it is verified and guaranteed to be a valid game, so the statistics do not include cheaters. additionally you do have to be logged in to submit a game, so the statistics are only updated for logged in users.
 === Data Structures
 
 ==== Circular Queue
 A queue is a data structure following the FIFO (first in first out) principle, where you use a sized array, along with variables to store the capacity, front & back of the array, when a file is queued, the file is put onto the index of the back of the array, and then the back index is added to % capacity unless the back becomes equal to the front, in which the queue returns an error instead, this allows for a non resizable array, which allows a set amount of elements to be queued, but not more than the size of the array, allowing for efficient memory management
 
 ==== HashMap
-A hash table (colloquially called a hashmap) is an array that is abstracted over by a "hashing" function, which outputs an index based on an output, usually the hash function aims to be as diverse as possible, but you can also write special hash functions that are more efficient for your given data types.
+A hash table (colloquially called a hashmap) is an array that is abstracted over by a "hashing" function, which outputs an index based on an output, usually the hash function aims to be as diverse as possible, but you can also write special hash functions that are more efficient for your given data types. 
 
 ==== Option/Result Types
 an Optional type, is a simple data structure that allows for beautiful error handling, an Option type wraps the output data, allowing for the error to be handled before trying to manipulate data, i.e in a Some(data) or None, where None means that the data was nonexistent, or we can use a result type to handle errors down the stack, where we can pass the error with Err(e) and Ok(d), so if one part of the function layer breaks we can know exactly where it errored and softly handle the error if needed
@@ -1071,7 +1084,9 @@ for error handling i use result and option types, i try to handle errors in the 
 #linebreak()
 one particular example of performance optimizations is in the #code_ref("Multiplayer Game Management", <multiplayer-game-management>) section, I use the `tokio::select` macro to handle the websocket messages and game states, this allows for the websocket messages and game states to be handled concurrently, and the `tokio::sync::mpsc` crate to send the websocket to the game handler thread, this allows for the websocket to be sent to the game handler thread without blocking the main thread, the `tokio::select` macro brings great improvements to performance, as it is non-blocking and only runs when there is an available event. 
 
-additionally I have used rust, which is a systems programming language with performance on-par with c++ and alternatives, and used libraries known for high performance. particularly `axum`, which is currently the #8 fastest web framework, per the [techempower framework](https://www.techempower.com/benchmarks/#hw=ph&test=composite&section=data-r23)
+additionally I have used rust, which is a systems programming language with performance on-par with c++ and alternatives, and used libraries known for high performance. particularly `axum`, which is currently the #8 fastest web framework, per the [techempower framework](https://www.techempower.com/benchmarks/#hw=ph&test=composite&section=data-r23) benchmark, and `tokio`, which is a high-performance asynchronous runtime for Rust. svelte is also known for performance, and is one of the fastest frontend framework for building user interfaces.
+
+additionally i use scc Hashmaps, instead of rust's standard library hashmaps, which perform better in concurrent environments, and are more memory efficient.
 
 #figure(
   align(center, box(
