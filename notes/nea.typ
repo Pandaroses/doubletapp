@@ -412,6 +412,31 @@ performance is inherently critical for this part, as it will be run on every "su
 
 overall, manhattan distance is the best option for this project, as at max the grid would be 6x6, in which using A-star would be overkill, and manhattan distance is the fastest, while djikstra's is the slowest, and would be too slow for the game.
 
+==== Rust Memory Management @Rust-Book
+in rust, variables are managed through a system called "ownership" which is enforced at compile time. Unlike languages with garbage collection (like JavaScript) or manual memory management (like C++), Rust uses three core rules:
+
+1. Each value has a single owner variable
+2. There can only be one owner at a time 
+3. When the owner goes out of scope, the value is automatically dropped
+
+Rust distinguishes between stack and heap memory:
+- **Stack**: Fixed-size, fast memory for data with known size at compile time (primitives like integers, booleans)
+- **Heap**: Variable-size memory for data that may change size or needs to live beyond a function's scope
+
+When a value is assigned from one variable to another, Rust's behavior depends on the data type:
+- For simple types implementing the `Copy` trait (integers, booleans), values are duplicated
+- For complex types like `String` or custom structs, ownership is transferred (moved) unless explicitly cloned
+
+
+==== Postgres Triggers @Postgres-Docs
+in postgres, triggers are a way to automatically execute a function when a specific event occurs, i.e a row is inserted, updated, or deleted, or a table is created, dropped, or truncated.
+#codeblock( ```sql
+CREATE TRIGGER trigger_name
+AFTER INSERT ON table_name
+FOR EACH ROW
+EXECUTE FUNCTION function_name();
+```)
+these are very useful, as they can minimize round trips to the server, and can be used to validate data, or perform other actions, i.e when a row is inserted, the trigger can be used to automatically update a counter, or perform other actions.
 
 == Prototyping
 A rudimentary prototype has been made, which tested out multiple different input methods for simultaneous inputs, which has finalized in a "cursor"-based system, where you have two cursors controlled by Wasd-like movement, with each set of controls representing their respective cursor, additionally it has been decided that both cursors need to be on individual Tiles, to prevent copying movements on each hand. this prototype also implemented server-side move verification, making it more difficult to cheat. Finally, the UI design of the prototype will be used in later iterations of the project.
@@ -433,7 +458,7 @@ this was the initial UI design sketch,which shows the general layout of the game
     width: 80%,
     image("assets/doubletapp-realprototypeUI.png", width: 100%)
   ),
-  caption: [Initial Doubletapp WireFrame UI]
+  caption: [Initial Doubletapp PrototypeUI]
 )
 
 #figure(
@@ -524,7 +549,7 @@ this was the initial UI design sketch,which shows the general layout of the game
             box(fill: rgb(203, 166, 247, 20%), inset: 8pt, radius: 4pt, stroke: 0.5pt, height: 10em, [
               #text(weight: "bold")[Bug Fixes]
               #linebreak()
-              test and resolve bugsi 
+              test and resolve bugs
             ])
           )
         ]
@@ -844,8 +869,8 @@ case $state.keycodes.wU:
 ==== Game Verification
 
 
-#codeblock( ```rust
-ub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
+#zebraw( background-color: rgb(24, 24, 37), ```rust
+pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
     //this is assuming we start at 0,0 and size,size (should be a client side force, now enforced)
     let mut rng = sillyrng::Xoshiro256plus::new(Some(seed as u64));
     let mut grid: Vec<bool> = vec![false; (size * size) as usize];
@@ -1042,6 +1067,19 @@ A hash table (colloquially called a hashmap) is an array that is abstracted over
 
 ==== Option/Result Types
 an Optional type, is a simple data structure that allows for beautiful error handling, an Option type wraps the output data, allowing for the error to be handled before trying to manipulate data, i.e in a Some(data) or None, where None means that the data was nonexistent, or we can use a result type to handle errors down the stack, where we can pass the error with Err(e) and Ok(d), so if one part of the function layer breaks we can know exactly where it errored and softly handle the error if needed
+
+
+==== Arc 
+Crucial feature in the rust programming language, the Arc(atomic reference counted pointer), allows for thread safe sharing of data, by using a reference counted pointer, which allows for the data to be shared between threads, and the data to be cloned when moved, allowing for efficient memory management, and the data to be shared between threads safely, without having to worry about race conditions.
+#linebreak()
+refer to Rusts Memory Management section for more information about how rust handles variable scopes.
+#linebreak()
+I use Arcs to wrap all websocket connections, additionally wrapping the game state, so it can be concurrently accessed by multiple threads, allowing for many users to simultaneously modify the game state without loss of atomicity.
+
+==== Mutex
+the Mutex (mutual exclusion) is a data structure, that when combined with the Arc, allows for thread safe data sharing, you "lock" the data when you need to write to it, which means all other references to the mutex are blocked from writing to the mutex, althought this has performance downgrades, it pairs well with Arcs, as you don't have to worry about race conditions, and can still have multiple readers.
+
+
 
 
 === Diagrams
@@ -3793,7 +3831,10 @@ the user experience was very well executed and intuitive"
 overall users have enjoyed the game, and found it to be quite challenging at first, but with practice they were able to improve. users have particularly enjoyed the multiplayer system, and the challenge of trying to beat their friends.
 
 "I like the lay out and the colour scheme. initiative to use and edit the game format"
+#linebreak()
 "The app was smooth and everything worked well. I found the usage of two hands to be a unique challenge, but the game was explained well and the UI was intuitive and easy to understand."
+#linebreak()
+"The game's awesome!! It's so simple but so fun to play. It didn't take long to get a hang of it and it works great, would definitely give it a 10/10 and recommend it to others."
 
 === Future Improvements
 In the future, i plan to improve the game by adding mobile support, and having more in depth analytics on the users profile page.

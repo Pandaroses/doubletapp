@@ -4,7 +4,7 @@ Xoshiro-PRNG:
   author: David Blackman and Sebastiano Vigna
   url:
     value: https://prng.di.unimi.it/
-    date: 2023-12-15
+    date: 2024-12-15
 
 WebSockets-Guide:
   type: article
@@ -12,7 +12,7 @@ WebSockets-Guide:
   author: Mozilla Developer Network
   url:
     value: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
-    date: 2023-12-10
+    date: 2024-12-10
 
 SvelteKit-Docs:
   type: web
@@ -20,7 +20,7 @@ SvelteKit-Docs:
   author: Svelte Team
   url:
     value: https://kit.svelte.dev/docs/introduction
-    date: 2023-12-19
+    date: 2024-12-19
 
 Rust-Async:
   type: web
@@ -28,7 +28,7 @@ Rust-Async:
   author: Rust Language Team
   url:
     value: https://rust-lang.github.io/async-book/
-    date: 2023-12-02
+    date: 2024-12-02
 
 TailwindCSS-Guide:
   type: web
@@ -36,7 +36,7 @@ TailwindCSS-Guide:
   author: Tailwind Labs
   url:
     value: https://tailwindcss.com/docs
-    date: 2023-12-05
+    date: 2024-12-05
 
 Catppuccin-Theme:
   type: web
@@ -44,15 +44,15 @@ Catppuccin-Theme:
   author: Catppuccin Team
   url:
     value: https://github.com/catppuccin/catppuccin
-    date: 2023-12-08
+    date: 2024-12-08
 
 Sigmoid-Function:
   type: article
-  title: Understanding the Sigmoid Function in Mathematics
-  author: Towards Data Science
+  title: Sigmoid function
+  author: Wikipedia contributors
   url:
-    value: https://towardsdatascience.com/understanding-the-sigmoid-function-385f5c01ae3e
-    date: 2023-12-14
+    value: https://en.wikipedia.org/wiki/Sigmoid_function
+    date: 2024-12-14
 
 Multiplayer-Game-Design:
   type: book
@@ -60,7 +60,7 @@ Multiplayer-Game-Design:
   author: Joshua Glazer and Sanjay Madhav
   url:
     value: https://www.informit.com/store/multiplayer-game-programming-architecting-networked-9780134034300
-    date: 2023-12-12
+    date: 2024-12-12
 
 DAS-Tetris:
   type: article
@@ -68,7 +68,7 @@ DAS-Tetris:
   author: Hard Drop - Tetris Wiki
   url:
     value: https://harddrop.com/wiki/DAS
-    date: 2023-12-17
+    date: 2024-12-17
 
 HTTP-Protocol:
   type: article
@@ -76,7 +76,7 @@ HTTP-Protocol:
   author: MDN Web Docs
   url:
     value: https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
-    date: 2023-12-20
+    date: 2024-12-20
 
 UDP-Protocol:
   type: article
@@ -84,4 +84,21 @@ UDP-Protocol:
   author: IETF - Network Working Group
   url:
     value: https://www.ietf.org/rfc/rfc768.txt
-    date: 2023-12-20
+    date: 2024-12-20
+
+Rust-Book:
+  type: book
+  title: The Rust Programming Language
+  author: Steve Klabnik and Carol Nichols
+  url:
+    value: https://doc.rust-lang.org/book/
+    date: 2024-12-01
+  
+
+Postgres-Docs:
+  type: web
+  title: Postgres Documentation
+  author: Postgres Team
+  url:
+    value: https://www.postgresql.org/docs/
+    date: 2024-12-01
