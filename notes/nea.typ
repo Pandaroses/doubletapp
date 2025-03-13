@@ -49,7 +49,9 @@
 
 #outline()
 
+#pagebreak()
 
+= Analysis 
 == Abstract
 This project develops a multiplayer grid-based dexterity training game called DoubleTapp, designed to simultaneously test and improve the dexterity of both hands. Building on the existing single-cursor game Tapp, this implementation introduces dual-cursor gameplay requiring coordinated control using different keys for each hand. The system features both singleplayer and multiplayer modes with competitive elements, leaderboards, and server-side anti-cheat mechanisms.
 
@@ -124,7 +126,7 @@ Tetris is one of the most recognized dexterity-based puzzle games worldwide. Whi
     width: 80%,
     image("assets/tetris.png", width: 100%)
   ),
-  caption: [Tetris UI]
+  caption: [Tetris UI (jstris.jezevec10.com)]
 )
 - Tetris focuses primarily on single-hand dexterity, with players typically using one hand for directional controls and the other for occasional rotation/drop buttons
 - It has a significant learning curve with complex strategies around piece placement and line clearing, i.e T-spins, Wall Kicks
@@ -633,7 +635,7 @@ this was the initial UI design sketch,which shows the general layout of the game
     + implement robust error handling and logging.
 
 
-== Documented Design
+= Documented Design
 
 === Libraries Used
 ==== Frontend Libraries
@@ -1183,7 +1185,7 @@ the Mutex (mutual exclusion) is a data structure, that when combined with the Ar
 
 
 
-== Technical Solution
+= Technical Solution
 
 === Code Contents
 
@@ -3784,7 +3786,7 @@ export class Xoshiro256plus {
 )
 
 
-== Evaluation
+= Evaluation
 
 
 === Evaluation Against Objectives
