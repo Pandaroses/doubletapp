@@ -75,7 +75,7 @@ I plan to develop this game using Rust and Svelte, as well as a websocket server
 == Client
 
 === Client Synopsys (conclusion)
-The Client is Alexander Tahiri, a student and part-time Software Developer (who likes to program computers) and the developer of Tapp, a game based on a 4x4 grid, which consists of 12 inactive tiles, and 4 active tiles. Players use the mouse cursor to click on an active tile, which then deactivates that tile and actives a new, currently non-active tile.the objective of Tapp is to achieve as high a score as possible, without making any mistakes. The Client requires a derivative of this game, which tests simultaneous dexterity of both hands, additionally The Client wants to incorporate a competitive aspect to the game, which consists of a leaderboard section, allowing players to see their position whithin the rankings and a Tetris-99-esque game mechanic, where players compete to either achieve the highest score, or last the longest in a mass multiplayer format. The Client has specifically asked for the Catppuccin colour scheme to be used, The Client has sufficient computing power to host both the client,server and database, which will be provided free of charge.
+The Client is Alexander Tahiri, a student and part-time Software Developer, and the developer of Tapp, a game based on a 4x4 grid, which consists of 12 inactive tiles, and 4 active tiles. Players use the mouse cursor to click on an active tile, which then deactivates that tile and actives a new, currently non-active tile.the objective of Tapp is to achieve as high a score as possible, without making any mistakes. The Client requires a derivative of this game, which tests simultaneous dexterity of both hands, additionally The Client wants to incorporate a competitive aspect to the game, which consists of a leaderboard section, allowing players to see their position whithin the rankings and a Tetris-99-esque game mechanic, where players compete to either achieve the highest score, or last the longest in a mass multiplayer format. The Client has specifically asked for the Catppuccin colour scheme to be used, The Client has sufficient computing power to host both the client,server and database, which will be provided free of charge.
 
 
 === Interview Notes
@@ -587,6 +587,7 @@ this was the initial UI design sketch,which shows the general layout of the game
   + user can change ARR 
   + user can log out of account
   + user can reset all keybinds to a sane default
+  + settings are saved on the browsers
 + user can play the game
   + on game start, user sees cursors are positioned on opposing sides of the board
   + on game start, user sees the starting active tiles
@@ -597,53 +598,31 @@ this was the initial UI design sketch,which shows the general layout of the game
   + user can "submit" their move
     + user can interactively see if the move was valid via a colour interaction which flashes green or red depending on if the move was valid, a valid move is when the two cursors are on two active grid tiles within the grid boundary and they are distinct active tiles
     + on successfull submit, user sees two new tiles become active, which were previously inactive and are not on current cursor location
-  + cursors are rendered via two different colours, with the two cursors being visually distinct but symmetrically consistent 
+  + cursors are rendered via two different colours, with the two cursors being visually distinct but symmetrically consistent
+  + user can move using keybinds, or by holding down keys (Das,Arr)
+  + user can react to changes in a successive manner
 + user can see statistics post singleplayer game end
   + user views their score
   + user views if their score was validated by the server
   + user views their leaderboard position
-  + user can copy their game statistics to the clipboard for sharing
-  + if user is logged in and not marked as a cheater, user can view their game in the statistics page
   + user has the option to start a new game from the results menu
 + user can view leaderboard
-  + user can view leaderboards, in a paginated format 
+  + user can view leaderboards, in a paginated format
+  + user can choose to see their personal leaderboard, or global leaderboard
+  + user can select different dimensions
+  + user can select different time limits
 + user can play the multiplayer gamemode
   + user can see the other players movements on other grids in the game
   + user can see their remaining score quota for each 5 second interval period
   + after a user has been eliminated by not reaching the quota,the user can view their position in the game
 + user can log in to the application
-  + user can login or signup depending on their requirements
+  + user can login or signup depending on their requirements (authenticated by database)
   + user is shown error codes depending on if account already exists or their login details are incorrect
-  
-=== Server Side
-+ server handles user authentication & management:
-  + server securely authenticates users with password hashing
-  + server enforces username uniqueness
-  + server manages sessions with server-side storage and cookies
-  + server distinguishes between regular users, admins, and flagged cheaters
-+ server maintains database records:
-  + server contains all required tables for game functionality
-  + server maintains atomicity of database operations
-+ server verifies game integrity:
-  + server validates all submitted moves for legality
-  + server checks cursor positions against active tiles
-  + server analyzes move timings for statistical anomalies
-  + server assesses path optimality to detect potential bot usage
-  + server verifies games complete within allowed time limits
-+ server handles multiplayer functionality:
-  + server establishes websocket connections with clients
-  + server processes moves in real-time with minimal latency
-  + server broadcasts game state updates to appropriate clients
-  + server validates each move to prevent cheating
-  + server manages player quota and elimination logic
-  + server tracks player rankings during multiplayer games
-+ server ensures system reliability:
-  + server optimizes database queries for performance
-  + server efficiently manages concurrent game instances
-  + server handles connection disruptions gracefully
-  + server implements comprehensive error logging
-  + server scales to support the target of 50 concurrent users
-
+  + if user is signed up, their games can be saved
++ user can see rules / introduction
+  + if user has never played before, popup should be shown to user
+  + user has option to view again
++ user can use keybinds to reset game
 
 = Documented Design
 
