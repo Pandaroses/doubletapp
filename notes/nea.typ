@@ -420,8 +420,8 @@ in rust, variables are managed through a system called "ownership" which is enfo
 3. When the owner goes out of scope, the value is automatically dropped
 
 Rust distinguishes between stack and heap memory:
-- **Stack**: Fixed-size, fast memory for data with known size at compile time (primitives like integers, booleans)
-- **Heap**: Variable-size memory for data that may change size or needs to live beyond a function's scope
+- *Stack*: Fixed-size, fast memory for data with known size at compile time (primitives like integers, booleans)
+- *Heap*: Variable-size memory for data that may change size or needs to live beyond a function's scope
 
 When a value is assigned from one variable to another, Rust's behavior depends on the data type:
 - For simple types implementing the `Copy` trait (integers, booleans), values are duplicated
