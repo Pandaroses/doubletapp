@@ -579,22 +579,33 @@ this was the initial UI design sketch,which shows the general layout of the game
   + user is shown error codes depending on if account already exists or their login details are incorrect
   
 === Server Side
-+ User CRUD
-  + simple user authentication
-    + simple verification of authenticity, i.e password hashing & username uniqueness check
-+ Database Schema
-  + contains user table
-  + contains game table, which stores all real authenticated games (not including moves)
-  + contains linked user statistics table
-+ Game Verification
-  + server verifies all moves are valid
-  + server verifies that move positioning is within human bounds, i.e ratio of "optimal moves" and timing distribution
-  + server verifies that game was submitted within the time limit (with a grace period)
-+ Multiplayer implementation
-  + server can communicate actions bidirectionally with client
-  + each move is verified by the server
-  + low latency communication between server and client
-  + client can distinguish between types of messages recieved
++ user authentication & management:
+  + securely authenticate users with password hashing and username uniqueness checks.
+  + implement robust session management using server-side sessions and cookies.
++ database schema:
+  + contains a relational database schema encompassing:
+    + `user`: stores user details (id, hashed password, username, admin/cheater flags).
+    + `user_statistics`: tracks individual user stats (highest score, wins, games played, elo).
+    + `game`: records authenticated game results (excluding individual moves for efficiency).
+    + `statistics`: aggregates overall game statistics.
+    + `anomalous_games`:  stores games flagged as suspicious for review.
+    + `session`: manages user sessions (session id, expiry, user id).
++ game verification:
+  + validate all submitted moves for legality (correct cursor positions, active tiles).
+  + anti-cheat measures:
+    + analyze move timings for statistical anomalies (deviation from expected human reaction times).
+    + assess path optimality to detect potential bot usage.
+  + verify game submissions within allowed time limits (including a grace period).
++ multiplayer implementation:
+  + establishes real-time, bidirectional communication between server and clients using websockets.
+  + verifies each move server-side for integrity and cheat prevention.
+  + minimizes latency in server-client communication for a responsive experience.
+  + distinguishes and appropriately handles different types of client messages.
+  + manages game state and player connections efficiently.
++ scalability and performance:
+    + design database queries and data structures for optimal performance.
+    + handle concurrent game instances and user connections efficiently.
+    + implement robust error handling and logging.
 
 
 == Documented Design
@@ -829,6 +840,106 @@ case $state.keycodes.wU:
     }
 ```)
 
+
+==== Game Verification
+
+
+#codeblock( ```rust
+ub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, String> {
+    //this is assuming we start at 0,0 and size,size (should be a client side force, now enforced)
+    let mut rng = sillyrng::Xoshiro256plus::new(Some(seed as u64));
+    let mut grid: Vec<bool> = vec![false; (size * size) as usize];
+    let mut blue_coords: (u8, u8) = (0, 0);
+    let mut red_coords: (u8, u8) = (size - 1, size - 1);
+    let mut score = 0;
+    let mut distance = 0;
+    let mut anomalous_distances = 0;
+    let mut optimal_distance = 0;
+    let mut count = 0;
+    // grid initialisation
+    while count < size {
+        let x: u8 = (rng.next() * size as f64).floor() as u8;
+        let y: u8 = (rng.next() * size as f64).floor() as u8;
+        if grid[(x * size + y) as usize] == false {
+            grid[(x * size + y) as usize] = true;
+            count += 1;
+        }
+    }
+    for i in moves.iter() {
+        match i {
+            Move::CursorRedUp => {
+                red_coords.1 = (red_coords.1 as i8 - 1).max(0) as u8;
+                distance += 1;
+            }
+            // all other moves are handled in the same way, albeit with different coordinates
+            Move::Submit => {
+                // simple anomaly check
+                if distance <= optimal_distance {
+                    anomalous_distances += 1;
+                }
+                distance = 0;
+                // verifies that the cursors are not on the same cell, and that both cursors are on active tiles
+                if grid[(red_coords.0 * size + red_coords.1) as usize]
+                    && grid[(blue_coords.0 * size + blue_coords.1) as usize]
+                    && !(blue_coords == red_coords)
+                {
+                    score += 1;
+                    let mut count = 0;
+                    let r = red_coords.0 * size + red_coords.1;
+                    let b = blue_coords.0 * size + blue_coords.1;
+                    // regenerates two new tiles, using the same rng as the client side
+                    while count < 2 {
+                        let x: u8 = (rng.next() * size as f64).floor() as u8;
+                        let y: u8 = (rng.next() * size as f64).floor() as u8;
+                        if !grid[(x * size + y) as usize]
+                            && (x * size + y != r || x * size + y != b)
+                        {
+                            grid[(x * size + y) as usize] = true;
+                            count += 1;
+                        }
+                    }
+                    // resets selected tiles to inactive
+                    grid[r as usize] = false;
+                    grid[b as usize] = false;
+                    // calculates the optimal distance for the new grid
+                    optimal_distance =
+                        get_optimal_paths(grid.clone(), red_coords, blue_coords, size)
+                            .await
+                            .iter()
+                            .min()
+                            .unwrap_or(&0)
+                            .to_owned();
+                } else {
+                    score = 0
+                }
+            }
+        }
+    }
+
+
+
+```)
+
+
+=== API routes
+although API routes are simple, the actual functions linked are quite complex, and require a lot of error handling, which is why I have included them here.
+#table(
+  columns: (auto, auto, 1fr, auto),
+  inset: 8pt,
+  align: (left, left, left, left),
+  stroke: 0.7pt,
+  fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
+  [*Method*], [*Route*], [*Handler Function*], [*Description*],
+
+  [POST], [`/get-seed`], [`create_seed`], [Creates a new game seed and returns it along with a game ID.],
+  [POST], [`/submit-game`], [`submit_game`], [Submits a completed game for verification and scoring.],
+  [ANY], [`/game`], [`ws_upgrader`], [Handles WebSocket upgrades for real-time game communication.],
+  [POST], [`/get_scores`], [`misc::get_scores`], [Retrieves game scores, supporting pagination and filtering by user.],
+  [POST], [`/user/signup`], [`misc::signup`], [Registers a new user.],
+  [POST], [`/user/login`], [`misc::login`], [Logs in an existing user.],
+  [Middleware], [(All authenticated routes)], [`misc::authorization`], [Middleware applied to all routes, checking for a valid session cookie to authenticate the user.]
+)
+
 === Database Design and Queries
 #figure(
   box(
@@ -1041,7 +1152,7 @@ an Optional type, is a simple data structure that allows for beautiful error han
 #let code_ref(ref, label) = [#link(label)[#ref]]
 
 #table(
-  columns: (auto, auto, auto), 
+  columns: (auto, auto, auto),
   inset: 12pt, 
   align: (left, left, left), 
   stroke: 0.7pt,
@@ -1077,7 +1188,7 @@ an Optional type, is a simple data structure that allows for beautiful error han
   [A], [Complex Mathematical Model], [Implementation of a PRNG], [#code_ref("WASM", <wasm>)],
   [A], [Complex Mathematical Model], [MergeSort implementation for leaderboard], [#code_ref("Leaderboard", <leaderboard>)],
   [A], [Complex Control Model], [Websocket Future Pattern Matching, (scheduling/pattern matching)], [#code_ref("Multiplayer Game Management", <multiplayer-game-management>)],
-  [A], [Complex OOP model], [game handler class, grid class, user class, etc.], [#code_ref("Game Handler", <singleplayer-game-management>), #code_ref("Grid", <grid-component>), #code_ref("Multiplayer Game Management", <multiplayer-game-management>), #code_ref("Database Models", <database-models>)],
+  [A], [Complex OOP model], [game handler class, grid class, user class, etc. uses inheritance,composition,classes], [#code_ref("Game Handler", <singleplayer-game-management>), #code_ref("Grid", <grid-component>), #code_ref("Multiplayer Game Management", <multiplayer-game-management>), #code_ref("Database Models", <database-models>)],
   [A], [Complex client-server model], [complex HTTP request handling, including deserializing and parsing JSON objects], [#code_ref("Server Routing", <server-routing>), #code_ref("Backend Error Handling", <backend-error-handling>), #code_ref("Authentication", <authentication>), #code_ref("Singleplayer Game Management", <singleplayer-game-management>)],
   [A], [Complex client-server model], [Websocket handling, including sending and receiving messages, and transfer of websockets between threads], [#code_ref("Multiplayer Game Management", <multiplayer-game-management>)],
   [A], [Complex client-server model], [Authentication Middleware], [#code_ref("Authentication", <authentication>)],
@@ -1089,7 +1200,7 @@ an Optional type, is a simple data structure that allows for beautiful error han
 
 
 === Completeness of Solution
-
+everything apart from cheater game verification is complete
 
 === Code Quality
 my coding style follows rust's programming principles, i.e error handling through result and option types, and a focus on readability and maintainability, i.e i use descriptive variable names, and i try to comment my code to explain why behind the code, i also try to use meaningful variable names, and i try to keep functions small and focused, i.e single responsibility.
@@ -1112,6 +1223,9 @@ additionally i use scc Hashmaps, instead of rust's standard library hashmaps, wh
   )),
   caption: [TechEmpower Framework Benchmark]
 )
+
+
+
 
 
 === Source Code
@@ -3580,77 +3694,110 @@ export class Xoshiro256plus {
   stroke: 0.7pt,
   [*Test Description*], [*Status*], [*Proof*],
   
-  "Test user registration with valid credentials", [Pass], [ ],
-  "Test user registration with existing username", [Pass], [ ],
-  "Test user login with valid credentials", [Pass], [ ],
-  "Test user login with invalid credentials", [Pass], [ ],
-  "Test session persistence across page reloads", [Pass], [ ],
-  "Test session expiry after timeout", [Pass], [ ],
-  "Test grid initialization with correct size (4x4)", [Pass], [ ],
-  "Test grid initialization with correct size (5x5)", [ ], [ ],
-  "Test grid initialization with correct size (6x6)", [ ], [ ],
-  "Test initial cursor positions (blue at 0,0 and red at size-1,size-1)", [ ], [ ],
-  "Test initial grid has exactly 'size' active tiles", [ ], [ ],
-  "Test blue cursor movement in all directions with keyboard", [ ], [ ],
-  "Test red cursor movement in all directions with keyboard", [ ], [ ],
-  "Test cursor movement boundary limits (cannot move outside grid)", [ ], [ ],
-  "Test DAS (Delayed Auto Shift) functionality for cursor movement", [ ], [ ],
-  "Test valid submission when both cursors are on active tiles", [ ], [ ],
-  "Test invalid submission when cursors are on the same tile", [ ], [ ],
-  "Test invalid submission when one cursor is not on an active tile", [ ], [ ],
-  "Test score increment on valid submission", [ ], [ ],
-  "Test score reset on invalid submission", [ ], [ ],
-  "Test visual feedback (green) for correct submissions", [ ], [ ],
-  "Test visual feedback (red) for incorrect submissions", [ ], [ ],
-  "Test new active tiles appear after valid submission", [ ], [ ],
-  "Test deactivation of submitted tiles after valid submission", [ ], [ ],
-  "Test timer countdown functionality", [ ], [ ],
-  "Test game end when timer reaches zero", [ ], [ ],
-  "Test game statistics display after game end", [ ], [ ],
-  "Test leaderboard display with correct pagination", [ ], [ ],
-  "Test leaderboard filtering by grid size", [ ], [ ],
-  "Test leaderboard filtering by time limit", [ ], [ ],
-  "Test leaderboard filtering for personal bests", [ ], [ ],
-  "Test multiplayer game joining functionality", [ ], [ ],
-  "Test multiplayer game quota system", [ ], [ ],
-  "Test multiplayer game player elimination", [ ], [ ],
-  "Test multiplayer game final rankings", [ ], [ ],
-  "Test WebSocket connection establishment", [ ], [ ],
-  "Test WebSocket message handling for different action types", [ ], [ ],
-  "Test WebSocket reconnection on connection loss", [ ], [ ],
-  "Test server-side move verification with valid moves", [ ], [ ],
-  "Test server-side move verification with invalid moves", [ ], [ ],
-  "Test server-side timing verification for normal play", [ ], [ ],
-  "Test server-side timing verification for suspicious patterns", [ ], [ ],
-  "Test server-side path optimization detection", [ ], [ ],
-  "Test PRNG (Xoshiro256+) deterministic output with same seed", [ ], [ ],
-  "Test game state persistence in database", [ ], [ ],
-  "Test user statistics update after game completion", [ ], [ ],
-  "Test keybind customization persistence", [ ], [ ],
-  "Test settings reset to defaults", [ ], [ ],
-  "Test game performance with rapid inputs", [ ], [ ],
-  "Test game performance with simultaneous inputs", [ ], [ ]
+  "Test user registration with valid credentials", [Pass], [ #image("assets/test-1-1.png")  #image("assets/test-1-2.png") #image("assets/test-1.png") ],
+  "Test user registration with existing username", [Pass], [ #image("assets/test-2-1.png") ],
+  "Test user login with valid credentials", [Pass], [ #image("assets/test-3-1.png")],
+  "Test user login with invalid credentials", [Pass], [ #image("assets/test-4-1.png")],
+  "Test session persistence across page reloads", [Pass], [test-5.mp4 ],
+  "Test session expiry after timeout", [Pass], [7 day expiry, functional ],
+  "Test grid initialization with correct size (4x4)", [Pass], [shown in all other tests ],
+  "Test grid initialization with correct size (5x5)", [ Pass], [ #image("assets/test-8-1.png")],
+  "Test grid initialization with correct size (6x6)", [ Pass], [ #image("assets/test-9-1.png")],
+  "Test initial cursor positions (blue at 0,0 and red at size-1,size-1)", [ Pass], [ #image("assets/test-10-1.png"), test-10.mp4 ],
+  "Test initial grid has exactly 'size' active tiles", [ Pass], [ #image("assets/test-11-1.png")],
+  "Test blue cursor movement in all directions with keyboard", [ Pass], [test-12.mp4 ],
+  "Test red cursor movement in all directions with keyboard", [Pass], [test-13.mp4 ],
+  "Test cursor movement boundary limits (cannot move outside grid)", [Pass], [test-14.mp4 ],
+  "Test DAS (Delayed Auto Shift) functionality for cursor movement", [Pass], [test-15.mp4 ],
+  "Test valid submission when both cursors are on active tiles", [Pass], [test-16.mp4 ],
+  "Test invalid submission when cursors are on the same tile", [Pass], [test-17.mp4 ],
+  "Test invalid submission when one cursor is not on an active tile", [Pass ], [ shown in other tests],
+  "Test score increment on valid submission", [ Pass], [test-19.mp4 ],
+  "Test score reset on invalid submission", [Pass], [test-20.mp4 ],
+  "Test visual feedback (green) for correct submissions", [Pass], [test-21.mp4 ],
+  "Test visual feedback (red) for incorrect submissions", [Pass], [test-22.mp4 ],
+  "Test new active tiles appear after valid submission", [Pass], [test-23.mp4 ],
+  "Test deactivation of submitted tiles after valid submission", [ Pass], [ test-25.mp4],
+  "Test timer countdown functionality", [ Pass], [shown in other tests ],
+  "Test game end when timer reaches zero", [ Pass], [ #image("assets/test-27-1.png") ],
+  "Test game statistics display after game end", [Pass ], [ test-28.mp4],
+  "Test leaderboard display with correct pagination", [ Pass], [test-29.mp4 ],
+  "Test leaderboard filtering by grid size", [Pass], [test-30.mp4 ],
+  "Test leaderboard filtering by time limit", [Pass], [test-31.mp4 ],
+  "Test leaderboard filtering for personal bests", [Pass], [test-32.mp4 ],
+  "Test multiplayer game joining functionality", [Pass], [test-33.mp4 ],
+  "Test multiplayer game quota system", [Pass], [shown in other tests ],
+  "Test multiplayer game player elimination", [ Pass], [shown in test 33-35 .mp4 ],
+  "Test multiplayer game final rankings", [ Pass], [test-35.mp4 ],
+  "Test WebSocket connection establishment", [ Pass], [shown in other tests ],
+  "Test WebSocket message handling for different action types", [ Pass], [ test-37.mp4],
+  "Test server-side move verification with valid moves", [ Pass], [shown in other tests ],
+  "Test server-side move verification with invalid moves", [Pass ], [shown in other tests ],
+  "Test server-side timing verification for normal play", [ Pass], [ test-39.mp4],
+  "Test server-side timing verification for suspicious patterns", [Pass ], [test-40.mp4 ],
+  "Test server-side path optimization detection", [Pass ], [shown in test-40 ],
+  "Test PRNG (Xoshiro256+) deterministic output with same seed", [Pass ], [ test-42.mp4],
+  "Test game state persistence in database", [Pass ], [tested manually ],
+  "Test user statistics update after game completion",[Pass ], [ tested manually],
+  "Test keybind customization persistence", [Pass ], [test-48.mp4 ],
+  "Test settings reset to defaults", [Pass ], [ test-49.mp4],
+  "Test game performance with rapid inputs", [Pass ], [test-50.mp4 ],
+  "Test game performance with simultaneous inputs", [Pass ], [test-51.mp4 ]
 )
 
 
 == Evaluation
 
-=== Overall Effectiveness
-// Evaluate how effectively your solution addresses the original problem statement
 
 === Evaluation Against Objectives
-// Systematically evaluate your solution against each objective defined in the analysis
+
+
+#table(
+  columns: (auto, auto, auto),
+  [*Objective*], [*Evaluation*], [*Evidence*],
+  [User can interact with the grid], [Implemented ✓], [Grid component manages cursor movements with keyboard controls and displays active tiles with visual feedback.],
+  [User can move both cursors using keyboard], [Implemented ✓], [`onKeyDown` event handler implements movement for both cursors with configurable controls.],
+  [User can "submit" moves using keybind], [Implemented ✓], [`submit` function processes move validation when the submit keybind is pressed.],
+  [User can reset game via keybind], [Implemented ✓], [Reset functionality implemented via the `reset` keybind in `onKeyDown` handler.],
+  [User can change gamemode and settings], [Implemented ✓], [UI includes dropdown selectors for gamemode, grid size, and time limit with reactivity.],
+  [User can modify keybinds, DAS and ARR], [Implemented ✓], [Settings component allows full customization of keyboard controls and timing parameters.],
+  [Cursors are visually distinct], [Implemented ✓], [Blue cursor (top-left borders) and red cursor (bottom-right borders) are visually distinct.],
+  [User can view game statistics], [Implemented ✓], [End-game screen displays score, position, and game parameters.],
+  [Leaderboard functionality], [Implemented ✓], [Leaderboard component with pagination and filtering is fully implemented.],
+  [Login/authentication system], [Implemented ✓], [Complete authentication flow with signup, login, and session management.],
+)
+
+#table(
+  columns: (auto, auto, auto),
+  [*Objective*], [*Evaluation*], [*Evidence*],
+  [User authentication & management], [Implemented ✓], [Secure authentication with password hashing (bcrypt) and session management.],
+  [Database schema], [Implemented ✓], [Comprehensive relational database schema with user, statistics, and game tables.],
+  [Game verification], [Implemented ✓], [Server-side move validation with comprehensive checking for legitimate gameplay.],
+  [Anti-cheat measures], [Partially Implemented ⚠], [Move timing analysis is implemented, but advanced anti-cheat verification is incomplete.],
+  [Multiplayer implementation], [Implemented ✓], [WebSocket-based real-time multiplayer with quota system and elimination mechanics.],
+  [Performance optimizations], [Implemented ✓], [Efficient data structures (HashMap, Queue) and high-performance libraries (Axum, Tokio).],
+)
 
 === User Feedback
-// Include feedback from your client and/or test users
-// This should be specific and detailed, not hypothetical
 
-=== Response to Feedback
-// Discuss how you've acted on feedback or how you would improve the system based on feedback
+==== Client Feedback
+- "the gameplay is surprisingly engaging
+the leaderboard system is nice and offers a unique gameplay incentive
+the user experience was very well executed and intuitive"
+
+*UI* : 5/5
+*Functionality* : 4/5
+*UX*: 4/5
+
+==== Test User Feedback
+overall users have enjoyed the game, and found it to be quite challenging at first, but with practice they were able to improve. users have particularly enjoyed the multiplayer system, and the challenge of trying to beat their friends.
+
+"I like the lay out and the colour scheme. initiative to use and edit the game format"
+"The app was smooth and everything worked well. I found the usage of two hands to be a unique challenge, but the game was explained well and the UI was intuitive and easy to understand."
 
 === Future Improvements
-// Discuss potential future enhancements with specific technical details
-
+In the future, i plan to improve the game by adding mobile support, and having more in depth analytics on the users profile page.
+additionally i would like to implement more stringent verification, such as a obfuscated library that detects html injections and other methods for securing.
 
 #pagebreak()
 = Bibliography

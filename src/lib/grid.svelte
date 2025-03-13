@@ -299,6 +299,7 @@
 		dasIntervals[i] = false;
 	};
 	const onKeyDown = (e: any) => {
+		console.log(e.key);
 		if (!gameStarted && $state.gameMode === 'multiplayer') {
 			return;
 		}
@@ -544,13 +545,17 @@
 				moves.push(['CursorRedRight', timeDiff]);
 				lastActionTime = Date.now();
 				break;
-			case $state.keycodes.submit:
+			
+			case $state.keycodes.submit:	
 				submit(timeDiff);
 				lastActionTime = Date.now();
 				break;
 			case $state.keycodes.reset:
 				end == false ? (end = true) : '';
 				endGame();
+				break;
+			default:
+				acursorX = Math.min(acursorX + 2, $state.size - 1);
 				break;
 		}
 	};
