@@ -1,6 +1,6 @@
 #import "catppuccin/typst/src/lib.typ": catppuccin, flavors
 #import "@preview/zebraw:0.4.7": *
-#set par(justify: true)
+
 #show link: underline
 #set page(
   numbering: "1",
@@ -21,18 +21,26 @@
 
 #show: catppuccin.with(flavors.mocha, code-block: true, code-syntax: true)
 
-#set page(margin: 2cm, footer: [*Centre Number:* 22147  #h(1fr) #context counter(page).display("1") #h(1fr) *Candidate Number:* 9255])
+
+
 #page(numbering: none, [
-  #v(2fr)
-  #align(center, [
-    #text(23pt, weight: 700, [Multiplayer Grid Based Dexterity Training Game])
-    #v(0.1fr)
-    #text(23pt, weight: 500, [NEA: Georgiy Tnimov])
-    #v(1.1fr)
+  #block(height: 100%, width: 100%, inset: 0pt, [
+    #align(center, [
+      #v(8fr)
+      #text(style: "normal", weight: "medium", size: 12pt, tracking: 1.5pt, fill: rgb(188, 99, 142), [COMPUTER SCIENCE NEA])
+      #v(0.8fr)
+      #text(style: "normal", weight: "bold", size: 30pt, [Multiplayer Grid Based])
+      #text(style: "normal", weight: "bold", size: 30pt, [Dexterity Training Game])
+      #v(0.8fr)
+      #text(style: "normal", weight: "medium", size: 20pt, fill: rgb(180, 190, 254), [DoubleTapp])
+      #v(0.8fr)
+      #text(style: "normal", weight: "regular", size: 16pt, [Georgiy Tnimov])
+      #v(8fr)
+    ])
   ])
-  #v(2fr)
 ])
 
+#set page(margin: 2cm, footer: [*Centre Number:* 22147  #h(1fr) #context counter(page).display("1") #h(1fr) *Candidate Number:* 9255])
 
 #let codeblock(body) = {
 	block(
@@ -65,7 +73,7 @@ I plan to develop this game using Rust and Svelte, as well as a websocket server
 == Client
 
 === Client Synopsys (conclusion)
-The Client is Alexander Tahiri, a software developer at Studio Squared and the developer of Tapp, a game based on a 4x4 grid, which consists of 12 inactive tiles, and 4 active tiles. Players use the mouse cursor to click on an active tile, which then deactivates that tile and actives a new, currently non-active tile.the objective of Tapp is to achieve as high a score as possible, without making any mistakes. The Client requires a derivative of this game, which tests simultaneous dexterity of both hands, additionally The Client wants to incorporate a competitive aspect to the game, which consists of a leaderboard section, allowing players to see their position whithin the rankings and a Tetris-99-esque game mechanic, where players compete to either achieve the highest score, or last the longest in a mass multiplayer format. The Client has specifically asked for the Catppuccin colour scheme to be used, The Client has sufficient computing power to host both the client,server and database, which will be provided free of charge.
+The Client is Alexander Tahiri, a student and part-time Software Developer (who likes to program computers) and the developer of Tapp, a game based on a 4x4 grid, which consists of 12 inactive tiles, and 4 active tiles. Players use the mouse cursor to click on an active tile, which then deactivates that tile and actives a new, currently non-active tile.the objective of Tapp is to achieve as high a score as possible, without making any mistakes. The Client requires a derivative of this game, which tests simultaneous dexterity of both hands, additionally The Client wants to incorporate a competitive aspect to the game, which consists of a leaderboard section, allowing players to see their position whithin the rankings and a Tetris-99-esque game mechanic, where players compete to either achieve the highest score, or last the longest in a mass multiplayer format. The Client has specifically asked for the Catppuccin colour scheme to be used, The Client has sufficient computing power to host both the client,server and database, which will be provided free of charge.
 
 
 === Interview Notes
@@ -606,33 +614,33 @@ this was the initial UI design sketch,which shows the general layout of the game
   + user is shown error codes depending on if account already exists or their login details are incorrect
   
 === Server Side
-+ user authentication & management:
-  + securely authenticate users with password hashing and username uniqueness checks.
-  + implement robust session management using server-side sessions and cookies.
-+ database schema:
-  + contains a relational database schema encompassing:
-    + `user`: stores user details (id, hashed password, username, admin/cheater flags).
-    + `user_statistics`: tracks individual user stats (highest score, wins, games played, elo).
-    + `game`: records authenticated game results (excluding individual moves for efficiency).
-    + `statistics`: aggregates overall game statistics.
-    + `anomalous_games`:  stores games flagged as suspicious for review.
-    + `session`: manages user sessions (session id, expiry, user id).
-+ game verification:
-  + validate all submitted moves for legality (correct cursor positions, active tiles).
-  + anti-cheat measures:
-    + analyze move timings for statistical anomalies (deviation from expected human reaction times).
-    + assess path optimality to detect potential bot usage.
-  + verify game submissions within allowed time limits (including a grace period).
-+ multiplayer implementation:
-  + establishes real-time, bidirectional communication between server and clients using websockets.
-  + verifies each move server-side for integrity and cheat prevention.
-  + minimizes latency in server-client communication for a responsive experience.
-  + distinguishes and appropriately handles different types of client messages.
-  + manages game state and player connections efficiently.
-+ scalability and performance:
-    + design database queries and data structures for optimal performance.
-    + handle concurrent game instances and user connections efficiently.
-    + implement robust error handling and logging.
++ server handles user authentication & management:
+  + server securely authenticates users with password hashing
+  + server enforces username uniqueness
+  + server manages sessions with server-side storage and cookies
+  + server distinguishes between regular users, admins, and flagged cheaters
++ server maintains database records:
+  + server contains all required tables for game functionality
+  + server maintains atomicity of database operations
++ server verifies game integrity:
+  + server validates all submitted moves for legality
+  + server checks cursor positions against active tiles
+  + server analyzes move timings for statistical anomalies
+  + server assesses path optimality to detect potential bot usage
+  + server verifies games complete within allowed time limits
++ server handles multiplayer functionality:
+  + server establishes websocket connections with clients
+  + server processes moves in real-time with minimal latency
+  + server broadcasts game state updates to appropriate clients
+  + server validates each move to prevent cheating
+  + server manages player quota and elimination logic
+  + server tracks player rankings during multiplayer games
++ server ensures system reliability:
+  + server optimizes database queries for performance
+  + server efficiently manages concurrent game instances
+  + server handles connection disruptions gracefully
+  + server implements comprehensive error logging
+  + server scales to support the target of 50 concurrent users
 
 
 = Documented Design
@@ -951,22 +959,20 @@ pub async fn verify_moves(moves: Vec<Move>, size: u8, seed: u32) -> Result<u32, 
 === API routes
 although API routes are simple, the actual functions linked are quite complex, and require a lot of error handling, which is why I have included them here.
 #table(
-  columns: (auto, auto, 1fr, auto),
+  columns: (auto, auto, auto, 1fr),
   inset: 8pt,
   align: (left, left, left, left),
   stroke: 0.7pt,
   fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
   [*Method*], [*Route*], [*Handler Function*], [*Description*],
-
-  [POST], [`/get-seed`], [`create_seed`], [Creates a new game seed and returns it along with a game ID.],
-  [POST], [`/submit-game`], [`submit_game`], [Submits a completed game for verification and scoring.],
-  [ANY], [`/game`], [`ws_upgrader`], [Handles WebSocket upgrades for real-time game communication.],
-  [POST], [`/get_scores`], [`misc::get_scores`], [Retrieves game scores, supporting pagination and filtering by user.],
-  [POST], [`/user/signup`], [`misc::signup`], [Registers a new user.],
-  [POST], [`/user/login`], [`misc::login`], [Logs in an existing user.],
-  [Middleware], [(All authenticated routes)], [`misc::authorization`], [Middleware applied to all routes, checking for a valid session cookie to authenticate the user.]
+  [POST], [#text["/get-seed"]], [#text["create_seed"]], [Creates a new game seed and returns it along with a game ID.],
+  [POST], [#text["/submit-game"]], [#text["submit_game"]], [Submits a completed game for verification and scoring.],
+  [ANY], [#text["/game"]], [#text["ws_upgrader"]], [Handles WebSocket connections for game actions.],
+  [POST], [#text["/get_scores"]], [#text["misc::get_scores"]], [Retrieves game scores, with options for pagination and user-specific filtering.],
+  [POST], [#text["/user/signup"]], [#text["misc::signup"]], [Registers a new user.],
+  [POST], [#text["/user/login"]], [#text["misc::login"]], [Logs in an existing user.],
+  [Middleware], [#text["(All authenticated routes)"]], [#text["misc::authorization"]], [Middleware applied to all routes, checking for a valid session cookie to authenticate the user.]
 )
-
 === Database Design and Queries
 #figure(
   box(
@@ -1072,7 +1078,7 @@ an Optional type, is a simple data structure that allows for beautiful error han
 
 
 ==== Arc 
-Crucial feature in the rust programming language, the Arc(atomic reference counted pointer), allows for thread safe sharing of data, by using a reference counted pointer, which allows for the data to be shared between threads, and the data to be cloned when moved, allowing for efficient memory management, and the data to be shared between threads safely, without having to worry about race conditions.
+Crucial feature in the rust programming language, the Arc(atomic reference counted pointer), allows for thread safe sharing of data, by using a reference counted pointer, which allows for the data to be shared between threads, and the data not needing to be cloned, allowing for efficient memory management, and the data to be shared between threads safely, without having to worry about race conditions.
 #linebreak()
 refer to Rusts Memory Management section for more information about how rust handles variable scopes.
 #linebreak()
