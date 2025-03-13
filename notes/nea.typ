@@ -40,7 +40,6 @@
   ])
 ])
 
-#set page(margin: 2cm, footer: [*Centre Number:* 22147  #h(1fr) #context counter(page).display("1") #h(1fr) *Candidate Number:* 9255])
 
 #let codeblock(body) = {
 	block(
@@ -58,6 +57,9 @@
 #outline()
 
 #pagebreak()
+
+
+#set page(margin: 2cm, footer: [*Centre Number:* 22147  #h(1fr) #context counter(page).display("1") #h(1fr) *Candidate Number:* 9255])
 
 = Analysis 
 == Abstract
