@@ -102,3 +102,114 @@ Postgres-Docs:
   url:
     value: https://www.postgresql.org/docs/
     date: 2024-12-01
+
+
+Linear-Congruential-Generators:
+  type: article
+  title: Linear Congruential Generators
+  author: Rosetta Code contributors
+  url:
+    value: https://rosettacode.org/wiki/Linear_congruential_generator
+    date: 2025-02-14
+
+Linear-Congruential-Generators-2:
+  type: article
+  title: Linear Congruential Generators
+  author: Wikipedia contributors
+  url:
+    value: https://en.wikipedia.org/wiki/Linear_congruential_generator
+    date: 2025-02-14
+
+Mersenne-Twister:
+  type: article
+  title: Mersenne Twister
+  author: Wikipedia contributors
+  url:
+    value: https://en.wikipedia.org/wiki/Mersenne_Twister
+    date: 2025-02-14
+    
+
+Permuted-Congruential-Generator:
+  type: article
+  title: Permuted Congruential Generator
+  author: Wikipedia contributors
+  url:
+    value: https://en.wikipedia.org/wiki/Permuted_congruential_generator
+    date: 2025-02-14
+    
+
+
+Xorshift:
+  type: article
+  title: Xorshift
+  author: Wikipedia contributors
+  url:
+    value: https://en.wikipedia.org/wiki/Xorshift#xorshift*
+    date: 2025-02-14
+
+
+Chacha20:
+  type: article
+  title: ChaCha20
+  author: Wikipedia contributors
+  url:
+    value: https://en.wikipedia.org/wiki/ChaCha20
+    date: 2025-02-14
+
+
+
+Chacha20-RFC:
+  type: article
+  title: ChaCha20
+  author: IETF - Network Working Group
+  url:
+    value: https://datatracker.ietf.org/doc/html/rfc7539
+    date: 2025-02-14
+    
+
+Seedrandom:
+  type: web
+  title: Seedrandom
+  author: david bau
+  url:
+    value: https://www.npmjs.com/package/seedrandom
+    date: 2025-02-14
+
+
+
+ARC4:
+  type: web
+  title: ARC4
+  author: Wikipedia contributors
+  url:
+    value: https://en.wikipedia.org/wiki/RC4
+    date: 2025-02-14
+
+
+MergeSort:
+  type: article
+  title: Merge Sort
+  author: Wikipedia contributors
+  url:
+    value: https://en.wikipedia.org/wiki/Merge_sort
+    date: 2025-02-14
+
+
+
+Circular-Queue:
+  type: article
+  title: Circular Queue
+  author: GeeksforGeeks
+  url:
+    value: https://www.geeksforgeeks.org/introduction-to-circular-queue/
+    date: 2025-02-14
+    
+    
+
+Standard-Deviation:
+  type: article
+  title: Standard Deviation
+  author: Wikipedia contributors
+  url:
+      value: https://en.wikipedia.org/wiki/Standard_deviation
+      date: 2025-02-14

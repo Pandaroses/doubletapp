@@ -225,7 +225,7 @@ for implementing multiplayer, there are multiple solutions that work, i.e unidir
 I have decided to use websockets, as they are a reasonable balance of complexity, performance, and ease of implementation, while still providing a high degree of reliability and safety. 
 === PRNG's (Pseudorandom Number Generators)
 
-after considering many PRNG's (pseudorandomnumber generators), for example ARC4 , seedrandom, ChaCha20, and discounting them due to performance issues / hardware dependent randomization, I decided on using the Xoshiro/Xoroshiro family of algorithms, which are based on the Linear Congruential Generators, which are a (now-obsolete) family of PRNG's, which use a linear multiplication combined with modulus operations, to create quite large non-repeating sequences, although quite slow and needing very large state. xoshiro generators use a much smaller state (between 128-512) bits, while still maintaining a large periodicity,
+after considering many PRNG's (pseudorandomnumber generators), for example ARC4 , seedrandom, ChaCha20, and discounting them due to performance issues / hardware dependent randomization, I decided on using the Xoshiro/Xoroshiro @Xoshiro-PRNG family of algorithms, which are based on the Linear Congruential Generators, which are a (now-obsolete) family of PRNG's, which use a linear multiplication combined with modulus operations, to create quite large non-repeating sequences, although quite slow and needing very large state. xoshiro generators use a much smaller state (between 128-512) bits, while still maintaining a large periodicity,
 
 
 #table(
@@ -260,7 +260,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   - Not cryptographically secure by default
   ],
   
-  [ChaCha20],
+  [ChaCha20 @Chacha20-RFC @Chacha20],
   [
   - Cryptographically secure
   - Excellent statistical properties
@@ -273,7 +273,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   - Higher computational cost
   ],
   
-  [Xorshift],
+  [Xorshift @Xorshift],
   [
   - Extremely fast
   - Simple implementation
@@ -285,7 +285,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   - Some states can lead to poor quality
   ],
   
-  [Linear Congruential Generator (LCG)],
+  [Linear Congruential Generator (LCG) @Linear-Congruential-Generators @Linear-Congruential-Generators-2],
   [
   - Simplest implementation
   - Very fast
@@ -297,7 +297,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   - Predictable patterns
   ],
   
-  [Mersenne Twister],
+  [Mersenne Twister @Mersenne-Twister],
   [
   - Very long period
   - Good statistical properties
@@ -309,7 +309,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   - Slow initialization
   ],
   
-  [Xoshiro256+/++],
+  [Xoshiro256+/++ @Xoshiro-PRNG],
   [
   - Excellent speed
   - Great statistical properties
@@ -322,7 +322,7 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
   - Some variants have issues with specific bits
   ],
   
-  [PCG (Permuted Congruential Generator)],
+  [PCG (Permuted Congruential Generator) @Permuted-Congruential-Generator],
   [
   - Excellent statistical properties
   - Small state
@@ -347,49 +347,49 @@ after considering many PRNG's (pseudorandomnumber generators), for example ARC4 
    fill: (_, row) => if row == 0 { rgb(24, 24, 37) } else { none },
   [*PRNG Algorithm*], [*Estimated Time*], [*Cycle Length*], [*State Size*], [*Performance*],
   
-  [ARC4],
+  [ARC4 @ARC4],
   [Medium],
   [~$10^{100}$],
   [~256 bits],
   [Moderate],
   
-  [seedrandom.js],
+  [seedrandom.js @Seedrandom],
   [Medium],
   [(multiple selectable algorithms)],
   [Varies by algorithm],
   [Moderate (JS limited)],
   
-  [ChaCha20],
+  [ChaCha20 @Chacha20-RFC @Chacha20],
   [High],
   [$2^256$],
   [384 bits],
   [High for crypto],
   
-  [Xorshift],
+  [Xorshift @Xorshift],
   [Very Low],
   [$2^128 - 1$],
   [128-256 bits],
   [Very High],
   
-  [Linear Congruential Generator (LCG)],
+  [Linear Congruential Generator (LCG) @Linear-Congruential-Generators @Linear-Congruential-Generators-2],
   [Extremely Low],
   [Up to $2^32$],
   [32-64 bits],
   [Extremely High],
   
-  [Mersenne Twister],
+  [Mersenne Twister @Mersenne-Twister],
   [Medium],
   [$2^19937-1$],
   [2.5 KB (19937 bits)],
   [Moderate],
   
-  [Xoshiro256+/++],
+  [Xoshiro256+/++ @Xoshiro-PRNG],
   [Very Low],
   [$2^256-1$],
   [256 bits],
   [Very High],
   
-  [PCG (Permuted Congruential Generator)],
+  [PCG (Permuted Congruential Generator) @Permuted-Congruential-Generator],
   [Low],
   [$2^128$ or more],
   [64-128 bits],
@@ -402,7 +402,7 @@ after testing, xoshiro256+ has provided the best results, in terms of speed and 
 === Statistics(anti-cheat)
 for the anticheat,I will be comparing the consistency of player movement timings, and the optimality of their paths, to approximately determine if they are using any forms of cheating, be it a bot, or a human using external software.
 
-==== Player timings
+==== Player timings @Standard-Deviation
 for player timings, I will be using the standard deviation of the player's move timings, and comparing it to a sampled standard deviation based on my own move timings, a high standard deviation indicates that the player is more human, as different grid positions require different amounts of thought to move optimally
 
 
@@ -735,7 +735,7 @@ additionally git has statistics, which allows me to see the changes i have made 
 
 === Algorithms
 
-==== Xoshiro256+
+==== Xoshiro256+ @Xoshiro-PRNG
 xoshiro256+ is my chosen RNG, as it is performant and has a relatively low state size, allowing for many concurrent games to be played on a single machine, it is also very simple to implement, and has a relatively high cycle length, allowing for a more consistent game experience, it is also very fast, and has a low memory footprint, making it a perfect fit for the game.
 xoshiro256+ has a time complexity of O(1), and a space complexity of O(1), as it only requires a single pass through the seed array, and a single pass through the result array, which is constant time, and constant space, as the size of the seed and result arrays are constant.
 
@@ -777,7 +777,7 @@ fn manhattan_distance(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
 }
 ```)
 
-==== MergeSort
+==== MergeSort @MergeSort
 mergesort is a sorting algorithm, which works by the divide and conquer principle, where it breaks down the array into smaller and smaller arrays, till it gets to arrays of length 2, which it then subsequently sorts from the ground up, returning a sorted array in O(nlog(n)) time complexity & O(n) space complexity
 #codeblock( ```pseudocode
 function merge_sort(array):
@@ -810,7 +810,7 @@ function merge(left, right):
 
 ```)
 
-==== Standard deviation
+==== Standard deviation @Standard-Deviation
 
 the algorithm for standard deviation is as follows:
 
@@ -833,7 +833,7 @@ fn std_dev(arr: &[T]) -> T {
 
 
 
-==== Delayed Auto Shift
+==== Delayed Auto Shift @DAS-Tetris
 Delayed auto shift (DAS for short) is a technique implemented in tetris, where you wait for a period of time before starting to move the pieces, while the key is being held down, bypassing the operating systems repeat rate. This is useful for optimizing movements in games similar to DoubleTapp, or tetris, people can customize their DAS and their ARR(auto repeat rate) to be optimal for their own reaction time, so if they need to move a piece they can move it to the corners very quickly, but only after X time has passed, instead of the OS default of ~1 second for delay and ~100ms per repeat, in my algorithm I used the provided javascript api's of setTimeout and setInterval, wrapped inside an asynchronous function to allow for multiple consecutive inputs, I separately handle keyDown and keyUp events, where on key down the interval is added to an array of intervals (thanks to javascripts type safety), in which the interval is cleared when an OS keyUP is detected, this comes with caveats as there are operating systems which send these events at different times, which can introduce some uncertainty. But due to the timings being customizeable, this isn't much of a problem.
 
 #codeblock( ```js
@@ -1021,7 +1021,7 @@ additionally the queries are very readable, I selected 100 rows as it is a good 
 INSERT INTO "game" (game_id, score, average_time, dimension, time_limit, user_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 ```)
-self explanatory.
+inserts a game into the game table, with the game id, score, average time, dimension, time limit, and user id.
 ==== Statistics Trigger
 #codeblock( ```sql
 CREATE OR REPLACE FUNCTION update_statistics_on_game_insert()
@@ -1048,17 +1048,17 @@ this trigger is used to update both user statistics, and global statistics, when
 a game is only submitted when it is verified and guaranteed to be a valid game, so the statistics do not include cheaters. additionally you do have to be logged in to submit a game, so the statistics are only updated for logged in users.
 === Data Structures
 
-==== Circular Queue
+==== Circular Queue @Circular-Queue
 A queue is a data structure following the FIFO (first in first out) principle, where you use a sized array, along with variables to store the capacity, front & back of the array, when a file is queued, the file is put onto the index of the back of the array, and then the back index is added to % capacity unless the back becomes equal to the front, in which the queue returns an error instead, this allows for a non resizable array, which allows a set amount of elements to be queued, but not more than the size of the array, allowing for efficient memory management
 
 ==== HashMap
 A hash table (colloquially called a hashmap) is an array that is abstracted over by a "hashing" function, which outputs an index based on an output, usually the hash function aims to be as diverse as possible, but you can also write special hash functions that are more efficient for your given data types. 
 
 ==== Option/Result Types
-an Optional type, is a simple data structure that allows for beautiful error handling, an Option type wraps the output data, allowing for the error to be handled before trying to manipulate data, i.e in a Some(data) or None, where None means that the data was nonexistent, or we can use a result type to handle errors down the stack, where we can pass the error with Err(e) and Ok(d), so if one part of the function layer breaks we can know exactly where it errored and softly handle the error if needed
+an Optional type, is a simple data structure (technically a monad) that allows for beautiful error handling, an Option type wraps the output data, allowing for the error to be handled before trying to manipulate data, i.e in a Some(data) or None, where None means that the data was nonexistent, or we can use a result type to handle errors down the stack, where we can pass the error with Err(e) and Ok(d), so if one part of the function layer breaks we can know exactly where it errored and softly handle the error if needed
 
 
-==== Arc 
+==== Arc @Rust-Async
 Crucial feature in the rust programming language, the Arc(atomic reference counted pointer), allows for thread safe sharing of data, by using a reference counted pointer, which allows for the data to be shared between threads, and the data not needing to be cloned, allowing for efficient memory management, and the data to be shared between threads safely, without having to worry about race conditions.
 #linebreak()
 refer to Rusts Memory Management section for more information about how rust handles variable scopes.
@@ -1262,6 +1262,7 @@ additionally i use scc Hashmaps, instead of rust's standard library hashmaps, wh
 
 #zebraw(background-color: rgb(24, 24, 37),  ```rust
 <script lang="ts">
+  // general imports
 	import Clock from 'svelte-material-icons/Timer.svelte';
 	import Trophy from 'svelte-material-icons/Trophy.svelte';
 	import Dice from 'svelte-material-icons/Dice5.svelte';
@@ -1281,6 +1282,7 @@ additionally i use scc Hashmaps, instead of rust's standard library hashmaps, wh
 	if (browser) {
 		initWasm().catch(console.error);
 	}
+  // variable initializations
 	export let showModal;
 	let state: any = getContext('state');
 	let scoreboard: any = 0;
@@ -2015,6 +2017,7 @@ additionally i use scc Hashmaps, instead of rust's standard library hashmaps, wh
     async function handleSubmit(e: SubmitEvent) {
       e.preventDefault();
       let data = new URLSearchParams(new FormData(e.target as HTMLFormElement));
+      // ternary operators
       let path = isSignup ? "/api/user/signup" : "/api/user/login";
       const res = await fetch(path, {
         method: "POST",
@@ -3047,13 +3050,14 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
     let mut interval = interval(Duration::from_secs(5));
 
     loop {
+      // combines all websocket futures into one, allows for all to be awaited at once
         let websocket_futures = futures::future::select_all(
             receivers
                 .iter_mut()
                 .enumerate()
                 .map(|(i, ws)| Box::pin(async move { (i, ws.next().await) })),
         );
-
+        //tokio select macro, allows for multiple futures to be awaited at once, while not impacting performance, particularly efficient
         select! {
             (result, _, _) = websocket_futures => {
                 let (idx, msg_result) = result;
@@ -3123,6 +3127,7 @@ async fn game_handler(id: Ulid, mut rx: mpsc::Receiver<WebSocket>) {
                     _ => continue,
                 }
             }
+            // if 5s interval is up, update quota
             _ = interval.tick() => {
                 println!("New quota for game {}", id);
                 let mut culled_players = vec![];
@@ -3805,6 +3810,8 @@ export class Xoshiro256plus {
   [Performance optimizations], [Implemented ✓], [Efficient data structures (HashMap, Queue) and high-performance libraries (Axum, Tokio).],
 )
 
+
+
 === User Feedback
 
 ==== Client Feedback
@@ -3828,6 +3835,10 @@ overall users have enjoyed the game, and found it to be quite challenging at fir
 === Future Improvements
 In the future, i plan to improve the game by adding mobile support, and having more in depth analytics on the users profile page.
 additionally i would like to implement more stringent verification, such as a obfuscated library that detects html injections and other methods for securing.
+
+=== Conclusion
+the project has been mostly a success, and has been a great learning experience, i have learned a lot about web development, and have a better understanding of the complexities required to create truly random numbers, and securing a web application.
+
 
 #pagebreak()
 = Bibliography
